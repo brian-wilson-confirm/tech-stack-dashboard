@@ -1,7 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
 import { Sidebar } from './components/Sidebar'
 import { Breadcrumbs } from './components/Breadcrumbs'
-import TechStack from './pages/TechStack'
+import TechStack from './pages/Dashboard'
 
 // Frontend pages
 import RuntimeEnvPage from './pages/frontend/RuntimeEnvPage'
@@ -19,6 +19,7 @@ import BackendRuntimePage from './pages/backend/RuntimePage'
 import WebFrameworksPage from './pages/backend/WebFrameworksPage'
 import APIFrameworksPage from './pages/backend/APIFrameworksPage'
 import BackendTestingPage from './pages/backend/BackendTestingPage'
+import LanguagesPage from './pages/backend/LanguagesPage'
 
 // Database pages
 import SQLDatabasesPage from './pages/database/SQLDatabasesPage'
@@ -77,6 +78,7 @@ function App() {
             
             {/* Backend routes */}
             <Route path="/backend/runtime" element={<BackendRuntimePage />} />
+            <Route path="/backend/languages" element={<LanguagesPage />} />
             <Route path="/backend/web-frameworks" element={<WebFrameworksPage />} />
             <Route path="/backend/api-frameworks" element={<APIFrameworksPage />} />
             <Route path="/backend/testing" element={<BackendTestingPage />} />

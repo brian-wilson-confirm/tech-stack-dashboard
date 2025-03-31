@@ -90,6 +90,7 @@ export function Sidebar({ className }: React.HTMLAttributes<HTMLDivElement>) {
           icon: Server,
           href: "/backend",
           subItems: [
+            { label: "Languages", href: "/backend/languages" },
             { label: "Runtime Environments", href: "/backend/runtime" },
             { label: "Web Frameworks", href: "/backend/web-frameworks" },
             { label: "API Frameworks", href: "/backend/api-frameworks" },

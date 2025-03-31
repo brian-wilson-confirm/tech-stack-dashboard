@@ -53,6 +53,17 @@ class CoverageResponse(BaseModel):
     items: List[CoverageItem]
     overallProgress: int
 
+class Task(BaseModel):
+    id: str
+    done: bool
+    task: str
+    technology: str
+    subcategory: str
+    category: str
+
+class TasksResponse(BaseModel):
+    tasks: List[Task]
+
 @router.get("/tech/languages", response_model=TechStackResponse)
 async def get_languages_stats():
     return {
@@ -172,4 +183,147 @@ async def get_coverage():
             {"category": "Monitoring", "percentage": 10}
         ],
         "overallProgress": 37
+    }
+
+@router.get("/tasks", response_model=TasksResponse)
+async def get_tasks():
+    return {
+        "tasks": [
+            {
+                "id": "1",
+                "done": False,
+                "task": "Complete PluralSight course on FastAPI",
+                "technology": "FastAPI",
+                "subcategory": "API",
+                "category": "Backend"
+            },
+            {
+                "id": "2",
+                "done": True,
+                "task": "Create responsive dashboard layout",
+                "technology": "Material-UI",
+                "subcategory": "UI Framework",
+                "category": "Frontend"
+            },
+            {
+                "id": "3",
+                "done": False,
+                "task": "Set up CI/CD pipeline with GitHub Actions",
+                "technology": "Jenkins",
+                "subcategory": "CI/CD",
+                "category": "DevOps"
+            },
+            {
+                "id": "4",
+                "done": True,
+                "task": "Configure Redis caching layer",
+                "technology": "Redis",
+                "subcategory": "Caching",
+                "category": "Backend"
+            },
+            {
+                "id": "5",
+                "done": False,
+                "task": "Write unit tests for API endpoints",
+                "technology": "Jest",
+                "subcategory": "Testing",
+                "category": "Backend"
+            },
+            {
+                "id": "6",
+                "done": False,
+                "task": "Implement OAuth2 authentication",
+                "technology": "Auth0",
+                "subcategory": "Authentication",
+                "category": "Security"
+            },
+            {
+                "id": "7",
+                "done": True,
+                "task": "Set up Kubernetes cluster",
+                "technology": "Kubernetes",
+                "subcategory": "Container Orchestration",
+                "category": "DevOps"
+            },
+            {
+                "id": "8",
+                "done": False,
+                "task": "Configure Elasticsearch logging",
+                "technology": "Elasticsearch",
+                "subcategory": "Logging",
+                "category": "Monitoring"
+            },
+            {
+                "id": "9",
+                "done": True,
+                "task": "Implement GraphQL API",
+                "technology": "Apollo",
+                "subcategory": "API",
+                "category": "Backend"
+            },
+            {
+                "id": "10",
+                "done": False,
+                "task": "Set up message queue system",
+                "technology": "RabbitMQ",
+                "subcategory": "Message Queue",
+                "category": "Messaging"
+            },
+            {
+                "id": "11",
+                "done": True,
+                "task": "Implement real-time notifications",
+                "technology": "WebSocket",
+                "subcategory": "Real-time",
+                "category": "Frontend"
+            },
+            {
+                "id": "12",
+                "done": False,
+                "task": "Configure database replication",
+                "technology": "PostgreSQL",
+                "subcategory": "Database",
+                "category": "Database"
+            },
+            {
+                "id": "13",
+                "done": True,
+                "task": "Set up service mesh",
+                "technology": "Istio",
+                "subcategory": "Service Mesh",
+                "category": "DevOps"
+            },
+            {
+                "id": "14",
+                "done": False,
+                "task": "Implement rate limiting",
+                "technology": "Kong",
+                "subcategory": "API Gateway",
+                "category": "Middleware"
+            },
+            {
+                "id": "15",
+                "done": True,
+                "task": "Set up monitoring dashboards",
+                "technology": "Grafana",
+                "subcategory": "Monitoring",
+                "category": "DevOps"
+            },
+            {
+                "id": "16",
+                "done": False,
+                "task": "Implement data caching strategy",
+                "technology": "Memcached",
+                "subcategory": "Caching",
+                "category": "Backend"
+            },
+            {
+                "id": "17",
+                "done": True,
+                "task": "Configure SSL/TLS certificates",
+                "technology": "Let's Encrypt",
+                "subcategory": "Security",
+                "category": "DevOps"
+            }
+        ]
     } 

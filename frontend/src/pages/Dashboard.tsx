@@ -5,6 +5,7 @@ import { CategoryWidget } from "@/components/widgets/CategoryWidget"
 import { SecurityWidget } from "@/components/widgets/SecurityWidget"
 import { MetricsWidget } from "@/components/widgets/MetricsWidget"
 import { CoverageWidget } from "@/components/widgets/CoverageWidget"
+import { TasksWidget } from "@/components/widgets/TasksWidget"
 
 // Types from the individual pages
 import type { TechStats } from "@/types"
@@ -15,11 +16,18 @@ export default function Dashboard() {
   const [securityAlerts, setSecurityAlerts] = useState<any[]>([])
   const [metrics, setMetrics] = useState<any[]>([])
   const [coverage, setCoverage] = useState<{ items: any[], overallProgress: number }>({ items: [], overallProgress: 0 })
+  const [tasks, setTasks] = useState<any[]>([])
 
   // Fetch data from individual pages
   const fetchCategoryData = async () => {
     try {
       setIsLoading(true)
+      
+      // Fetch tasks separately to ensure proper data structure
+      const tasksResponse = await fetch('/api/tasks')
+      const tasksData = await tasksResponse.json()
+      setTasks(tasksData.tasks || [])
+
       // These would be actual API calls to your backend
       const [languages, backend, storage, devops, coverage] = await Promise.all([
         fetch('/api/tech/languages').then(res => res.json()),
@@ -106,6 +114,10 @@ export default function Dashboard() {
           items={coverage.items}
           overallProgress={coverage.overallProgress}
         />
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 mb-8">
+        <TasksWidget tasks={tasks} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

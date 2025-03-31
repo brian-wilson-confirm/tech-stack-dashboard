@@ -4,6 +4,7 @@ import { Code2, Server, Database, Cloud } from "lucide-react"
 import { CategoryWidget } from "@/components/widgets/CategoryWidget"
 import { SecurityWidget } from "@/components/widgets/SecurityWidget"
 import { MetricsWidget } from "@/components/widgets/MetricsWidget"
+import { CoverageWidget } from "@/components/widgets/CoverageWidget"
 
 // Types from the individual pages
 import type { TechStats } from "@/types"
@@ -13,17 +14,19 @@ export default function Dashboard() {
   const [categories, setCategories] = useState<any[]>([])
   const [securityAlerts, setSecurityAlerts] = useState<any[]>([])
   const [metrics, setMetrics] = useState<any[]>([])
+  const [coverage, setCoverage] = useState<{ items: any[], overallProgress: number }>({ items: [], overallProgress: 0 })
 
   // Fetch data from individual pages
   const fetchCategoryData = async () => {
     try {
       setIsLoading(true)
       // These would be actual API calls to your backend
-      const [languages, backend, storage, devops] = await Promise.all([
+      const [languages, backend, storage, devops, coverage] = await Promise.all([
         fetch('/api/tech/languages').then(res => res.json()),
         fetch('/api/tech/backend').then(res => res.json()),
         fetch('/api/tech/storage').then(res => res.json()),
-        fetch('/api/tech/devops').then(res => res.json())
+        fetch('/api/tech/devops').then(res => res.json()),
+        fetch('/api/coverage').then(res => res.json())
       ])
 
       setCategories([
@@ -53,6 +56,8 @@ export default function Dashboard() {
         }
       ])
 
+      setCoverage(coverage)
+
       // Fetch security data
       const security = await fetch('/api/security/alerts').then(res => res.json())
       setSecurityAlerts(security.alerts)
@@ -71,7 +76,6 @@ export default function Dashboard() {
     fetchCategoryData()
   }, [])
 
-
   return (
     <div className="p-8">
       <div className="flex items-center justify-between mb-8">
@@ -86,7 +90,7 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {(categories).map((category) => (
+        {categories.map((category) => (
           <CategoryWidget
             key={category.name}
             name={category.name}
@@ -95,6 +99,13 @@ export default function Dashboard() {
             recentUpdates={category.recentUpdates}
           />
         ))}
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 mb-8">
+        <CoverageWidget 
+          items={coverage.items}
+          overallProgress={coverage.overallProgress}
+        />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

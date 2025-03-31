@@ -45,6 +45,14 @@ class Metric(BaseModel):
 class MetricsResponse(BaseModel):
     data: List[Metric]
 
+class CoverageItem(BaseModel):
+    category: str
+    percentage: int
+
+class CoverageResponse(BaseModel):
+    items: List[CoverageItem]
+    overallProgress: int
+
 @router.get("/tech/languages", response_model=TechStackResponse)
 async def get_languages_stats():
     return {
@@ -148,4 +156,20 @@ async def get_system_metrics():
                 "trend": MetricTrend.DOWN
             }
         ]
+    }
+
+@router.get("/coverage", response_model=CoverageResponse)
+async def get_coverage():
+    return {
+        "items": [
+            {"category": "Frontend", "percentage": 70},
+            {"category": "Middleware", "percentage": 30},
+            {"category": "Backend", "percentage": 60},
+            {"category": "Database", "percentage": 50},
+            {"category": "Messaging", "percentage": 10},
+            {"category": "DevOps", "percentage": 40},
+            {"category": "Security", "percentage": 20},
+            {"category": "Monitoring", "percentage": 10}
+        ],
+        "overallProgress": 37
     } 

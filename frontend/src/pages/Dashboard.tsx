@@ -71,81 +71,6 @@ export default function Dashboard() {
     fetchCategoryData()
   }, [])
 
-  // For demo purposes, using mock data until API is ready
-  const mockData = {
-    categories: [
-      {
-        name: "Languages & Frameworks",
-        icon: Code2,
-        stats: {
-          total: 24,
-          production: 14,
-          testing: 6,
-          planned: 4
-        },
-        recentUpdates: [
-          "Python updated to v3.12",
-          "TypeScript v5.3 deployed",
-          "React v18.2 in production"
-        ]
-      },
-      {
-        name: "Backend Services",
-        icon: Server,
-        stats: {
-          total: 18,
-          production: 12,
-          testing: 4,
-          planned: 2
-        },
-        recentUpdates: [
-          "Node.js v20 LTS deployed",
-          "Django REST framework updated",
-          "GraphQL Gateway testing"
-        ]
-      },
-      {
-        name: "Data Storage",
-        icon: Database,
-        stats: {
-          total: 15,
-          production: 8,
-          testing: 4,
-          planned: 3
-        },
-        recentUpdates: [
-          "PostgreSQL 16 migration complete",
-          "Redis Cache layer expanded",
-          "MongoDB Atlas evaluation"
-        ]
-      },
-      {
-        name: "DevOps & Cloud",
-        icon: Cloud,
-        stats: {
-          total: 20,
-          production: 11,
-          testing: 5,
-          planned: 4
-        },
-        recentUpdates: [
-          "Kubernetes v1.28 rollout",
-          "Terraform modules updated",
-          "New CI/CD pipeline active"
-        ]
-      }
-    ],
-    securityAlerts: [
-      { level: "high", message: "Dependencies security audit needed" },
-      { level: "medium", message: "JWT token expiration review" },
-      { level: "low", message: "SSL certificate renewal in 30 days" }
-    ],
-    metrics: [
-      { name: "System Uptime", value: "99.98%", trend: "up" },
-      { name: "API Response Time", value: "245ms", trend: "stable" },
-      { name: "Error Rate", value: "0.02%", trend: "down" }
-    ]
-  }
 
   return (
     <div className="p-8">
@@ -161,7 +86,7 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {(categories.length ? categories : mockData.categories).map((category) => (
+        {(categories).map((category) => (
           <CategoryWidget
             key={category.name}
             name={category.name}
@@ -174,10 +99,10 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <SecurityWidget 
-          alerts={securityAlerts.length ? securityAlerts : mockData.securityAlerts} 
+          alerts={securityAlerts} 
         />
         <MetricsWidget 
-          metrics={metrics.length ? metrics : mockData.metrics} 
+          metrics={metrics} 
         />
       </div>
     </div>

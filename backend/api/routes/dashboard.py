@@ -65,7 +65,7 @@ async def get_languages_stats():
 async def get_backend_stats():
     return {
         "stats": {
-            "total": 18,
+            "total": 666,
             "production": 12,
             "testing": 4,
             "planned": 2
@@ -103,7 +103,7 @@ async def get_devops_stats():
             "planned": 4
         },
         "updates": [
-            "Kubernetes v1.28 rollout",
+            "Kubernetes v1.30 rollout",
             "Terraform modules updated",
             "New CI/CD pipeline active"
         ]

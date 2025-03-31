@@ -6,25 +6,26 @@ import { useState } from "react"
 import {
   ChevronRight,
   LayoutDashboard,
-  Settings,
-  History,
-  Star,
-  Library,
-  PanelLeftClose,
-  PanelLeftOpen,
+  Code,
+  Database,
+  Server,
+  Network,
+  MessageSquare,
+  Cloud,
+  Shield,
+  LineChart,
   Boxes,
-  Timer,
   Users,
   Plane,
-  MoreHorizontal,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react"
-
-interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {}
 
 interface NavItem {
   label: string
-  icon: any
+  icon?: any
   href: string
+  subItems?: NavItem[]
 }
 
 interface NavGroup {
@@ -32,16 +33,25 @@ interface NavGroup {
   items: NavItem[]
 }
 
-export function Sidebar({ className }: SidebarProps) {
+export function Sidebar({ className }: React.HTMLAttributes<HTMLDivElement>) {
   const location = useLocation()
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [expandedGroups, setExpandedGroups] = useState<string[]>(['Platform'])
+  const [expandedItems, setExpandedItems] = useState<string[]>([])
 
   const toggleGroup = (group: string) => {
     setExpandedGroups(current =>
       current.includes(group)
         ? current.filter(item => item !== group)
         : [...current, group]
+    )
+  }
+
+  const toggleItem = (item: string) => {
+    setExpandedItems(current =>
+      current.includes(item)
+        ? current.filter(i => i !== item)
+        : [...current, item]
     )
   }
 
@@ -55,14 +65,90 @@ export function Sidebar({ className }: SidebarProps) {
           href: "/"
         },
         {
-          label: "History",
-          icon: History,
-          href: "/history"
+          label: "Frontend",
+          icon: Code,
+          href: "/frontend",
+          subItems: [
+            { label: "Runtime Environments", href: "/frontend/runtime" },
+            { label: "Build & Compiler Tools", href: "/frontend/build-tools" },
+            { label: "UI Frameworks", href: "/frontend/ui-frameworks" },
+            { label: "JS Libraries", href: "/frontend/libraries" },
+            { label: "Testing & QA", href: "/frontend/testing" }
+          ]
         },
         {
-          label: "Starred",
-          icon: Star,
-          href: "/starred"
+          label: "Middleware",
+          icon: Network,
+          href: "/middleware",
+          subItems: [
+            { label: "API Gateway", href: "/middleware/api-gateway" },
+            { label: "API Layer", href: "/middleware/api-layer" }
+          ]
+        },
+        {
+          label: "Backend",
+          icon: Server,
+          href: "/backend",
+          subItems: [
+            { label: "Runtime Environments", href: "/backend/runtime" },
+            { label: "Web Frameworks", href: "/backend/web-frameworks" },
+            { label: "API Frameworks", href: "/backend/api-frameworks" },
+            { label: "Testing & QA", href: "/backend/testing" }
+          ]
+        },
+        {
+          label: "Database",
+          icon: Database,
+          href: "/database",
+          subItems: [
+            { label: "SQL Databases", href: "/database/sql" },
+            { label: "NoSQL Databases", href: "/database/nosql" },
+            { label: "Object Storage", href: "/database/object-storage" },
+            { label: "In-Memory Caches", href: "/database/cache" },
+            { label: "Search & Analytics", href: "/database/search" }
+          ]
+        },
+        {
+          label: "Messaging",
+          icon: MessageSquare,
+          href: "/messaging",
+          subItems: [
+            { label: "Message Brokers", href: "/messaging/brokers" },
+            { label: "Message Queues", href: "/messaging/queues" },
+            { label: "Task Queues", href: "/messaging/tasks" }
+          ]
+        },
+        {
+          label: "DevOps",
+          icon: Cloud,
+          href: "/devops",
+          subItems: [
+            { label: "Version Control", href: "/devops/version-control" },
+            { label: "CDN", href: "/devops/cdn" },
+            { label: "Containerization", href: "/devops/containers" },
+            { label: "Orchestration", href: "/devops/orchestration" },
+            { label: "Infrastructure as Code", href: "/devops/iac" },
+            { label: "CI/CD Pipeline", href: "/devops/cicd" }
+          ]
+        },
+        {
+          label: "Security",
+          icon: Shield,
+          href: "/security",
+          subItems: [
+            { label: "Authentication", href: "/security/auth" },
+            { label: "Authorization", href: "/security/authz" }
+          ]
+        },
+        {
+          label: "Monitoring",
+          icon: LineChart,
+          href: "/monitoring",
+          subItems: [
+            { label: "Logging", href: "/monitoring/logging" },
+            { label: "Tracing", href: "/monitoring/tracing" },
+            { label: "Alerting", href: "/monitoring/alerting" }
+          ]
         }
       ]
     },
@@ -88,10 +174,8 @@ export function Sidebar({ className }: SidebarProps) {
     }
   ]
 
-  const sidebarWidth = isCollapsed ? "w-16" : "w-64"
-
   return (
-    <div className={cn("relative flex flex-col border-r", sidebarWidth, className)}>
+    <div className={cn("relative flex flex-col border-r", isCollapsed ? "w-16" : "w-64", className)}>
       <div className="flex h-14 items-center justify-between px-4 border-b">
         {!isCollapsed && <span className="font-semibold">Tech Dashboard</span>}
         <Button
@@ -130,18 +214,54 @@ export function Sidebar({ className }: SidebarProps) {
               <div className="space-y-1">
                 {(!isCollapsed || expandedGroups.includes(group.label)) &&
                   group.items.map((item) => (
-                    <Link key={item.href} to={item.href}>
-                      <Button
-                        variant={location.pathname === item.href ? "secondary" : "ghost"}
-                        className={cn(
-                          "w-full justify-start",
-                          isCollapsed && "justify-center px-2"
-                        )}
-                      >
-                        <item.icon className={cn("h-4 w-4", !isCollapsed && "mr-2")} />
-                        {!isCollapsed && item.label}
-                      </Button>
-                    </Link>
+                    <div key={item.href}>
+                      <Link to={item.href}>
+                        <Button
+                          variant={location.pathname === item.href ? "secondary" : "ghost"}
+                          className={cn(
+                            "w-full justify-start",
+                            isCollapsed && "justify-center px-2",
+                            item.subItems && expandedItems.includes(item.label) && "bg-secondary/50"
+                          )}
+                          onClick={(e) => {
+                            if (item.subItems) {
+                              e.preventDefault()
+                              toggleItem(item.label)
+                            }
+                          }}
+                        >
+                          {item.icon && <item.icon className={cn("h-4 w-4", !isCollapsed && "mr-2")} />}
+                          {!isCollapsed && (
+                            <>
+                              {item.label}
+                              {item.subItems && (
+                                <ChevronRight
+                                  size={16}
+                                  className={cn(
+                                    "ml-auto transition-transform",
+                                    expandedItems.includes(item.label) && "rotate-90"
+                                  )}
+                                />
+                              )}
+                            </>
+                          )}
+                        </Button>
+                      </Link>
+                      {!isCollapsed && item.subItems && expandedItems.includes(item.label) && (
+                        <div className="pl-6 mt-1 space-y-1">
+                          {item.subItems.map((subItem) => (
+                            <Link key={subItem.href} to={subItem.href}>
+                              <Button
+                                variant={location.pathname === subItem.href ? "secondary" : "ghost"}
+                                className="w-full justify-start text-sm"
+                              >
+                                {subItem.label}
+                              </Button>
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   ))}
               </div>
             </div>

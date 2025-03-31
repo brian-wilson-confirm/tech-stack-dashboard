@@ -14,11 +14,11 @@ import {
   Cloud,
   Shield,
   LineChart,
-  Boxes,
-  Users,
   Plane,
   PanelLeftClose,
   PanelLeftOpen,
+  CheckSquare,
+  ClipboardCheck,
 } from "lucide-react"
 
 interface NavItem {
@@ -57,7 +57,7 @@ export function Sidebar({ className }: React.HTMLAttributes<HTMLDivElement>) {
 
   const navigationGroups: NavGroup[] = [
     {
-      label: "Platform",
+      label: "System Architecture",
       items: [
         {
           label: "Dashboard",
@@ -154,17 +154,17 @@ export function Sidebar({ className }: React.HTMLAttributes<HTMLDivElement>) {
       ]
     },
     {
-      label: "Projects",
+      label: "Administration",
       items: [
         {
-          label: "Design Engineering",
-          icon: Boxes,
-          href: "/design"
+          label: "Tasks",
+          icon: CheckSquare,
+          href: "/tasks",
         },
         {
-          label: "Sales & Marketing",
-          icon: Users,
-          href: "/sales"
+          label: "Assessments",
+          icon: ClipboardCheck,
+          href: "/assessments"
         },
         {
           label: "Travel",
@@ -193,23 +193,11 @@ export function Sidebar({ className }: React.HTMLAttributes<HTMLDivElement>) {
         <div className="space-y-4 py-4">
           {navigationGroups.map((group) => (
             <div key={group.label} className="px-3 py-2">
-              <div
-                className="flex items-center justify-between mb-2 px-4 cursor-pointer"
-                onClick={() => !isCollapsed && toggleGroup(group.label)}
-              >
+              <div className="px-4 mb-2">
                 {!isCollapsed && (
-                  <>
-                    <span className="text-sm font-medium text-muted-foreground">
-                      {group.label}
-                    </span>
-                    <ChevronRight
-                      size={16}
-                      className={cn(
-                        "text-muted-foreground transition-transform",
-                        expandedGroups.includes(group.label) && "rotate-90"
-                      )}
-                    />
-                  </>
+                  <span className="text-sm font-medium text-muted-foreground">
+                    {group.label}
+                  </span>
                 )}
               </div>
               <div className="space-y-1">
@@ -275,8 +263,8 @@ export function Sidebar({ className }: React.HTMLAttributes<HTMLDivElement>) {
           <div className="h-8 w-8 rounded-full bg-muted" />
           {!isCollapsed && (
             <div className="space-y-1">
-              <p className="text-sm font-medium">shadcn</p>
-              <p className="text-xs text-muted-foreground">m@example.com</p>
+              <p className="text-sm font-medium">Brian Wilson</p>
+              <p className="text-xs text-muted-foreground">bwil0007@gmail.com</p>
             </div>
           )}
         </div>

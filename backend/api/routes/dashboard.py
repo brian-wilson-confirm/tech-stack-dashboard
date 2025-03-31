@@ -1,7 +1,8 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from enum import Enum
-from typing import List
+from typing import List, Optional
+from datetime import datetime, date
 
 router = APIRouter()
 
@@ -53,6 +54,32 @@ class CoverageResponse(BaseModel):
     items: List[CoverageItem]
     overallProgress: int
 
+class TaskStatus(str, Enum):
+    NOT_STARTED = "not_started"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+    ON_HOLD = "on_hold"
+    CANCELLED = "cancelled"
+
+class TaskPriority(str, Enum):
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    CRITICAL = "critical"
+
+class TaskType(str, Enum):
+    LEARNING = "learning"
+    IMPLEMENTATION = "implementation"
+    RESEARCH = "research"
+    DOCUMENTATION = "documentation"
+    MAINTENANCE = "maintenance"
+
+class TaskLevel(str, Enum):
+    BEGINNER = "beginner"
+    INTERMEDIATE = "intermediate"
+    ADVANCED = "advanced"
+    EXPERT = "expert"
+
 class Task(BaseModel):
     id: str
     done: bool
@@ -60,6 +87,20 @@ class Task(BaseModel):
     technology: str
     subcategory: str
     category: str
+    section: str
+    estimated_duration: int  # in hours
+    topics: List[str]
+    level: TaskLevel
+    type: TaskType
+    priority: TaskPriority
+    order: int
+    status: TaskStatus
+    progress: int  # percentage
+    source: str
+    start_date: Optional[date]
+    end_date: Optional[date]
+    actual_duration: Optional[int]  # in hours
+    # due_date
 
 class TasksResponse(BaseModel):
     tasks: List[Task]
@@ -195,7 +236,20 @@ async def get_tasks():
                 "task": "Complete PluralSight course on FastAPI",
                 "technology": "FastAPI",
                 "subcategory": "API",
-                "category": "Backend"
+                "category": "Backend",
+                "section": "Learning Path",
+                "estimated_duration": 8,
+                "topics": ["REST API", "Python", "API Documentation", "Authentication"],
+                "level": TaskLevel.INTERMEDIATE,
+                "type": TaskType.LEARNING,
+                "priority": TaskPriority.HIGH,
+                "order": 1,
+                "status": TaskStatus.IN_PROGRESS,
+                "progress": 60,
+                "source": "PluralSight",
+                "start_date": "2024-03-01",
+                "end_date": "2024-03-15",
+                "actual_duration": None
             },
             {
                 "id": "2",
@@ -203,7 +257,20 @@ async def get_tasks():
                 "task": "Create responsive dashboard layout",
                 "technology": "Material-UI",
                 "subcategory": "UI Framework",
-                "category": "Frontend"
+                "category": "Frontend",
+                "section": "Implementation",
+                "estimated_duration": 16,
+                "topics": ["React", "Responsive Design", "Component Library", "Theming"],
+                "level": TaskLevel.INTERMEDIATE,
+                "type": TaskType.IMPLEMENTATION,
+                "priority": TaskPriority.HIGH,
+                "order": 2,
+                "status": TaskStatus.COMPLETED,
+                "progress": 100,
+                "source": "Internal Project",
+                "start_date": "2024-02-15",
+                "end_date": "2024-02-28",
+                "actual_duration": 20
             },
             {
                 "id": "3",
@@ -211,7 +278,20 @@ async def get_tasks():
                 "task": "Set up CI/CD pipeline with GitHub Actions",
                 "technology": "Jenkins",
                 "subcategory": "CI/CD",
-                "category": "DevOps"
+                "category": "DevOps",
+                "section": "Infrastructure",
+                "estimated_duration": 24,
+                "topics": ["CI/CD", "Automation", "DevOps", "GitHub Actions"],
+                "level": TaskLevel.ADVANCED,
+                "type": TaskType.IMPLEMENTATION,
+                "priority": TaskPriority.CRITICAL,
+                "order": 3,
+                "status": TaskStatus.IN_PROGRESS,
+                "progress": 30,
+                "source": "Team Initiative",
+                "start_date": "2024-03-10",
+                "end_date": "2024-03-25",
+                "actual_duration": None
             },
             {
                 "id": "4",
@@ -219,7 +299,20 @@ async def get_tasks():
                 "task": "Configure Redis caching layer",
                 "technology": "Redis",
                 "subcategory": "Caching",
-                "category": "Backend"
+                "category": "Backend",
+                "section": "Performance",
+                "estimated_duration": 12,
+                "topics": ["Caching", "Redis", "Performance Optimization"],
+                "level": TaskLevel.INTERMEDIATE,
+                "type": TaskType.IMPLEMENTATION,
+                "priority": TaskPriority.MEDIUM,
+                "order": 4,
+                "status": TaskStatus.COMPLETED,
+                "progress": 100,
+                "source": "Architecture Review",
+                "start_date": "2024-02-01",
+                "end_date": "2024-02-10",
+                "actual_duration": 10
             },
             {
                 "id": "5",
@@ -227,7 +320,20 @@ async def get_tasks():
                 "task": "Write unit tests for API endpoints",
                 "technology": "Jest",
                 "subcategory": "Testing",
-                "category": "Backend"
+                "category": "Backend",
+                "section": "Quality Assurance",
+                "estimated_duration": 20,
+                "topics": ["Unit Testing", "API Testing", "Test Coverage"],
+                "level": TaskLevel.INTERMEDIATE,
+                "type": TaskType.IMPLEMENTATION,
+                "priority": TaskPriority.HIGH,
+                "order": 5,
+                "status": TaskStatus.NOT_STARTED,
+                "progress": 0,
+                "source": "Quality Standards",
+                "start_date": None,
+                "end_date": None,
+                "actual_duration": None
             },
             {
                 "id": "6",
@@ -235,7 +341,20 @@ async def get_tasks():
                 "task": "Implement OAuth2 authentication",
                 "technology": "Auth0",
                 "subcategory": "Authentication",
-                "category": "Security"
+                "category": "Security",
+                "section": "Security Implementation",
+                "estimated_duration": 30,
+                "topics": ["OAuth2", "JWT", "Security Protocols", "User Management"],
+                "level": TaskLevel.ADVANCED,
+                "type": TaskType.IMPLEMENTATION,
+                "priority": TaskPriority.CRITICAL,
+                "order": 6,
+                "status": TaskStatus.NOT_STARTED,
+                "progress": 0,
+                "source": "Security Audit",
+                "start_date": "2024-04-01",
+                "end_date": "2024-04-15",
+                "actual_duration": None
             },
             {
                 "id": "7",
@@ -243,7 +362,20 @@ async def get_tasks():
                 "task": "Set up Kubernetes cluster",
                 "technology": "Kubernetes",
                 "subcategory": "Container Orchestration",
-                "category": "DevOps"
+                "category": "DevOps",
+                "section": "Infrastructure",
+                "estimated_duration": 40,
+                "topics": ["Kubernetes", "Container Orchestration", "High Availability"],
+                "level": TaskLevel.EXPERT,
+                "type": TaskType.IMPLEMENTATION,
+                "priority": TaskPriority.HIGH,
+                "order": 7,
+                "status": TaskStatus.COMPLETED,
+                "progress": 100,
+                "source": "Infrastructure Upgrade",
+                "start_date": "2024-01-15",
+                "end_date": "2024-02-15",
+                "actual_duration": 45
             },
             {
                 "id": "8",
@@ -251,7 +383,20 @@ async def get_tasks():
                 "task": "Configure Elasticsearch logging",
                 "technology": "Elasticsearch",
                 "subcategory": "Logging",
-                "category": "Monitoring"
+                "category": "Monitoring",
+                "section": "Observability",
+                "estimated_duration": 16,
+                "topics": ["ELK Stack", "Log Management", "Monitoring"],
+                "level": TaskLevel.INTERMEDIATE,
+                "type": TaskType.IMPLEMENTATION,
+                "priority": TaskPriority.MEDIUM,
+                "order": 8,
+                "status": TaskStatus.ON_HOLD,
+                "progress": 25,
+                "source": "Monitoring Initiative",
+                "start_date": "2024-03-20",
+                "end_date": None,
+                "actual_duration": None
             },
             {
                 "id": "9",
@@ -259,7 +404,20 @@ async def get_tasks():
                 "task": "Implement GraphQL API",
                 "technology": "Apollo",
                 "subcategory": "API",
-                "category": "Backend"
+                "category": "Backend",
+                "section": "API Development",
+                "estimated_duration": 35,
+                "topics": ["GraphQL", "API Design", "Schema Development"],
+                "level": TaskLevel.ADVANCED,
+                "type": TaskType.IMPLEMENTATION,
+                "priority": TaskPriority.HIGH,
+                "order": 9,
+                "status": TaskStatus.COMPLETED,
+                "progress": 100,
+                "source": "API Modernization",
+                "start_date": "2024-01-01",
+                "end_date": "2024-02-01",
+                "actual_duration": 32
             },
             {
                 "id": "10",
@@ -267,7 +425,20 @@ async def get_tasks():
                 "task": "Set up message queue system",
                 "technology": "RabbitMQ",
                 "subcategory": "Message Queue",
-                "category": "Messaging"
+                "category": "Messaging",
+                "section": "System Integration",
+                "estimated_duration": 25,
+                "topics": ["Message Queues", "Async Processing", "System Integration"],
+                "level": TaskLevel.ADVANCED,
+                "type": TaskType.IMPLEMENTATION,
+                "priority": TaskPriority.HIGH,
+                "order": 10,
+                "status": TaskStatus.IN_PROGRESS,
+                "progress": 45,
+                "source": "Architecture Enhancement",
+                "start_date": "2024-03-15",
+                "end_date": "2024-04-01",
+                "actual_duration": None
             },
             {
                 "id": "11",
@@ -275,7 +446,20 @@ async def get_tasks():
                 "task": "Implement real-time notifications",
                 "technology": "WebSocket",
                 "subcategory": "Real-time",
-                "category": "Frontend"
+                "category": "Frontend",
+                "section": "User Experience",
+                "estimated_duration": 20,
+                "topics": ["WebSocket", "Real-time Communication", "Push Notifications"],
+                "level": TaskLevel.INTERMEDIATE,
+                "type": TaskType.IMPLEMENTATION,
+                "priority": TaskPriority.MEDIUM,
+                "order": 11,
+                "status": TaskStatus.COMPLETED,
+                "progress": 100,
+                "source": "UX Enhancement",
+                "start_date": "2024-02-20",
+                "end_date": "2024-03-05",
+                "actual_duration": 18
             },
             {
                 "id": "12",
@@ -283,7 +467,20 @@ async def get_tasks():
                 "task": "Configure database replication",
                 "technology": "PostgreSQL",
                 "subcategory": "Database",
-                "category": "Database"
+                "category": "Database",
+                "section": "Data Management",
+                "estimated_duration": 28,
+                "topics": ["Database Replication", "High Availability", "Data Consistency"],
+                "level": TaskLevel.EXPERT,
+                "type": TaskType.IMPLEMENTATION,
+                "priority": TaskPriority.CRITICAL,
+                "order": 12,
+                "status": TaskStatus.IN_PROGRESS,
+                "progress": 70,
+                "source": "Database Reliability",
+                "start_date": "2024-03-01",
+                "end_date": "2024-03-20",
+                "actual_duration": None
             },
             {
                 "id": "13",
@@ -291,7 +488,20 @@ async def get_tasks():
                 "task": "Set up service mesh",
                 "technology": "Istio",
                 "subcategory": "Service Mesh",
-                "category": "DevOps"
+                "category": "DevOps",
+                "section": "Infrastructure",
+                "estimated_duration": 45,
+                "topics": ["Service Mesh", "Microservices", "Traffic Management"],
+                "level": TaskLevel.EXPERT,
+                "type": TaskType.IMPLEMENTATION,
+                "priority": TaskPriority.HIGH,
+                "order": 13,
+                "status": TaskStatus.COMPLETED,
+                "progress": 100,
+                "source": "Architecture Modernization",
+                "start_date": "2024-01-10",
+                "end_date": "2024-02-20",
+                "actual_duration": 50
             },
             {
                 "id": "14",
@@ -299,7 +509,20 @@ async def get_tasks():
                 "task": "Implement rate limiting",
                 "technology": "Kong",
                 "subcategory": "API Gateway",
-                "category": "Middleware"
+                "category": "Middleware",
+                "section": "API Management",
+                "estimated_duration": 15,
+                "topics": ["Rate Limiting", "API Gateway", "Traffic Control"],
+                "level": TaskLevel.INTERMEDIATE,
+                "type": TaskType.IMPLEMENTATION,
+                "priority": TaskPriority.MEDIUM,
+                "order": 14,
+                "status": TaskStatus.NOT_STARTED,
+                "progress": 0,
+                "source": "API Security",
+                "start_date": None,
+                "end_date": None,
+                "actual_duration": None
             },
             {
                 "id": "15",
@@ -307,23 +530,62 @@ async def get_tasks():
                 "task": "Set up monitoring dashboards",
                 "technology": "Grafana",
                 "subcategory": "Monitoring",
-                "category": "DevOps"
+                "category": "DevOps",
+                "section": "Observability",
+                "estimated_duration": 18,
+                "topics": ["Monitoring", "Metrics", "Dashboards", "Alerting"],
+                "level": TaskLevel.INTERMEDIATE,
+                "type": TaskType.IMPLEMENTATION,
+                "priority": TaskPriority.HIGH,
+                "order": 15,
+                "status": TaskStatus.COMPLETED,
+                "progress": 100,
+                "source": "Monitoring Setup",
+                "start_date": "2024-02-01",
+                "end_date": "2024-02-10",
+                "actual_duration": 16
             },
             {
                 "id": "16",
                 "done": False,
-                "task": "Implement data caching strategy",
-                "technology": "Memcached",
-                "subcategory": "Caching",
-                "category": "Backend"
+                "task": "Research AI integration options",
+                "technology": "TensorFlow",
+                "subcategory": "Machine Learning",
+                "category": "Research",
+                "section": "Innovation",
+                "estimated_duration": 40,
+                "topics": ["AI", "Machine Learning", "Integration Strategy"],
+                "level": TaskLevel.EXPERT,
+                "type": TaskType.RESEARCH,
+                "priority": TaskPriority.MEDIUM,
+                "order": 16,
+                "status": TaskStatus.IN_PROGRESS,
+                "progress": 35,
+                "source": "Innovation Initiative",
+                "start_date": "2024-03-01",
+                "end_date": "2024-04-15",
+                "actual_duration": None
             },
             {
                 "id": "17",
                 "done": True,
-                "task": "Configure SSL/TLS certificates",
-                "technology": "Let's Encrypt",
-                "subcategory": "Security",
-                "category": "DevOps"
+                "task": "Document API versioning strategy",
+                "technology": "OpenAPI",
+                "subcategory": "Documentation",
+                "category": "Backend",
+                "section": "Documentation",
+                "estimated_duration": 10,
+                "topics": ["API Documentation", "Versioning", "Best Practices"],
+                "level": TaskLevel.BEGINNER,
+                "type": TaskType.DOCUMENTATION,
+                "priority": TaskPriority.LOW,
+                "order": 17,
+                "status": TaskStatus.COMPLETED,
+                "progress": 100,
+                "source": "Documentation Sprint",
+                "start_date": "2024-02-25",
+                "end_date": "2024-03-01",
+                "actual_duration": 8
             }
         ]
     } 

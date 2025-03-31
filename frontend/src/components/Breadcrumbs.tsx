@@ -35,7 +35,7 @@ export function Breadcrumbs() {
             to="/"
             className="text-muted-foreground hover:text-foreground transition-colors"
           >
-            Home
+            Dashboard
           </Link>
         </li>
         {breadcrumbs}

@@ -1,0 +1,37 @@
+import { useState, useEffect } from "react"
+import { TasksWidget } from "@/components/widgets/TasksWidget"
+import { CheckSquare } from "lucide-react"
+
+export default function TasksPage() {
+  const [tasks, setTasks] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        const response = await fetch('/api/tasks')
+        const data = await response.json()
+        setTasks(data.tasks)
+      } catch (error) {
+        console.error('Error fetching tasks:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchTasks()
+  }, [])
+
+  return (
+    <div className="p-8">
+      <div className="flex items-center gap-3 mb-8">
+        <CheckSquare className="h-8 w-8" />
+        <h1 className="text-3xl font-bold">Tasks</h1>
+      </div>
+
+      <div className="grid gap-6">
+        <TasksWidget tasks={tasks} />
+      </div>
+    </div>
+  )
+} 

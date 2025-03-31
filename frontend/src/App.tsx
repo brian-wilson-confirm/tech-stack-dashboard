@@ -51,9 +51,9 @@ import TracingPage from './pages/monitoring/TracingPage'
 import AlertingPage from './pages/monitoring/AlertingPage'
 
 // Other pages
-import DesignPage from './pages/DesignPage'
-import SalesPage from './pages/SalesPage'
 import TravelPage from './pages/TravelPage'
+import TasksPage from './pages/TasksPage'
+import AssessmentsPage from './pages/AssessmentsPage'
 
 function App() {
   return (
@@ -113,9 +113,9 @@ function App() {
             <Route path="/monitoring/alerting" element={<AlertingPage />} />
             
             {/* Other routes */}
-            <Route path="/design" element={<DesignPage />} />
-            <Route path="/sales" element={<SalesPage />} />
+            <Route path="/assessments" element={<AssessmentsPage />} />
             <Route path="/travel" element={<TravelPage />} />
+            <Route path="/tasks" element={<TasksPage />} />
           </Routes>
         </main>
       </div>

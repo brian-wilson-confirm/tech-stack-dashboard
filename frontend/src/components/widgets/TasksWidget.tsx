@@ -11,12 +11,15 @@ import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import {
-  MoreHorizontal,
   GripVertical,
   Pencil,
   Trash2,
   Check,
-  X
+  X,
+  Clock,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react"
 import {
   Select,
@@ -25,6 +28,48 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Badge } from "@/components/ui/badge"
+import { Progress } from "@/components/ui/progress"
+
+interface SortConfig {
+  field: keyof Task
+  direction: 'asc' | 'desc'
+}
+
+interface SortableColumnProps {
+  field: keyof Task
+  children: React.ReactNode
+  sortConfigs: SortConfig[]
+  onSort: (field: keyof Task, isMultiSort: boolean) => void
+}
+
+function SortableColumn({ field, children, sortConfigs, onSort }: SortableColumnProps) {
+  const sortConfig = sortConfigs.find(config => config.field === field)
+  const sortIndex = sortConfigs.findIndex(config => config.field === field)
+
+  return (
+    <div
+      className="flex items-center gap-1 cursor-pointer select-none"
+      onClick={(e: React.MouseEvent) => onSort(field, e.shiftKey)}
+    >
+      <div className="flex items-center gap-1">
+        {children}
+        {sortConfig ? (
+          <div className="flex items-center">
+            <span className="text-xs mr-1">{sortIndex + 1}</span>
+            {sortConfig.direction === 'asc' ? (
+              <ArrowUp className="h-4 w-4" />
+            ) : (
+              <ArrowDown className="h-4 w-4" />
+            )}
+          </div>
+        ) : (
+          <ArrowUpDown className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+        )}
+      </div>
+    </div>
+  )
+}
 
 interface Task {
   id: string
@@ -33,6 +78,19 @@ interface Task {
   technology: string
   subcategory: string
   category: string
+  order: number
+  status: 'not_started' | 'in_progress' | 'completed' | 'on_hold' | 'cancelled'
+  progress: number
+  priority: 'low' | 'medium' | 'high' | 'critical'
+  type: string
+  level: string
+  section: string
+  topics: string[]
+  source: string
+  estimated_duration: number
+  actual_duration?: number
+  start_date?: string
+  end_date?: string
 }
 
 interface TasksWidgetProps {
@@ -46,6 +104,38 @@ export function TasksWidget({ tasks: initialTasks }: TasksWidgetProps) {
   const [rowsPerPage, setRowsPerPage] = useState(5)
   const [editingTask, setEditingTask] = useState<string | null>(null)
   const [editForm, setEditForm] = useState<Task | null>(null)
+  const [sortConfigs, setSortConfigs] = useState<SortConfig[]>([])
+
+  const sortTasks = (tasksToSort: Task[]) => {
+    if (sortConfigs.length === 0) return tasksToSort
+
+    return [...tasksToSort].sort((a, b) => {
+      for (const { field, direction } of sortConfigs) {
+        const aValue = a[field]
+        const bValue = b[field]
+
+        // Handle null/undefined values
+        if (aValue === null || aValue === undefined) return direction === 'asc' ? -1 : 1
+        if (bValue === null || bValue === undefined) return direction === 'asc' ? 1 : -1
+
+        // Compare values based on their type
+        if (typeof aValue === 'string' && typeof bValue === 'string') {
+          const comparison = aValue.localeCompare(bValue)
+          if (comparison !== 0) return direction === 'asc' ? comparison : -comparison
+        } else if (typeof aValue === 'number' && typeof bValue === 'number') {
+          const comparison = aValue - bValue
+          if (comparison !== 0) return direction === 'asc' ? comparison : -comparison
+        } else if (typeof aValue === 'boolean' && typeof bValue === 'boolean') {
+          const comparison = (aValue === bValue ? 0 : aValue ? 1 : -1)
+          if (comparison !== 0) return direction === 'asc' ? comparison : -comparison
+        } else if (Array.isArray(aValue) && Array.isArray(bValue)) {
+          const comparison = aValue.join(',').localeCompare(bValue.join(','))
+          if (comparison !== 0) return direction === 'asc' ? comparison : -comparison
+        }
+      }
+      return 0
+    })
+  }
 
   // Initialize tasks only once
   useEffect(() => {
@@ -54,10 +144,40 @@ export function TasksWidget({ tasks: initialTasks }: TasksWidgetProps) {
     }
   }, [initialTasks])
 
+  const handleSort = (field: keyof Task, isMultiSort: boolean) => {
+    setSortConfigs(prevConfigs => {
+      const existingConfigIndex = prevConfigs.findIndex(config => config.field === field)
+      
+      // If holding Shift key, add to existing sorts
+      if (isMultiSort) {
+        if (existingConfigIndex === -1) {
+          // Add new sort config
+          return [...prevConfigs, { field, direction: 'asc' }]
+        } else {
+          // Toggle direction of existing sort
+          return prevConfigs.map((config, index) =>
+            index === existingConfigIndex
+              ? { ...config, direction: config.direction === 'asc' ? 'desc' : 'asc' }
+              : config
+          )
+        }
+      } else {
+        // Without Shift, replace all sorts with just this one
+        if (existingConfigIndex === -1) {
+          return [{ field, direction: 'asc' }]
+        } else {
+          const config = prevConfigs[existingConfigIndex]
+          return [{ field, direction: config.direction === 'asc' ? 'desc' : 'asc' }]
+        }
+      }
+    })
+  }
+
   const totalPages = Math.ceil(tasks.length / rowsPerPage)
   const start = (page - 1) * rowsPerPage
   const end = start + rowsPerPage
-  const currentTasks = tasks.slice(start, end)
+  const sortedTasks = sortTasks(tasks)
+  const currentTasks = sortedTasks.slice(start, end)
 
   const toggleTaskDone = (taskId: string, checked: boolean) => {
     setTasks(prevTasks => 
@@ -95,31 +215,161 @@ export function TasksWidget({ tasks: initialTasks }: TasksWidgetProps) {
     setTasks(tasks.filter(task => task.id !== taskId))
   }
 
-  const handleEditChange = (field: keyof Task, value: string) => {
+  const handleEditChange = (field: keyof Task, value: string | number | string[] | null) => {
     if (editForm) {
-      setEditForm({ ...editForm, [field]: value })
+      let processedValue: any = value
+      
+      // Handle numeric fields
+      if (['order', 'progress', 'estimated_duration'].includes(field)) {
+        processedValue = Number(value)
+      }
+      
+      // Handle array fields
+      if (field === 'topics' && typeof value === 'string') {
+        processedValue = value.split(',').map(t => t.trim())
+      }
+      
+      setEditForm({ ...editForm, [field]: processedValue })
     }
+  }
+
+  const getStatusColor = (status: Task['status']) => {
+    const colors = {
+      not_started: "bg-gray-500",
+      in_progress: "bg-blue-500",
+      completed: "bg-green-500",
+      on_hold: "bg-yellow-500",
+      cancelled: "bg-red-500"
+    } as const
+    return colors[status]
+  }
+
+  const getPriorityColor = (priority: Task['priority']) => {
+    const colors = {
+      low: "bg-gray-500",
+      medium: "bg-blue-500",
+      high: "bg-yellow-500",
+      critical: "bg-red-500"
+    } as const
+    return colors[priority]
   }
 
   return (
     <div className="border rounded-lg p-6 col-span-full">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold">Today's Tasks</h2>
+        <div className="flex flex-col gap-2">
+          <h2 className="text-xl font-semibold">Today's Tasks</h2>
+          {sortConfigs.length > 0 && (
+            <div className="text-sm text-muted-foreground">
+              Sorting by: {sortConfigs.map((config, i) => (
+                <span key={config.field}>
+                  {i > 0 && ", "}
+                  {config.field} ({config.direction})
+                </span>
+              ))}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="ml-2"
+                onClick={() => setSortConfigs([])}
+              >
+                Clear Sort
+              </Button>
+            </div>
+          )}
+        </div>
         <Button variant="outline" size="sm">
           Add Task
         </Button>
       </div>
 
-      <div className="rounded-md border">
+      <div className="rounded-md border overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead className="w-12"></TableHead>
               <TableHead className="w-12">Done</TableHead>
-              <TableHead>Task</TableHead>
-              <TableHead>Technology</TableHead>
-              <TableHead>Subcategory</TableHead>
-              <TableHead>Category</TableHead>
+              <TableHead className="min-w-[200px] group">
+                <SortableColumn field="task" sortConfigs={sortConfigs} onSort={handleSort}>
+                  Task
+                </SortableColumn>
+              </TableHead>
+              <TableHead className="group">
+                <SortableColumn field="order" sortConfigs={sortConfigs} onSort={handleSort}>
+                  Order
+                </SortableColumn>
+              </TableHead>
+              <TableHead className="group">
+                <SortableColumn field="status" sortConfigs={sortConfigs} onSort={handleSort}>
+                  Status
+                </SortableColumn>
+              </TableHead>
+              <TableHead className="group">
+                <SortableColumn field="progress" sortConfigs={sortConfigs} onSort={handleSort}>
+                  Progress
+                </SortableColumn>
+              </TableHead>
+              <TableHead className="group">
+                <SortableColumn field="priority" sortConfigs={sortConfigs} onSort={handleSort}>
+                  Priority
+                </SortableColumn>
+              </TableHead>
+              <TableHead className="group">
+                <SortableColumn field="type" sortConfigs={sortConfigs} onSort={handleSort}>
+                  Type
+                </SortableColumn>
+              </TableHead>
+              <TableHead className="group">
+                <SortableColumn field="level" sortConfigs={sortConfigs} onSort={handleSort}>
+                  Level
+                </SortableColumn>
+              </TableHead>
+              <TableHead className="group">
+                <SortableColumn field="section" sortConfigs={sortConfigs} onSort={handleSort}>
+                  Section
+                </SortableColumn>
+              </TableHead>
+              <TableHead className="group">
+                <SortableColumn field="category" sortConfigs={sortConfigs} onSort={handleSort}>
+                  Category
+                </SortableColumn>
+              </TableHead>
+              <TableHead className="group">
+                <SortableColumn field="subcategory" sortConfigs={sortConfigs} onSort={handleSort}>
+                  Subcategory
+                </SortableColumn>
+              </TableHead>
+              <TableHead className="group">
+                <SortableColumn field="technology" sortConfigs={sortConfigs} onSort={handleSort}>
+                  Technology
+                </SortableColumn>
+              </TableHead>
+              <TableHead className="min-w-[150px]">Topics</TableHead>
+              <TableHead className="group">
+                <SortableColumn field="source" sortConfigs={sortConfigs} onSort={handleSort}>
+                  Source
+                </SortableColumn>
+              </TableHead>
+              <TableHead className="group">
+                <SortableColumn field="estimated_duration" sortConfigs={sortConfigs} onSort={handleSort}>
+                  Est. Duration
+                </SortableColumn>
+              </TableHead>
+              <TableHead className="group">
+                <SortableColumn field="actual_duration" sortConfigs={sortConfigs} onSort={handleSort}>
+                  Actual Duration
+                </SortableColumn>
+              </TableHead>
+              <TableHead className="group">
+                <SortableColumn field="start_date" sortConfigs={sortConfigs} onSort={handleSort}>
+                  Start Date
+                </SortableColumn>
+              </TableHead>
+              <TableHead className="group">
+                <SortableColumn field="end_date" sortConfigs={sortConfigs} onSort={handleSort}>
+                  End Date
+                </SortableColumn>
+              </TableHead>
               <TableHead className="w-[100px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -148,11 +398,129 @@ export function TasksWidget({ tasks: initialTasks }: TasksWidgetProps) {
                 <TableCell>
                   {editingTask === task.id ? (
                     <Input
-                      value={editForm?.technology}
-                      onChange={(e) => handleEditChange('technology', e.target.value)}
+                      type="number"
+                      value={editForm?.order}
+                      onChange={(e) => handleEditChange('order', e.target.value)}
+                      className="w-20"
+                    />
+                  ) : task.order}
+                </TableCell>
+                <TableCell>
+                  {editingTask === task.id ? (
+                    <Select
+                      value={editForm?.status}
+                      onValueChange={(value) => handleEditChange('status', value)}
+                    >
+                      <SelectTrigger className="w-[130px]">
+                        <SelectValue>{editForm?.status.replace('_', ' ')}</SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="not_started">Not Started</SelectItem>
+                        <SelectItem value="in_progress">In Progress</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="on_hold">On Hold</SelectItem>
+                        <SelectItem value="cancelled">Cancelled</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Badge variant="secondary" className={`${getStatusColor(task.status)} text-white`}>
+                      {task.status.replace('_', ' ')}
+                    </Badge>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {editingTask === task.id ? (
+                    <Input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={editForm?.progress}
+                      onChange={(e) => handleEditChange('progress', e.target.value)}
+                      className="w-20"
+                    />
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Progress value={task.progress} className="w-[60px]" />
+                      <span className="text-sm">{task.progress}%</span>
+                    </div>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {editingTask === task.id ? (
+                    <Select
+                      value={editForm?.priority}
+                      onValueChange={(value) => handleEditChange('priority', value)}
+                    >
+                      <SelectTrigger className="w-[100px]">
+                        <SelectValue>{editForm?.priority}</SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="low">Low</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="high">High</SelectItem>
+                        <SelectItem value="critical">Critical</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Badge variant="secondary" className={`${getPriorityColor(task.priority)} text-white`}>
+                      {task.priority}
+                    </Badge>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {editingTask === task.id ? (
+                    <Select
+                      value={editForm?.type}
+                      onValueChange={(value) => handleEditChange('type', value)}
+                    >
+                      <SelectTrigger className="w-[130px]">
+                        <SelectValue>{editForm?.type}</SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="learning">Learning</SelectItem>
+                        <SelectItem value="implementation">Implementation</SelectItem>
+                        <SelectItem value="research">Research</SelectItem>
+                        <SelectItem value="documentation">Documentation</SelectItem>
+                        <SelectItem value="maintenance">Maintenance</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) : task.type}
+                </TableCell>
+                <TableCell>
+                  {editingTask === task.id ? (
+                    <Select
+                      value={editForm?.level}
+                      onValueChange={(value) => handleEditChange('level', value)}
+                    >
+                      <SelectTrigger className="w-[120px]">
+                        <SelectValue>{editForm?.level}</SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="beginner">Beginner</SelectItem>
+                        <SelectItem value="intermediate">Intermediate</SelectItem>
+                        <SelectItem value="advanced">Advanced</SelectItem>
+                        <SelectItem value="expert">Expert</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) : task.level}
+                </TableCell>
+                <TableCell>
+                  {editingTask === task.id ? (
+                    <Input
+                      value={editForm?.section}
+                      onChange={(e) => handleEditChange('section', e.target.value)}
                       className="w-full"
                     />
-                  ) : task.technology}
+                  ) : task.section}
+                </TableCell>
+                <TableCell>
+                  {editingTask === task.id ? (
+                    <Input
+                      value={editForm?.category}
+                      onChange={(e) => handleEditChange('category', e.target.value)}
+                      className="w-full"
+                    />
+                  ) : task.category}
                 </TableCell>
                 <TableCell>
                   {editingTask === task.id ? (
@@ -166,11 +534,89 @@ export function TasksWidget({ tasks: initialTasks }: TasksWidgetProps) {
                 <TableCell>
                   {editingTask === task.id ? (
                     <Input
-                      value={editForm?.category}
-                      onChange={(e) => handleEditChange('category', e.target.value)}
+                      value={editForm?.technology}
+                      onChange={(e) => handleEditChange('technology', e.target.value)}
                       className="w-full"
                     />
-                  ) : task.category}
+                  ) : task.technology}
+                </TableCell>
+                <TableCell>
+                  {editingTask === task.id ? (
+                    <Input
+                      value={editForm?.topics.join(', ')}
+                      onChange={(e) => handleEditChange('topics', e.target.value.split(',').map(t => t.trim()))}
+                      className="w-full"
+                      placeholder="Comma-separated topics"
+                    />
+                  ) : (
+                    <div className="flex flex-wrap gap-1">
+                      {task.topics.map((topic, index) => (
+                        <Badge key={index} variant="outline" className="text-xs">
+                          {topic}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {editingTask === task.id ? (
+                    <Input
+                      value={editForm?.source}
+                      onChange={(e) => handleEditChange('source', e.target.value)}
+                      className="w-full"
+                    />
+                  ) : task.source}
+                </TableCell>
+                <TableCell>
+                  {editingTask === task.id ? (
+                    <Input
+                      type="number"
+                      value={editForm?.estimated_duration}
+                      onChange={(e) => handleEditChange('estimated_duration', e.target.value)}
+                      className="w-20"
+                    />
+                  ) : (
+                    <div className="flex items-center gap-1">
+                      <Clock className="h-4 w-4" />
+                      {task.estimated_duration}h
+                    </div>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {editingTask === task.id ? (
+                    <Input
+                      type="number"
+                      value={editForm?.actual_duration || ''}
+                      onChange={(e) => handleEditChange('actual_duration', e.target.value || null)}
+                      className="w-20"
+                      placeholder="Hours"
+                    />
+                  ) : task.actual_duration && (
+                    <div className="flex items-center gap-1">
+                      <Clock className="h-4 w-4" />
+                      {task.actual_duration}h
+                    </div>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {editingTask === task.id ? (
+                    <Input
+                      type="date"
+                      value={editForm?.start_date || ''}
+                      onChange={(e) => handleEditChange('start_date', e.target.value || null)}
+                      className="w-32"
+                    />
+                  ) : task.start_date || '-'}
+                </TableCell>
+                <TableCell>
+                  {editingTask === task.id ? (
+                    <Input
+                      type="date"
+                      value={editForm?.end_date || ''}
+                      onChange={(e) => handleEditChange('end_date', e.target.value || null)}
+                      className="w-32"
+                    />
+                  ) : task.end_date || '-'}
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">

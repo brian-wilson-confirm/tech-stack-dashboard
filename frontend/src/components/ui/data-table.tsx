@@ -26,6 +26,7 @@ import {
   
   import { Button } from "@/components/ui/button"
   import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react"
+import { useState } from "react"
   
   interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[]
@@ -36,15 +37,17 @@ import {
     columns,
     data,
   }: DataTableProps<TData, TValue>) {
+    const [rowSelection, setRowSelection] = useState({})
     const table = useReactTable({
       data,
       columns,
+      onRowSelectionChange: setRowSelection,
       getCoreRowModel: getCoreRowModel(),
       getFilteredRowModel: getFilteredRowModel(),
       getPaginationRowModel: getPaginationRowModel(),
       enableRowSelection: true,
       state: {
-        rowSelection: {},  // Add this line
+        rowSelection,
       },
     })
   

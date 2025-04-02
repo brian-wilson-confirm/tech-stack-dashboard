@@ -4,6 +4,7 @@ import { columns } from "@/components/ui/columns"
 import { Task } from "@/components/data/schema"
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
+import { Checkbox } from '../ui/checkbox';
 
 
 const TempWidget: React.FC<{ tasks: Task[] }> = ({ tasks }) => {
@@ -29,15 +30,5 @@ const TempWidget: React.FC<{ tasks: Task[] }> = ({ tasks }) => {
     );
 };
 
-{/*
-<div className="flex items-center space-x-2">
-    <Button>Add Task</Button>
-</div>
-
-
-
-
-*/
-}
 
 export default TempWidget;

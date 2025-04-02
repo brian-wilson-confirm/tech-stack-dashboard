@@ -14,41 +14,21 @@ export const columns: ColumnDef<Task>[] = [
   {
     id: "select",
     header: ({ table }) => (
-      <div className="flex items-center justify-center px-2">
       <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
+        checked={table.getIsAllPageRowsSelected()}
         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
         aria-label="Select all"
       />
-      </div>
     ),
     cell: ({ row }) => (
-      <div className="flex items-center justify-center px-2"> 
       <Checkbox
         checked={row.getIsSelected()}
         onCheckedChange={(value) => row.toggleSelected(!!value)}
         aria-label="Select row"
       />
-      </div>
     ),
     enableSorting: false,
     enableHiding: false,
-  },
-  {
-    accessorKey: "done",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Done" />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getValue("done")}
-        disabled  // or implement onCheckedChange to update the task status
-        aria-label="Task done status"
-      />
-    ),
   },
   {
     accessorKey: "id",

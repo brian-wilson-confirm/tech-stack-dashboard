@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react"
 import { TasksWidget } from "@/components/widgets/TasksWidget"
 import { CheckSquare } from "lucide-react"
+import { DataTable } from "@/components/ui/data-table"
+import { columns } from "@/components/ui/columns"
 
 export default function TasksPage() {
   const [tasks, setTasks] = useState([])
@@ -33,7 +35,11 @@ export default function TasksPage() {
       </div>
 
       <div className="grid gap-6">
-        <TasksWidget tasks={tasks} />
+        {/* <TasksWidget tasks={tasks} /> */}
+      </div>
+      <br></br>
+      <div className="grid gap-6">
+        <DataTable data={tasks} columns={columns} />
       </div>
     </div>
   )

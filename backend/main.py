@@ -1,16 +1,22 @@
-from fastapi import FastAPI, Depends
+from contextlib import asynccontextmanager
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.orm import Session
+from sqlmodel import SQLModel
 
-from backend.api.routes import dashboard
-from backend.database import SessionLocal, engine
-from backend.models import Base
-from backend.crud import get_tech_stack
+from backend.routers import dashboard
+from backend.database import engine
+from backend.routers import tasks
 
 
-Base.metadata.create_all(bind=engine)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    SQLModel.metadata.create_all(engine)
+    yield
 
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
+app.include_router(dashboard.router, prefix="/api")
+#app.include_router(tasks_router, prefix="/api", tags=["tasks"])
+app.include_router(tasks.router, prefix="/api", tags=["tasks"])
 
 # Configure CORS
 app.add_middleware(
@@ -21,19 +27,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include dashboard routes
-app.include_router(dashboard.router, prefix="/api")
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
+"""
 @app.get("/api/tech-stack")
-def read_stack(db: Session = Depends(get_db)):
+def read_stack(db: Session = Depends(get_session)):
     return get_tech_stack(db)
+"""
+
 
 @app.get("/")
 async def root():

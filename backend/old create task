@@ -1,0 +1,124 @@
+@router.post("/", response_model=dict)
+async def create_task(task: TaskCreate, conn=Depends(get_db_connection)):
+    with get_db_connection() as conn:  # Use the context manager
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:     # Get a cursor from the connection
+            try:
+                # Get technology ID
+                cur.execute(
+                    "SELECT id FROM technologies WHERE name = %s",
+                    (task.technology,)
+                )
+                tech_result = cur.fetchone()
+                if not tech_result:
+                    raise HTTPException(status_code=400, detail=f"Technology '{task.technology}' not found")
+                technology_id = tech_result['id']
+
+                # Get subcategory ID
+                cur.execute(
+                    """
+                    SELECT s.id 
+                    FROM subcategories s
+                    JOIN categories c ON s.category_id = c.id
+                    WHERE s.name = %s AND c.name = %s
+                    """,
+                    (task.subcategory, task.category)
+                )
+                subcat_result = cur.fetchone()
+                if not subcat_result:
+                    raise HTTPException(status_code=400, detail=f"Subcategory '{task.subcategory}' not found in category '{task.category}'")
+                subcategory_id = subcat_result['id']
+
+                # Get section ID
+                cur.execute(
+                    "SELECT id FROM sections WHERE name = %s",
+                    (task.section,)
+                )
+                section_result = cur.fetchone()
+                if not section_result:
+                    raise HTTPException(status_code=400, detail=f"Section '{task.section}' not found")
+                section_id = section_result['id']
+
+                # Get source ID
+                cur.execute(
+                    "SELECT id FROM sources WHERE name = %s",
+                    (task.source,)
+                )
+                source_result = cur.fetchone()
+                if not source_result:
+                    raise HTTPException(status_code=400, detail=f"Source '{task.source}' not found")
+                source_id = source_result['id']
+
+                # Insert the task
+                task_id = str(uuid4())
+                cur.execute(
+                    """
+                    INSERT INTO tasks (
+                        id, task, technology_id, subcategory_id, section_id, source_id,
+                        order_num, status, progress, priority, type, level,
+                        estimated_duration, actual_duration, start_date, end_date, done
+                    )
+                    VALUES (
+                        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, false
+                    )
+                    RETURNING *
+                    """,
+                    (
+                        task_id, task.task, technology_id, subcategory_id, section_id,
+                        source_id, task.order, task.status, task.progress, task.priority,
+                        task.type, task.level, task.estimated_duration, task.actual_duration,
+                        task.start_date, task.end_date
+                    )
+                )
+                new_task = cur.fetchone()
+
+                # Insert task topics
+                for topic_name in task.topics:
+                    # Get or create topic
+                    cur.execute(
+                        "SELECT id FROM topics WHERE name = %s",
+                        (topic_name,)
+                    )
+                    topic_result = cur.fetchone()
+                    if not topic_result:
+                        raise HTTPException(status_code=400, detail=f"Topic '{topic_name}' not found")
+                    topic_id = topic_result['id']
+
+                    # Create task-topic relationship
+                    cur.execute(
+                        "INSERT INTO task_topics (task_id, topic_id) VALUES (%s, %s)",
+                        (task_id, topic_id)
+                    )
+
+                conn.commit()
+
+                # Fetch the complete task data with all relationships
+                cur.execute(
+                    """
+                    SELECT 
+                        t.*,
+                        tech.name as technology,
+                        s.name as subcategory,
+                        c.name as category,
+                        sec.name as section,
+                        src.name as source,
+                        ARRAY_AGG(top.name) as topics
+                    FROM tasks t
+                    JOIN technologies tech ON t.technology_id = tech.id
+                    JOIN subcategories s ON t.subcategory_id = s.id
+                    JOIN categories c ON s.category_id = c.id
+                    JOIN sections sec ON t.section_id = sec.id
+                    JOIN sources src ON t.source_id = src.id
+                    LEFT JOIN task_topics tt ON t.id = tt.task_id
+                    LEFT JOIN topics top ON tt.topic_id = top.id
+                    WHERE t.id = %s
+                    GROUP BY t.id, tech.name, s.name, c.name, sec.name, src.name
+                    """,
+                    (task_id,)
+                )
+                complete_task = cur.fetchone()
+
+                return complete_task
+
+            except Exception as e:
+                conn.rollback()
+                raise HTTPException(status_code=500, detail=str(e)) 

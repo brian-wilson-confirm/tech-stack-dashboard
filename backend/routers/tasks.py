@@ -1,232 +1,66 @@
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
-from enum import Enum
-from typing import List, Optional
-from datetime import datetime, date
+from typing import List
+from fastapi import APIRouter, Depends
 
-router = APIRouter()
+from sqlmodel import Session, select
+from sqlalchemy.orm import selectinload
+from backend.database import get_session
 
-class TechStatus(str, Enum):
-    PRODUCTION = "production"
-    TESTING = "testing"
-    PLANNED = "planned"
+from backend.models import Category, Section, Source, Subcategory, Task, TaskTopicLink, TaskView, Technology
+from backend.routers.dashboard import TaskLevel, TaskPriority, TaskStatus, TaskType, TasksResponse
+from backend.schemas import TaskCreate
 
-class TechStats(BaseModel):
-    total: int
-    production: int
-    testing: int
-    planned: int
+router = APIRouter(prefix="/tasks")
 
-class TechStackResponse(BaseModel):
-    stats: TechStats
-    updates: List[str]
 
-class AlertLevel(str, Enum):
-    HIGH = "high"
-    MEDIUM = "medium"
-    LOW = "low"
+@router.post("/", response_model=Task)
+async def create_task(task_in: TaskCreate, session: Session = Depends(get_session)):
+    task = Task.from_orm(task_in)
+    session.add(task)
+    session.commit()
+    session.refresh(task)
 
-class SecurityAlert(BaseModel):
-    level: AlertLevel
-    message: str
+    for topic_id in task_in.topic_ids:
+        session.add(TaskTopicLink(task_id=task.id, topic_id=topic_id))
+    
+    session.commit()
+    return task
 
-class SecurityResponse(BaseModel):
-    alerts: List[SecurityAlert]
 
-class MetricTrend(str, Enum):
-    UP = "up"
-    DOWN = "down"
-    STABLE = "stable"
+@router.get("/", response_model=List[TaskView])
+async def get_tasks(session: Session = Depends(get_session)):
+    tasks = session.exec(
+        select(Task).options(selectinload(Task.topics))
+    ).all()
+    
+    result = []
+    for task in tasks:
+        result.append(TaskView(
+            id=task.id,
+            task=task.task,
+            technology=session.get(Technology, task.technology_id).name,
+            subcategory=(sub := session.get(Subcategory, task.subcategory_id)) and sub.name,
+            category=(cat := session.get(Category, task.category_id)) and cat.name,
+            section=(sec := session.get(Section, task.section_id)) and sec.name,
+            source=(src := session.get(Source, task.source_id)) and src.name,
+            level=(lvl := session.get(TaskLevel, task.level_id)) and lvl.name,
+            type=(typ := session.get(TaskType, task.type_id)) and typ.name,
+            status=(stat := session.get(TaskStatus, task.status_id)) and stat.name,
+            priority=(prio := session.get(TaskPriority, task.priority_id)) and prio.name,
+            progress=task.progress,
+            order=task.order,
+            #due_date=task.due_date,
+            start_date=task.start_date,
+            end_date=task.end_date,
+            estimated_duration=task.estimated_duration,
+            actual_duration=task.actual_duration,
+            done=task.done,
+            topics=[t.name for t in task.topics]
+        ))
+    
+    return result
 
-class Metric(BaseModel):
-    name: str
-    value: str
-    trend: MetricTrend
 
-class MetricsResponse(BaseModel):
-    data: List[Metric]
-
-class CoverageItem(BaseModel):
-    category: str
-    percentage: int
-
-class CoverageResponse(BaseModel):
-    items: List[CoverageItem]
-    overallProgress: int
-
-class TaskStatus(str, Enum):
-    NOT_STARTED = "not_started"
-    IN_PROGRESS = "in_progress"
-    COMPLETED = "completed"
-    ON_HOLD = "on_hold"
-    CANCELLED = "cancelled"
-
-class TaskPriority(str, Enum):
-    LOW = "low"
-    MEDIUM = "medium"
-    HIGH = "high"
-    CRITICAL = "critical"
-
-class TaskType(str, Enum):
-    LEARNING = "learning"
-    IMPLEMENTATION = "implementation"
-    RESEARCH = "research"
-    DOCUMENTATION = "documentation"
-    MAINTENANCE = "maintenance"
-
-class TaskLevel(str, Enum):
-    BEGINNER = "beginner"
-    INTERMEDIATE = "intermediate"
-    ADVANCED = "advanced"
-    EXPERT = "expert"
-
-class Task(BaseModel):
-    id: str
-    done: bool
-    task: str
-    technology: str
-    subcategory: str
-    category: str
-    section: str
-    estimated_duration: int  # in hours
-    topics: List[str]
-    level: TaskLevel
-    type: TaskType
-    priority: TaskPriority
-    order: int
-    status: TaskStatus
-    progress: int  # percentage
-    source: str
-    start_date: Optional[date]
-    end_date: Optional[date]
-    actual_duration: Optional[int]  # in hours
-    # due_date
-
-class TasksResponse(BaseModel):
-    tasks: List[Task]
-
-@router.get("/tech/languages", response_model=TechStackResponse)
-async def get_languages_stats():
-    return {
-        "stats": {
-            "total": 24,
-            "production": 14,
-            "testing": 6,
-            "planned": 4
-        },
-        "updates": [
-            "Python updated to v3.12",
-            "TypeScript v5.3 deployed",
-            "React v18.2 in production"
-        ]
-    }
-
-@router.get("/tech/backend", response_model=TechStackResponse)
-async def get_backend_stats():
-    return {
-        "stats": {
-            "total": 666,
-            "production": 12,
-            "testing": 4,
-            "planned": 2
-        },
-        "updates": [
-            "Node.js v20 LTS deployed",
-            "Django REST framework updated",
-            "GraphQL Gateway testing"
-        ]
-    }
-
-@router.get("/tech/storage", response_model=TechStackResponse)
-async def get_storage_stats():
-    return {
-        "stats": {
-            "total": 15,
-            "production": 8,
-            "testing": 4,
-            "planned": 3
-        },
-        "updates": [
-            "PostgreSQL 16 migration complete",
-            "Redis Cache layer expanded",
-            "MongoDB Atlas evaluation"
-        ]
-    }
-
-@router.get("/tech/devops", response_model=TechStackResponse)
-async def get_devops_stats():
-    return {
-        "stats": {
-            "total": 20,
-            "production": 11,
-            "testing": 5,
-            "planned": 4
-        },
-        "updates": [
-            "Kubernetes v1.30 rollout",
-            "Terraform modules updated",
-            "New CI/CD pipeline active"
-        ]
-    }
-
-@router.get("/security/alerts", response_model=SecurityResponse)
-async def get_security_alerts():
-    return {
-        "alerts": [
-            {
-                "level": AlertLevel.HIGH,
-                "message": "Dependencies security audit needed"
-            },
-            {
-                "level": AlertLevel.MEDIUM,
-                "message": "JWT token expiration review"
-            },
-            {
-                "level": AlertLevel.LOW,
-                "message": "SSL certificate renewal in 30 days"
-            }
-        ]
-    }
-
-@router.get("/metrics", response_model=MetricsResponse)
-async def get_system_metrics():
-    return {
-        "data": [
-            {
-                "name": "System Uptime",
-                "value": "99.98%",
-                "trend": MetricTrend.UP
-            },
-            {
-                "name": "API Response Time",
-                "value": "245ms",
-                "trend": MetricTrend.STABLE
-            },
-            {
-                "name": "Error Rate",
-                "value": "0.02%",
-                "trend": MetricTrend.DOWN
-            }
-        ]
-    }
-
-@router.get("/coverage", response_model=CoverageResponse)
-async def get_coverage():
-    return {
-        "items": [
-            {"category": "Frontend", "percentage": 70},
-            {"category": "Middleware", "percentage": 30},
-            {"category": "Backend", "percentage": 60},
-            {"category": "Database", "percentage": 50},
-            {"category": "Messaging", "percentage": 10},
-            {"category": "DevOps", "percentage": 40},
-            {"category": "Security", "percentage": 20},
-            {"category": "Monitoring", "percentage": 10}
-        ],
-        "overallProgress": 37
-    }
-
-@router.get("/tasks", response_model=TasksResponse)
+@router.get("/", response_model=TasksResponse)
 async def get_tasks():
     return {
         "tasks": [

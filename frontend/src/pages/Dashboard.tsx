@@ -7,8 +7,6 @@ import { MetricsWidget } from "@/components/widgets/MetricsWidget"
 import { CoverageWidget } from "@/components/widgets/CoverageWidget"
 import { TasksWidget } from "@/components/widgets/TasksWidget"
 
-// Types from the individual pages
-import type { TechStats } from "@/types"
 
 export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(false)

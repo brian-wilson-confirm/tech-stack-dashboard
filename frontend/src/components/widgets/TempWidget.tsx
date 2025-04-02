@@ -30,19 +30,19 @@ const TempWidget: React.FC<TempWidgetProps> = ({ tasks }) => {
         select: true,
         task_id: true,
         task: true,
-        order: true,
-        type: true,
-        section: true,
-        subcategory: true,
-        source: true,
-        estimated_duration: true,
         technology: true,
+        subcategory: false,
         category: true,
+        section: false,
+        source: true,
+        level: false,
+        type: true,
         status: true,
         priority: true,
-        progress: true,
-        level: true,
-        done: true,
+        progress: false,
+        order: false,
+        estimated_duration: true,
+        done: false,
     })
     const [isPending, startTransition] = React.useTransition()
 
@@ -162,11 +162,11 @@ const TempWidget: React.FC<TempWidgetProps> = ({ tasks }) => {
                                 <DropdownMenuTrigger asChild>
                                     <Button variant="outline" size="sm" className="h-8 border-dashed">
                                         <ViewVerticalIcon className="mr-2 h-4 w-4" />
-                                        View
+                                        Columns
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="start" className="w-[200px]">
-                                    <DropdownMenuLabel>Toggle columns</DropdownMenuLabel>
+                                    <DropdownMenuLabel>Toggle Columns</DropdownMenuLabel>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuCheckboxItem
                                         checked={columnVisibility["task_id"]}

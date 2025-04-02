@@ -9,8 +9,13 @@ import { priorities, statuses } from "../data/data"
 import { Task } from "../data/schema"
 import { DataTableColumnHeader } from "./data-table-column-header"
 import { DataTableRowActions } from "./data-table-row-actions"
+import { Button } from "./button"
 
-export const columns: ColumnDef<Task>[] = [
+interface ColumnOptions {
+  onTaskClick: (task: Task) => void
+}
+
+export const createColumns = ({ onTaskClick }: ColumnOptions): ColumnDef<Task>[] => [
   {
     id: "select",
     header: ({ table }) => (
@@ -35,7 +40,18 @@ export const columns: ColumnDef<Task>[] = [
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Task" />
     ),
-    cell: ({ row }) => <div className="w-[80px]">{row.getValue("task_id")}</div>,
+    cell: ({ row }) => {
+      const task = row.original
+      return (
+        <Button
+          variant="link"
+          className="p-0 h-auto font-medium"
+          onClick={() => onTaskClick(task)}
+        >
+          {task.task_id}
+        </Button>
+      )
+    },
   },
   {
     accessorKey: "task",

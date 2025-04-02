@@ -4,6 +4,7 @@ from datetime import date
 
 class TaskView(SQLModel):
     id: int
+    task_id: str
     task: str
     technology: str
     subcategory: str

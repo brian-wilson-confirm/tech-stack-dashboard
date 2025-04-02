@@ -36,6 +36,7 @@ async def get_tasks(session: Session = Depends(get_session)):
     for task in tasks:
         result.append(TaskView(
             id=task.id,
+            task_id=task.task_id,
             task=task.task,
             technology=session.get(Technology, task.technology_id).name,
             subcategory=(sub := session.get(Subcategory, task.subcategory_id)) and sub.name,

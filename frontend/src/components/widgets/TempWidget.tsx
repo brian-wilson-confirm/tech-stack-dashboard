@@ -7,19 +7,41 @@ import { Input } from '../ui/input';
 import { Cross2Icon, PlusCircledIcon, ViewVerticalIcon } from "@radix-ui/react-icons"
 import { priorities, statuses } from "../data/data"
 import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
+    DropdownMenu,
+    DropdownMenuCheckboxItem,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Separator } from "@/components/ui/separator"
 
-const TempWidget: React.FC<{ tasks: Task[] }> = ({ tasks }) => {
+interface TempWidgetProps {
+    tasks: Task[]
+}
+
+const TempWidget: React.FC<TempWidgetProps> = ({ tasks }) => {
     const [selectedStatus, setSelectedStatus] = React.useState<string[]>([])
     const [selectedPriority, setSelectedPriority] = React.useState<string[]>([])
+    const [searchQuery, setSearchQuery] = React.useState<string>("")
     const [isPending, startTransition] = React.useTransition()
+
+    // Filter tasks based on search query and selected filters
+    const filteredTasks = React.useMemo(() => {
+        return tasks.filter((task) => {
+            const matchesSearch = task.task.toLowerCase().includes(searchQuery.toLowerCase())
+            const matchesStatus = selectedStatus.length === 0 || selectedStatus.includes(task.status)
+            const matchesPriority = selectedPriority.length === 0 || selectedPriority.includes(task.priority)
+            return matchesSearch && matchesStatus && matchesPriority
+        })
+    }, [tasks, searchQuery, selectedStatus, selectedPriority])
+
+    // Reset all filters
+    const resetFilters = () => {
+        setSearchQuery("")
+        setSelectedStatus([])
+        setSelectedPriority([])
+    }
 
     return (
         <div>
@@ -27,10 +49,24 @@ const TempWidget: React.FC<{ tasks: Task[] }> = ({ tasks }) => {
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
                         <div className="flex flex-1 items-center space-x-2">
-                            <Input
-                                placeholder="Filter tasks..."
-                                className="h-8 w-[150px] lg:w-[250px]"
-                            />
+                            <div className="relative">
+                                <Input
+                                    placeholder="Filter tasks..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="h-8 w-[150px] lg:w-[250px]"
+                                />
+                                {searchQuery && (
+                                    <Button
+                                        variant="ghost"
+                                        className="absolute right-0 top-0 h-8 px-2 hover:bg-transparent"
+                                        onClick={() => setSearchQuery("")}
+                                    >
+                                        <Cross2Icon className="h-4 w-4" />
+                                        <span className="sr-only">Clear search</span>
+                                    </Button>
+                                )}
+                            </div>
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button variant="outline" size="sm" className="h-8 border-dashed">
@@ -60,17 +96,6 @@ const TempWidget: React.FC<{ tasks: Task[] }> = ({ tasks }) => {
                                             {status.label}
                                         </DropdownMenuCheckboxItem>
                                     ))}
-                                    {selectedStatus.length > 0 && (
-                                        <>
-                                            <DropdownMenuSeparator />
-                                            <DropdownMenuItem
-                                                onSelect={() => setSelectedStatus([])}
-                                                className="justify-center text-center"
-                                            >
-                                                Clear filters
-                                            </DropdownMenuItem>
-                                        </>
-                                    )}
                                 </DropdownMenuContent>
                             </DropdownMenu>
                             <DropdownMenu>
@@ -102,19 +127,17 @@ const TempWidget: React.FC<{ tasks: Task[] }> = ({ tasks }) => {
                                             {priority.label}
                                         </DropdownMenuCheckboxItem>
                                     ))}
-                                    {selectedPriority.length > 0 && (
-                                        <>
-                                            <DropdownMenuSeparator />
-                                            <DropdownMenuItem
-                                                onSelect={() => setSelectedPriority([])}
-                                                className="justify-center text-center"
-                                            >
-                                                Clear filters
-                                            </DropdownMenuItem>
-                                        </>
-                                    )}
                                 </DropdownMenuContent>
                             </DropdownMenu>
+                            <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="h-8 border-dashed"
+                                onClick={resetFilters}
+                                disabled={!searchQuery && selectedStatus.length === 0 && selectedPriority.length === 0}
+                            >
+                                Reset
+                            </Button>
                             <Button variant="outline" size="sm" className="h-8 border-dashed">
                                 <ViewVerticalIcon className="mr-2 h-4 w-4" />
                                 View
@@ -127,7 +150,7 @@ const TempWidget: React.FC<{ tasks: Task[] }> = ({ tasks }) => {
                             </Button>
                         </div>
                     </div>
-                    <DataTable data={tasks} columns={columns} />
+                    <DataTable data={filteredTasks} columns={columns} />
                 </div>
             </div>
         </div>

@@ -14,7 +14,7 @@ router = APIRouter(prefix="/tasks")
 
 @router.post("/", response_model=Task)
 async def create_task(task_in: TaskCreate, session: Session = Depends(get_session)):
-    task = Task.from_orm(task_in)
+    task = Task.model_validate(task_in)
     session.add(task)
     session.commit()
     session.refresh(task)

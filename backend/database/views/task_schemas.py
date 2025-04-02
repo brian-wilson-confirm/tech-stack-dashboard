@@ -30,20 +30,21 @@ class TaskCreate(BaseModel):
     task: str
     technology_id: int
     subcategory_id: int
+    category_id: int
+    topic_ids: List[int]
     section_id: int
     source_id: int
-    estimated_duration: Optional[int]
-    level: str
-    type: str
-    priority: str
-    status: str
+    level_id: int
+    type_id: int
+    status_id: int
+    priority_id: int
     progress: int = 0
-    done: bool = False
     order: Optional[int]
     start_date: Optional[date]
     end_date: Optional[date]
+    estimated_duration: Optional[int]
     actual_duration: Optional[int]
-    topic_ids: List[int]
+    done: bool = False
 
 class TasksResponse(BaseModel):
     tasks: List[Task]

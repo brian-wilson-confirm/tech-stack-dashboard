@@ -6,6 +6,9 @@ export default function TasksPage() {
   const [tasks, setTasks] = useState([])
   const [isLoading, setIsLoading] = useState(true)
 
+  /***********************
+   API: Get Tasks
+  ***********************/
   useEffect(() => {
     const fetchTasks = async () => {
       try {

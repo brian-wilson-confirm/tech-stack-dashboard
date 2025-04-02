@@ -1,28 +1,15 @@
-from typing import Optional, List
-from sqlmodel import SQLModel, Field, Relationship
 from datetime import date
-
+from sqlmodel import Field, Relationship, SQLModel
+from typing import List, Optional
 
 """
-class TechStackItem(Base):
-    __tablename__ = "tech_stack"
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, index=True)
-    category = Column(String)
+    TASKS
 """
-
 class TaskTopicLink(SQLModel, table=True):
     __tablename__ = "task_topic"
 
     task_id: Optional[int] = Field(default=None, foreign_key="task.id", primary_key=True)
     topic_id: Optional[int] = Field(default=None, foreign_key="topic.id", primary_key=True)
-
-
-class Topic(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    name: str
-
-    tasks: List["Task"] = Relationship(back_populates="topics", link_model=TaskTopicLink)
 
 
 class Task(SQLModel, table=True):
@@ -48,32 +35,30 @@ class Task(SQLModel, table=True):
     done: bool = False
 
 
-class TaskView(SQLModel):
-    id: int
-    task: str
-    technology: str
-    subcategory: str
-    category: str
-    topics: List[str]
-    section: str
-    source: str
-    level: Optional[str] = None
-    type: Optional[str] = None
-    status: Optional[str] = None
-    priority: Optional[str] = None
-    progress: int
-    order: Optional[int]
-    #due_date: Optional[date]
-    start_date: Optional[date]
-    end_date: Optional[date]
-    estimated_duration: Optional[int]
-    actual_duration: Optional[int]
-    done: bool = False
 
+
+
+"""
+    TASK DEPENDENCIES
+"""
+class Technology(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str
+    
 class Subcategory(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
     category_id: int
+
+class Category(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str
+
+class Topic(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str
+
+    tasks: List["Task"] = Relationship(back_populates="topics", link_model=TaskTopicLink)
 
 class Section(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -83,10 +68,27 @@ class Source(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
 
-class Technology(SQLModel, table=True):
+class TaskLevel(SQLModel, table=True):
+    __tablename__ = "task_level"
+    
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
 
-class Category(SQLModel, table=True):
+class TaskType(SQLModel, table=True):
+    __tablename__ = "task_type"
+    
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
+
+class TaskStatus(SQLModel, table=True):
+    __tablename__ = "task_status"
+    
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str
+
+class TaskPriority(SQLModel, table=True):
+    __tablename__ = "task_priority"
+    
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str
+

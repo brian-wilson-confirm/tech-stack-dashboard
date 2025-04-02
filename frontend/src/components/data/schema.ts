@@ -2,6 +2,7 @@ import { date, z } from "zod"
 
 export const taskSchema = z.object({
   id: z.string(),
+  task_id: z.string(),
   task: z.string(),
   technology: z.string(),
   subcategory: z.string(),

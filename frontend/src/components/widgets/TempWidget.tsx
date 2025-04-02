@@ -11,10 +11,12 @@ import {
     DropdownMenuCheckboxItem,
     DropdownMenuContent,
     DropdownMenuItem,
+    DropdownMenuLabel,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Separator } from "@/components/ui/separator"
+import { VisibilityState } from "@tanstack/react-table"
 
 interface TempWidgetProps {
     tasks: Task[]
@@ -24,6 +26,24 @@ const TempWidget: React.FC<TempWidgetProps> = ({ tasks }) => {
     const [selectedStatus, setSelectedStatus] = React.useState<string[]>([])
     const [selectedPriority, setSelectedPriority] = React.useState<string[]>([])
     const [searchQuery, setSearchQuery] = React.useState<string>("")
+    const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({
+        select: true,
+        task_id: true,
+        task: true,
+        order: true,
+        type: true,
+        section: true,
+        subcategory: true,
+        source: true,
+        estimated_duration: true,
+        technology: true,
+        category: true,
+        status: true,
+        priority: true,
+        progress: true,
+        level: true,
+        done: true,
+    })
     const [isPending, startTransition] = React.useTransition()
 
     // Filter tasks based on search query and selected filters
@@ -138,10 +158,183 @@ const TempWidget: React.FC<TempWidgetProps> = ({ tasks }) => {
                             >
                                 Reset
                             </Button>
-                            <Button variant="outline" size="sm" className="h-8 border-dashed">
-                                <ViewVerticalIcon className="mr-2 h-4 w-4" />
-                                View
-                            </Button>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="outline" size="sm" className="h-8 border-dashed">
+                                        <ViewVerticalIcon className="mr-2 h-4 w-4" />
+                                        View
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="start" className="w-[200px]">
+                                    <DropdownMenuLabel>Toggle columns</DropdownMenuLabel>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuCheckboxItem
+                                        checked={columnVisibility["task_id"]}
+                                        onCheckedChange={(value) =>
+                                            setColumnVisibility((prev) => ({
+                                                ...prev,
+                                                task_id: value,
+                                            }))
+                                        }
+                                    >
+                                        Task ID
+                                    </DropdownMenuCheckboxItem>
+                                    <DropdownMenuCheckboxItem
+                                        checked={columnVisibility["task"]}
+                                        onCheckedChange={(value) =>
+                                            setColumnVisibility((prev) => ({
+                                                ...prev,
+                                                task: value,
+                                            }))
+                                        }
+                                    >
+                                        Title
+                                    </DropdownMenuCheckboxItem>
+                                    <DropdownMenuCheckboxItem
+                                        checked={columnVisibility["order"]}
+                                        onCheckedChange={(value) =>
+                                            setColumnVisibility((prev) => ({
+                                                ...prev,
+                                                order: value,
+                                            }))
+                                        }
+                                    >
+                                        Order
+                                    </DropdownMenuCheckboxItem>
+                                    <DropdownMenuCheckboxItem
+                                        checked={columnVisibility["type"]}
+                                        onCheckedChange={(value) =>
+                                            setColumnVisibility((prev) => ({
+                                                ...prev,
+                                                type: value,
+                                            }))
+                                        }
+                                    >
+                                        Type
+                                    </DropdownMenuCheckboxItem>
+                                    <DropdownMenuCheckboxItem
+                                        checked={columnVisibility["section"]}
+                                        onCheckedChange={(value) =>
+                                            setColumnVisibility((prev) => ({
+                                                ...prev,
+                                                section: value,
+                                            }))
+                                        }
+                                    >
+                                        Section
+                                    </DropdownMenuCheckboxItem>
+                                    <DropdownMenuCheckboxItem
+                                        checked={columnVisibility["subcategory"]}
+                                        onCheckedChange={(value) =>
+                                            setColumnVisibility((prev) => ({
+                                                ...prev,
+                                                subcategory: value,
+                                            }))
+                                        }
+                                    >
+                                        Subcategory
+                                    </DropdownMenuCheckboxItem>
+                                    <DropdownMenuCheckboxItem
+                                        checked={columnVisibility["source"]}
+                                        onCheckedChange={(value) =>
+                                            setColumnVisibility((prev) => ({
+                                                ...prev,
+                                                source: value,
+                                            }))
+                                        }
+                                    >
+                                        Source
+                                    </DropdownMenuCheckboxItem>
+                                    <DropdownMenuCheckboxItem
+                                        checked={columnVisibility["estimated_duration"]}
+                                        onCheckedChange={(value) =>
+                                            setColumnVisibility((prev) => ({
+                                                ...prev,
+                                                estimated_duration: value,
+                                            }))
+                                        }
+                                    >
+                                        Est. Duration
+                                    </DropdownMenuCheckboxItem>
+                                    <DropdownMenuCheckboxItem
+                                        checked={columnVisibility["level"]}
+                                        onCheckedChange={(value) =>
+                                            setColumnVisibility((prev) => ({
+                                                ...prev,
+                                                level: value,
+                                            }))
+                                        }
+                                    >
+                                        Level
+                                    </DropdownMenuCheckboxItem>
+                                    <DropdownMenuCheckboxItem
+                                        checked={columnVisibility["technology"]}
+                                        onCheckedChange={(value) =>
+                                            setColumnVisibility((prev) => ({
+                                                ...prev,
+                                                technology: value,
+                                            }))
+                                        }
+                                    >
+                                        Technology
+                                    </DropdownMenuCheckboxItem>
+                                    <DropdownMenuCheckboxItem
+                                        checked={columnVisibility["category"]}
+                                        onCheckedChange={(value) =>
+                                            setColumnVisibility((prev) => ({
+                                                ...prev,
+                                                category: value,
+                                            }))
+                                        }
+                                    >
+                                        Category
+                                    </DropdownMenuCheckboxItem>
+                                    <DropdownMenuCheckboxItem
+                                        checked={columnVisibility["status"]}
+                                        onCheckedChange={(value) =>
+                                            setColumnVisibility((prev) => ({
+                                                ...prev,
+                                                status: value,
+                                            }))
+                                        }
+                                    >
+                                        Status
+                                    </DropdownMenuCheckboxItem>
+                                    <DropdownMenuCheckboxItem
+                                        checked={columnVisibility["priority"]}
+                                        onCheckedChange={(value) =>
+                                            setColumnVisibility((prev) => ({
+                                                ...prev,
+                                                priority: value,
+                                            }))
+                                        }
+                                    >
+                                        Priority
+                                    </DropdownMenuCheckboxItem>
+                                    <DropdownMenuCheckboxItem
+                                        checked={columnVisibility["progress"]}
+                                        onCheckedChange={(value) =>
+                                            setColumnVisibility((prev) => ({
+                                                ...prev,
+                                                progress: value,
+                                            }))
+                                        }
+                                    >
+                                        Progress
+                                    </DropdownMenuCheckboxItem>
+                                    <DropdownMenuCheckboxItem
+                                        checked={columnVisibility["done"]}
+                                        onCheckedChange={(value) =>
+                                            setColumnVisibility((prev) => ({
+                                                ...prev,
+                                                done: value,
+                                            }))
+                                        }
+                                    >
+                                        Done
+                                    </DropdownMenuCheckboxItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         </div>
                         <div className="flex items-center space-x-2">
                             <Button>
@@ -150,7 +343,12 @@ const TempWidget: React.FC<TempWidgetProps> = ({ tasks }) => {
                             </Button>
                         </div>
                     </div>
-                    <DataTable data={filteredTasks} columns={columns} />
+                    <DataTable 
+                        data={filteredTasks} 
+                        columns={columns}
+                        columnVisibility={columnVisibility}
+                        onColumnVisibilityChange={setColumnVisibility}
+                    />
                 </div>
             </div>
         </div>

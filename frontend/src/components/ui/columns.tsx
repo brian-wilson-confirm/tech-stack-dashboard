@@ -53,6 +53,111 @@ export const columns: ColumnDef<Task>[] = [
     },
   },
   {
+    accessorKey: "technology",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Technology" />
+    ),
+    cell: ({ row }) => {
+      return (
+        <div className="flex space-x-2">
+          <span className="max-w-[200px] truncate">
+            {row.getValue("technology")}
+          </span>
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey: "subcategory",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Subcategory" />
+    ),
+    cell: ({ row }) => {
+      return (
+        <div className="flex space-x-2">
+          <span className="max-w-[150px] truncate">
+            {row.getValue("subcategory")}
+          </span>
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey: "category",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Category" />
+    ),
+    cell: ({ row }) => {
+      return (
+        <div className="flex space-x-2">
+          <span className="max-w-[200px] truncate">
+            {row.getValue("category")}
+          </span>
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey: "section",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Section" />
+    ),
+    cell: ({ row }) => {
+      return (
+        <div className="flex space-x-2">
+          <span className="max-w-[150px] truncate">
+            {row.getValue("section")}
+          </span>
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey: "source",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Source" />
+    ),
+    cell: ({ row }) => {
+      return (
+        <div className="flex space-x-2">
+          <span className="max-w-[200px] truncate">
+            {row.getValue("source")}
+          </span>
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey: "level",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Level" />
+    ),
+    cell: ({ row }) => {
+      return (
+        <div className="flex space-x-2">
+          <span className="max-w-[150px] truncate">
+            {row.getValue("level")}
+          </span>
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey: "type",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Type" />
+    ),
+    cell: ({ row }) => {
+      return (
+        <div className="flex space-x-2">
+          <span className="max-w-[150px] truncate">
+            {row.getValue("type")}
+          </span>
+        </div>
+      )
+    },
+  },
+  {
     accessorKey: "status",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Status" />
@@ -94,6 +199,62 @@ export const columns: ColumnDef<Task>[] = [
     },
     filterFn: (row, id, value) => {
       return value.includes(row.getValue(id))
+    },
+  },
+  {
+    accessorKey: "progress",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Progress" />
+    ),
+    cell: ({ row }) => {
+      const progress = row.getValue("progress") as number
+      return (
+        <div className="flex items-center">
+          <span>{progress}%</span>
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey: "order",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Order" />
+    ),
+    cell: ({ row }) => {
+      const order = row.getValue("order") as number
+      return (
+        <div className="flex items-center">
+          <span>{order}</span>
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey: "estimated_duration",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Est. Duration" />
+    ),
+    cell: ({ row }) => {
+      const duration = row.getValue("estimated_duration") as number
+      return (
+        <div className="flex items-center">
+          <span>{duration} hrs</span>
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey: "done",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Done" />
+    ),
+    cell: ({ row }) => {
+      const done = row.getValue("done") as boolean
+      return (
+        <div className="flex items-center">
+          <Checkbox checked={done} disabled />
+        </div>
+      )
     },
   },
   {

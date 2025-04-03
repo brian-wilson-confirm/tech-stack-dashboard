@@ -164,7 +164,7 @@ export function TempWidget({ tasks, onTaskUpdate }: TempWidgetProps) {
         [handleTaskClick, editingRow, handleEditChange, handleEditClick, handleSave, handleCancel, handleDelete, editedTask]
     )
 
-    return (
+  return (
         <div>
             <div className="h-full flex-1 flex-col space-y-8 p-8 md:flex">
                 <div className="space-y-4">
@@ -382,8 +382,8 @@ export function TempWidget({ tasks, onTaskUpdate }: TempWidgetProps) {
                 open={sheetOpen}
                 onOpenChange={setSheetOpen}
             />
-        </div>
-    );
+    </div>
+  );
 }
 
 export default TempWidget;

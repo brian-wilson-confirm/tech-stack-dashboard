@@ -4,6 +4,7 @@ import { CheckSquare } from "lucide-react"
 import TempWidget from "@/components/widgets/TempWidget"
 import { TasksWidget } from "@/components/widgets/TasksWidget"
 import { Task } from "@/components/data/schema"
+import NewWidget from "@/components/widgets/NewWidget"
 
 export default function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>([])
@@ -44,7 +45,7 @@ export default function TasksPage() {
       </div>
 
       <div className="grid gap-6">
-        {/*<TasksWidget tasks={tasks} />*/}
+        <TasksWidget tasks={tasks} />
       </div>
       <br></br>
       <div className="grid gap-6">
@@ -52,6 +53,10 @@ export default function TasksPage() {
           tasks={tasks} 
           onTaskUpdate={handleTaskUpdate}
         />
+      </div>
+      <br></br>
+      <div className="grid gap-6">
+        <NewWidget tasks={tasks} onTaskUpdate={handleTaskUpdate} />
       </div>
     </div>
   )

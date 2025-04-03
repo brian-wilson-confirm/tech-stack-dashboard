@@ -1,9 +1,10 @@
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import date
+from sqlmodel import SQLModel
 
-from backend.database.models.task_models import TaskLevel, TaskType, TaskPriority, TaskStatus
 
+"""
 class Task(BaseModel):
     id: str
     done: bool
@@ -25,6 +26,30 @@ class Task(BaseModel):
     end_date: Optional[date]
     actual_duration: Optional[int]  # in hours
     # due_date
+"""
+
+class TaskRead(SQLModel):
+    id: int
+    task_id: str
+    task: str
+    technology: str
+    subcategory: str
+    category: str
+    topics: List[str]
+    section: str
+    source: str
+    level: Optional[str] = None
+    type: Optional[str] = None
+    status: Optional[str] = None
+    priority: Optional[str] = None
+    progress: int
+    order: Optional[int]
+    #due_date: Optional[date]
+    start_date: Optional[date]
+    end_date: Optional[date]
+    estimated_duration: Optional[int]
+    actual_duration: Optional[int]
+    done: bool = False
 
 class TaskCreate(BaseModel):
     task: str
@@ -46,9 +71,10 @@ class TaskCreate(BaseModel):
     actual_duration: Optional[int]
     done: bool = False
 
+"""
 class TasksResponse(BaseModel):
     tasks: List[Task]
-
+"""
 
 """
 class TaskCreate(BaseModel):

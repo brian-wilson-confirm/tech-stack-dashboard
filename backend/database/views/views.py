@@ -2,6 +2,7 @@ from typing import Optional, List
 from sqlmodel import SQLModel
 from datetime import date
 
+"""
 class TaskView(SQLModel):
     id: int
     task_id: str
@@ -24,3 +25,4 @@ class TaskView(SQLModel):
     estimated_duration: Optional[int]
     actual_duration: Optional[int]
     done: bool = False
+"""

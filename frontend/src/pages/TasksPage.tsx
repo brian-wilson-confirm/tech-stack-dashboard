@@ -1,32 +1,40 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { CheckSquare } from "lucide-react"
 
 import TempWidget from "@/components/widgets/TempWidget"
 import { TasksWidget } from "@/components/widgets/TasksWidget"
-
+import { Task } from "@/components/data/schema"
 
 export default function TasksPage() {
-  const [tasks, setTasks] = useState([])
+  const [tasks, setTasks] = useState<Task[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   /***********************
    API: Get Tasks
   ***********************/
-  useEffect(() => {
-    const fetchTasks = async () => {
-      try {
-        const response = await fetch('/api/tasks')
-        const data = await response.json()
-        setTasks(data)
-      } catch (error) {
-        console.error('Error fetching tasks:', error)
-      } finally {
-        setIsLoading(false)
-      }
+  const fetchTasks = useCallback(async () => {
+    try {
+      const response = await fetch('/api/tasks')
+      const data = await response.json()
+      setTasks(data)
+    } catch (error) {
+      console.error('Error fetching tasks:', error)
+    } finally {
+      setIsLoading(false)
     }
-
-    fetchTasks()
   }, [])
+
+  useEffect(() => {
+    fetchTasks()
+  }, [fetchTasks])
+
+  /***********************
+   Handle Task Updates
+  ***********************/
+  const handleTaskUpdate = useCallback(async (updatedTask: Task) => {
+    // Refresh the entire task list to ensure we have the latest data
+    await fetchTasks()
+  }, [fetchTasks])
 
   return (
     <div className="p-8">
@@ -40,7 +48,10 @@ export default function TasksPage() {
       </div>
       <br></br>
       <div className="grid gap-6">
-        <TempWidget tasks={tasks} />
+        <TempWidget 
+          tasks={tasks} 
+          onTaskUpdate={handleTaskUpdate}
+        />
       </div>
     </div>
   )

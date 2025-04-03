@@ -1,13 +1,12 @@
 from typing import List
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
 from sqlmodel import Session, select
 from sqlalchemy.orm import selectinload
 from backend.database.connection import get_session
 
-from backend.database.models.task_models import TaskTopicLink, Task, Category, Section, Source, Subcategory, Technology, TaskLevel, TaskPriority, TaskStatus, TaskType
-from backend.database.views.views import TaskView
-from backend.database.views.task_schemas import TaskCreate, TasksResponse
+from backend.database.models.task_models import TaskTopicLink, Task, Category, Section, Source, Subcategory, Technology, TaskLevel, TaskPriority, TaskStatus, TaskType, Topic
+from backend.database.views.task_schemas import TaskCreate, TaskRead
 
 router = APIRouter(prefix="/tasks")
 
@@ -26,7 +25,7 @@ async def create_task(task_in: TaskCreate, session: Session = Depends(get_sessio
     return task
 
 
-@router.get("/", response_model=List[TaskView])
+@router.get("/", response_model=List[TaskRead])
 async def get_tasks(session: Session = Depends(get_session)):
     tasks = session.exec(
         select(Task).options(selectinload(Task.topics))
@@ -34,7 +33,7 @@ async def get_tasks(session: Session = Depends(get_session)):
     
     result = []
     for task in tasks:
-        result.append(TaskView(
+        result.append(TaskRead(
             id=task.id,
             task_id=task.task_id,
             task=task.task,
@@ -59,3 +58,100 @@ async def get_tasks(session: Session = Depends(get_session)):
         ))
     
     return result
+
+
+@router.put("/{id}", response_model=TaskRead)
+async def update_task(id: int, task_update: TaskRead, session: Session = Depends(get_session)):
+    print(f"id: {id}")
+    task = session.exec(
+        select(Task).where(Task.id == id)
+    ).first()
+    
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    # Map of field names to their corresponding model classes and new field names
+    model_mappings = {
+        "priority": (TaskPriority, "priority_id"),
+        "status": (TaskStatus, "status_id"),
+        "type": (TaskType, "type_id"),
+        "level": (TaskLevel, "level_id"),
+        "technology": (Technology, "technology_id"),
+        "category": (Category, "category_id"),
+        "subcategory": (Subcategory, "subcategory_id"),
+        "section": (Section, "section_id"),
+        "source": (Source, "source_id"),
+    }
+
+    updates = {}
+    for field, value in task_update.model_dump(exclude_unset=True).items():
+        print(f"field: {field}, value: {value}")
+        if field == "topics":
+            value = session.exec(select(Topic).where(Topic.name.in_(value))).all()
+            updates[field] = value
+        elif field in model_mappings:
+            model_class, id_field = model_mappings[field]
+            # Look up the ID for the string value
+            result = session.exec(
+                select(model_class).where(model_class.name == value)
+            ).first()
+            if result is None:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Invalid {field} value: {value}"
+                )
+            updates[id_field] = result.id
+        else:
+            updates[field] = value
+
+    # Apply all updates at once
+    for field, value in updates.items():
+        setattr(task, field, value)
+
+    session.add(task)
+    session.commit()
+    session.refresh(task)
+    
+    # ❗️Return a transformed response matching TaskRead structure
+    return TaskRead(
+        id=task.id,
+        task_id=task.task_id,
+        task=task.task,
+        technology=session.get(Technology, task.technology_id).name,
+        subcategory=session.get(Subcategory, task.subcategory_id).name,
+        category=session.get(Category, task.category_id).name,
+        section=session.get(Section, task.section_id).name,
+        source=session.get(Source, task.source_id).name,
+        level=session.get(TaskLevel, task.level_id).name,
+        type=session.get(TaskType, task.type_id).name,
+        status=session.get(TaskStatus, task.status_id).name,
+        priority=session.get(TaskPriority, task.priority_id).name,
+        progress=task.progress,
+        order=task.order,
+        #due_date=task.due_date,
+        start_date=task.start_date,
+        end_date=task.end_date,
+        estimated_duration=task.estimated_duration,
+        actual_duration=task.actual_duration,
+        done=task.done,
+        topics=[t.name for t in task.topics]
+    )
+
+
+@router.delete("/{task_id}", status_code=204)
+async def delete_task(task_id: str, session: Session = Depends(get_session)):
+    task = session.exec(
+        select(Task).where(Task.task_id == task_id)
+    ).first()
+    
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    # Delete task topics first
+    session.exec(
+        select(TaskTopicLink).where(TaskTopicLink.task_id == task.id)
+    ).delete()
+    
+    # Delete the task
+    session.delete(task)
+    session.commit()

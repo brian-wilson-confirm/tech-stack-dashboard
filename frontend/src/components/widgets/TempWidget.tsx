@@ -21,14 +21,18 @@ import { TaskSheet } from "../ui/task-sheet"
 
 interface TempWidgetProps {
     tasks: Task[]
+    onTaskUpdate?: (updatedTask: Task) => void
 }
 
-const TempWidget: React.FC<TempWidgetProps> = ({ tasks }) => {
+export function TempWidget({ tasks, onTaskUpdate }: TempWidgetProps) {
+    console.log('TempWidget received tasks:', tasks)
     const [selectedStatus, setSelectedStatus] = React.useState<string[]>([])
     const [selectedPriority, setSelectedPriority] = React.useState<string[]>([])
     const [searchQuery, setSearchQuery] = React.useState<string>("")
     const [selectedTask, setSelectedTask] = React.useState<Task | null>(null)
     const [sheetOpen, setSheetOpen] = React.useState(false)
+    const [editingRow, setEditingRow] = React.useState<string | null>(null)
+    const [editedTask, setEditedTask] = React.useState<Task | null>(null)
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({
         select: true,
         task_id: true,
@@ -51,12 +55,14 @@ const TempWidget: React.FC<TempWidgetProps> = ({ tasks }) => {
 
     // Filter tasks based on search query and selected filters
     const filteredTasks = React.useMemo(() => {
-        return tasks.filter((task) => {
+        const filtered = tasks.filter((task) => {
             const matchesSearch = task.task.toLowerCase().includes(searchQuery.toLowerCase())
             const matchesStatus = selectedStatus.length === 0 || selectedStatus.includes(task.status)
             const matchesPriority = selectedPriority.length === 0 || selectedPriority.includes(task.priority)
             return matchesSearch && matchesStatus && matchesPriority
         })
+        console.log('Filtered tasks:', filtered)
+        return filtered
     }, [tasks, searchQuery, selectedStatus, selectedPriority])
 
     // Reset all filters
@@ -66,14 +72,96 @@ const TempWidget: React.FC<TempWidgetProps> = ({ tasks }) => {
         setSelectedPriority([])
     }
 
-    const handleTaskClick = (task: Task) => {
+    const handleTaskClick = React.useCallback((task: Task) => {
+        if (editingRow) return // Don't open sheet while editing
         setSelectedTask(task)
         setSheetOpen(true)
-    }
+    }, [editingRow])
+
+    const handleEditClick = React.useCallback((task: Task) => {
+        setEditingRow(task.task_id)
+        setEditedTask({ ...task })
+    }, [])
+
+    const handleEditChange = React.useCallback((field: string, value: any) => {
+        setEditedTask((prev) => {
+            if (!prev) return null
+            return {
+                ...prev,
+                [field]: value
+            }
+        })
+    }, [])
+
+    const handleSave = React.useCallback(async (task: Task) => {
+        if (!editedTask) return
+
+        try {
+            const response = await fetch(`/api/tasks/${task.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(editedTask),
+            })
+
+            if (!response.ok) {
+                throw new Error('Failed to update task')
+            }
+
+            // Update the tasks list with the edited task
+            const updatedTask = await response.json()
+            
+            // Notify parent component about the update
+            onTaskUpdate?.(updatedTask)
+            
+            // Reset editing state
+            setEditingRow(null)
+            setEditedTask(null)
+        } catch (error) {
+            console.error('Error updating task:', error)
+            // Handle error (show toast, etc.)
+        }
+    }, [editedTask, onTaskUpdate])
+
+    const handleCancel = React.useCallback(() => {
+        setEditingRow(null)
+        setEditedTask(null)
+    }, [])
+
+    const handleDelete = React.useCallback(async (task: Task) => {
+        if (!confirm('Are you sure you want to delete this task?')) return
+
+        try {
+            const response = await fetch(`/api/tasks/${task.task_id}`, {
+                method: 'DELETE',
+            })
+
+            if (!response.ok) {
+                throw new Error('Failed to delete task')
+            }
+
+            // Notify parent component about the deletion
+            onTaskUpdate?.(task)
+        } catch (error) {
+            console.error('Error deleting task:', error)
+            // Handle error (show toast, etc.)
+        }
+    }, [onTaskUpdate])
 
     const columns = React.useMemo(
-        () => createColumns({ onTaskClick: handleTaskClick }),
-        []
+        () =>
+            createColumns({
+                onTaskClick: handleTaskClick,
+                editingRow,
+                onEditChange: handleEditChange,
+                onEdit: handleEditClick,
+                onSave: handleSave,
+                onCancel: handleCancel,
+                onDelete: handleDelete,
+                editedTask,
+            }),
+        [handleTaskClick, editingRow, handleEditChange, handleEditClick, handleSave, handleCancel, handleDelete, editedTask]
     )
 
     return (
@@ -88,12 +176,14 @@ const TempWidget: React.FC<TempWidgetProps> = ({ tasks }) => {
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     className="h-8 w-[150px] lg:w-[250px]"
+                                    disabled={!!editingRow}
                                 />
                                 {searchQuery && (
                                     <Button
                                         variant="ghost"
                                         className="absolute right-0 top-0 h-8 px-2 hover:bg-transparent"
                                         onClick={() => setSearchQuery("")}
+                                        disabled={!!editingRow}
                                     >
                                         <Cross2Icon className="h-4 w-4" />
                                         <span className="sr-only">Clear search</span>
@@ -102,7 +192,7 @@ const TempWidget: React.FC<TempWidgetProps> = ({ tasks }) => {
                             </div>
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button variant="outline" size="sm" className="h-8 border-dashed">
+                                    <Button variant="outline" size="sm" className="h-8 border-dashed" disabled={!!editingRow}>
                                         <PlusCircledIcon className="mr-2 h-4 w-4" />
                                         Status
                                         {selectedStatus.length > 0 && (
@@ -133,7 +223,7 @@ const TempWidget: React.FC<TempWidgetProps> = ({ tasks }) => {
                             </DropdownMenu>
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button variant="outline" size="sm" className="h-8 border-dashed">
+                                    <Button variant="outline" size="sm" className="h-8 border-dashed" disabled={!!editingRow}>
                                         <PlusCircledIcon className="mr-2 h-4 w-4" />
                                         Priority
                                         {selectedPriority.length > 0 && (
@@ -167,13 +257,13 @@ const TempWidget: React.FC<TempWidgetProps> = ({ tasks }) => {
                                 size="sm" 
                                 className="h-8 border-dashed"
                                 onClick={resetFilters}
-                                disabled={!searchQuery && selectedStatus.length === 0 && selectedPriority.length === 0}
+                                disabled={(!searchQuery && selectedStatus.length === 0 && selectedPriority.length === 0) || !!editingRow}
                             >
                                 Reset
                             </Button>
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button variant="outline" size="sm" className="h-8 border-dashed">
+                                    <Button variant="outline" size="sm" className="h-8 border-dashed" disabled={!!editingRow}>
                                         <ViewVerticalIcon className="mr-2 h-4 w-4" />
                                         Columns
                                     </Button>
@@ -273,7 +363,7 @@ const TempWidget: React.FC<TempWidgetProps> = ({ tasks }) => {
                             </DropdownMenu>
                         </div>
                         <div className="flex items-center space-x-2">
-                            <Button>
+                            <Button disabled={!!editingRow}>
                                 <PlusCircledIcon className="mr-2 h-4 w-4" />
                                 Add Task
                             </Button>
@@ -294,6 +384,6 @@ const TempWidget: React.FC<TempWidgetProps> = ({ tasks }) => {
             />
         </div>
     );
-};
+}
 
 export default TempWidget;

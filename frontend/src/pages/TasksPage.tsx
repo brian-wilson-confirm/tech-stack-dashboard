@@ -45,7 +45,7 @@ export default function TasksPage() {
       </div>
 
       <div className="grid gap-6">
-        {/*<TasksWidget tasks={tasks} />*/}
+        <TasksWidget tasks={tasks} />
       </div>
       <br />
       <div className="grid gap-6">

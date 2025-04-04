@@ -41,6 +41,7 @@ import {
   Plus,
   X as CrossIcon,
   LayoutGrid,
+  Clock,
 } from "lucide-react"
 import {
   Select,
@@ -64,6 +65,7 @@ import { priorities, statuses } from "../data/data"
 import { TaskSheet } from "../ui/task-sheet"
 import { Task } from "@/components/data/schema"
 import { useToast } from "@/components/ui/use-toast"
+import { Progress } from "@/components/ui/progress"
 
 interface SortConfig {
   field: keyof Task
@@ -1327,7 +1329,12 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
                         onChange={(e) => handleEditChange('estimated_duration', parseInt(e.target.value))}
                         className="w-[80px]"
                       />
-                    ) : `${task.estimated_duration} hrs`}
+                    ) : (
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-4 w-4" />
+                        {task.estimated_duration}h
+                      </div>
+                    )}
                   </TableCell>
                 )}
                 {columnVisibility["status"] && (
@@ -1410,7 +1417,12 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
                         onChange={(e) => handleEditChange('progress', parseInt(e.target.value))}
                         className="w-[80px]"
                       />
-                    ) : `${task.progress}%`}
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <Progress value={task.progress} className="w-[60px]" />
+                        <span className="text-sm">{task.progress}%</span>
+                      </div>
+                    )}
                   </TableCell>
                 )}
                 {columnVisibility["order"] && <TableCell>{task.order}</TableCell>}
@@ -1424,7 +1436,12 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
                         onChange={(e) => handleEditChange('actual_duration', e.target.value ? parseInt(e.target.value) : null)}
                         className="w-[80px]"
                       />
-                    ) : task.actual_duration ? `${task.actual_duration} hrs` : '-'}
+                    ) : task.actual_duration ? (
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-4 w-4" />
+                        {task.actual_duration}h
+                      </div>
+                    ) : '-'}
                   </TableCell>
                 )}
                 {columnVisibility["start_date"] && (

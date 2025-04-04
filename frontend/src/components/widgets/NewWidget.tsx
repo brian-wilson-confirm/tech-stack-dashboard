@@ -543,6 +543,11 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
   const [selectedStatus, setSelectedStatus] = useState<string[]>([])
   const [selectedPriority, setSelectedPriority] = useState<string[]>([])
   const [priorities, setPriorities] = useState<Array<{ id: number; name: string }>>([])
+  const [statuses, setStatuses] = useState<Array<{ id: number; name: string }>>([])
+  const [types, setTypes] = useState<Array<{ id: number; name: string }>>([])
+  const [levels, setLevels] = useState<Array<{ id: number; name: string }>>([])
+  const [sources, setSources] = useState<Array<{ id: number; name: string }>>([])
+  const [categories, setCategories] = useState<Array<{ id: number; name: string }>>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
     task_id: true,              // ✓ Task ID
     task: true,                 // ✓ Task
@@ -651,17 +656,54 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
 
   const startEditing = async (task: Task) => {
     try {
-      const response = await fetch('http://localhost:8000/api/tasks/priorities')
-      if (!response.ok) {
-        throw new Error('Failed to fetch priorities')
+      // Fetch all dynamic data in parallel
+      const [
+        prioritiesRes,
+        statusesRes,
+        typesRes,
+        levelsRes,
+        sourcesRes,
+        categoriesRes
+      ] = await Promise.all([
+        fetch('http://localhost:8000/api/tasks/priorities'),
+        fetch('http://localhost:8000/api/tasks/statuses'),
+        fetch('http://localhost:8000/api/tasks/types'),
+        fetch('http://localhost:8000/api/tasks/levels'),
+        fetch('http://localhost:8000/api/tasks/sources'),
+        fetch('http://localhost:8000/api/tasks/categories')
+      ])
+
+      if (!prioritiesRes.ok || !statusesRes.ok || !typesRes.ok || !levelsRes.ok || !sourcesRes.ok || !categoriesRes.ok) {
+        throw new Error('Failed to fetch some options')
       }
-      const prioritiesData = await response.json()
+
+      const [
+        prioritiesData,
+        statusesData,
+        typesData,
+        levelsData,
+        sourcesData,
+        categoriesData
+      ] = await Promise.all([
+        prioritiesRes.json(),
+        statusesRes.json(),
+        typesRes.json(),
+        levelsRes.json(),
+        sourcesRes.json(),
+        categoriesRes.json()
+      ])
+
       setPriorities(prioritiesData)
+      setStatuses(statusesData)
+      setTypes(typesData)
+      setLevels(levelsData)
+      setSources(sourcesData)
+      setCategories(categoriesData)
     } catch (error) {
-      console.error('Error fetching priorities:', error)
+      console.error('Error fetching options:', error)
       toast({
         title: "Error",
-        description: "Failed to load priorities. Some options may be unavailable.",
+        description: "Failed to load some options. Some fields may be unavailable.",
         variant: "destructive",
       })
     }
@@ -851,17 +893,17 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
             <DropdownMenuContent align="start" className="w-[200px]">
               {statuses.map((status) => (
                 <DropdownMenuCheckboxItem
-                  key={status.value}
-                  checked={selectedStatus.includes(status.value)}
+                  key={status.id}
+                  checked={selectedStatus.includes(status.name)}
                   onCheckedChange={(checked) => {
                     startTransition(() => {
                       checked
-                        ? setSelectedStatus([...selectedStatus, status.value])
-                        : setSelectedStatus(selectedStatus.filter((value) => value !== status.value))
+                        ? setSelectedStatus([...selectedStatus, status.name])
+                        : setSelectedStatus(selectedStatus.filter((value) => value !== status.name))
                     })
                   }}
                 >
-                  {status.label}
+                  {status.name.replace('_', ' ')}
                 </DropdownMenuCheckboxItem>
               ))}
             </DropdownMenuContent>
@@ -1312,9 +1354,49 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
                   </TableCell>
                 )}
                 {columnVisibility["subcategory"] && <TableCell>{task.subcategory}</TableCell>}
-                {columnVisibility["category"] && <TableCell>{task.category}</TableCell>}
+                {columnVisibility["category"] && (
+                  <TableCell>
+                    {editingTask === task.id ? (
+                      <Select
+                        value={editForm?.category}
+                        onValueChange={(value) => handleEditChange('category', value)}
+                      >
+                        <SelectTrigger className="w-[150px]">
+                          <SelectValue>{editForm?.category}</SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {categories.map((category) => (
+                            <SelectItem key={category.id} value={category.name}>
+                              {category.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : task.category}
+                  </TableCell>
+                )}
                 {columnVisibility["section"] && <TableCell>{task.section}</TableCell>}
-                {columnVisibility["source"] && <TableCell>{task.source}</TableCell>}
+                {columnVisibility["source"] && (
+                  <TableCell>
+                    {editingTask === task.id ? (
+                      <Select
+                        value={editForm?.source}
+                        onValueChange={(value) => handleEditChange('source', value)}
+                      >
+                        <SelectTrigger className="w-[150px]">
+                          <SelectValue>{editForm?.source}</SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {sources.map((source) => (
+                            <SelectItem key={source.id} value={source.name}>
+                              {source.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : task.source}
+                  </TableCell>
+                )}
                 {columnVisibility["type"] && (
                   <TableCell>
                     {editingTask === task.id ? (
@@ -1326,11 +1408,11 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
                           <SelectValue>{editForm?.type}</SelectValue>
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="learning">Learning</SelectItem>
-                          <SelectItem value="implementation">Implementation</SelectItem>
-                          <SelectItem value="research">Research</SelectItem>
-                          <SelectItem value="documentation">Documentation</SelectItem>
-                          <SelectItem value="maintenance">Maintenance</SelectItem>
+                          {types.map((type) => (
+                            <SelectItem key={type.id} value={type.name}>
+                              {type.name}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     ) : task.type}
@@ -1365,11 +1447,11 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
                           <SelectValue>{editForm?.status.replace('_', ' ')}</SelectValue>
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="not_started">Not Started</SelectItem>
-                          <SelectItem value="in_progress">In Progress</SelectItem>
-                          <SelectItem value="completed">Completed</SelectItem>
-                          <SelectItem value="on_hold">On Hold</SelectItem>
-                          <SelectItem value="cancelled">Cancelled</SelectItem>
+                          {statuses.map((status) => (
+                            <SelectItem key={status.id} value={status.name}>
+                              {status.name.replace('_', ' ')}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     ) : (
@@ -1415,10 +1497,11 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
                           <SelectValue>{editForm?.level}</SelectValue>
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="beginner">Beginner</SelectItem>
-                          <SelectItem value="intermediate">Intermediate</SelectItem>
-                          <SelectItem value="advanced">Advanced</SelectItem>
-                          <SelectItem value="expert">Expert</SelectItem>
+                          {levels.map((level) => (
+                            <SelectItem key={level.id} value={level.name}>
+                              {level.name}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     ) : task.level}

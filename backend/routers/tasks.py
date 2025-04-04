@@ -124,6 +124,56 @@ async def delete_task(task_id: str, session: Session = Depends(get_session)):
 async def get_task_priorities(session: Session = Depends(get_session)):
     return session.exec(select(TaskPriority)).all()
 
+"""
+    Task Status: CRUD operations
+"""
+
+@router.get("/statuses", response_model=List[TaskStatus])
+async def get_task_statuses(session: Session = Depends(get_session)):
+    return session.exec(select(TaskStatus)).all()
+
+"""
+    Task Type: CRUD operations
+"""
+
+@router.get("/types", response_model=List[TaskType])
+async def get_task_types(session: Session = Depends(get_session)):
+    return session.exec(select(TaskType)).all()
+
+"""
+    Task Level: CRUD operations
+"""
+
+@router.get("/levels", response_model=List[TaskLevel])
+async def get_task_levels(session: Session = Depends(get_session)):
+    return session.exec(select(TaskLevel)).all()
+
+"""
+    Task Source: CRUD operations
+"""
+
+@router.get("/sources", response_model=List[Source])
+async def get_task_sources(session: Session = Depends(get_session)):
+    return session.exec(select(Source)).all()
+
+"""
+    Task Category: CRUD operations
+"""
+
+@router.get("/categories", response_model=List[Category])
+async def get_task_categories(session: Session = Depends(get_session)):
+    return session.exec(select(Category)).all()
+
+
+
+
+
+
+
+
+
+
+
 
 """
     Helper functions

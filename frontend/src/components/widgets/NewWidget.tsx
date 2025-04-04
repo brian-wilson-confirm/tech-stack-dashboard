@@ -675,6 +675,25 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
     }
   };
 
+  // Add a function to fetch technologies for a specific subcategory
+  const fetchTechnologiesForSubcategory = async (subcategoryId: string) => {
+    try {
+      const response = await fetch(`http://localhost:8000/api/tasks/technologies/${subcategoryId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch technologies');
+      }
+      const data = await response.json();
+      setTechnologies(data);
+    } catch (error) {
+      console.error('Error fetching technologies:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load technologies for the selected subcategory.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const startEditing = async (task: Task) => {
     try {
       // Fetch all dynamic data in parallel
@@ -684,19 +703,17 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
         typesRes,
         levelsRes,
         sourcesRes,
-        categoriesRes,
-        technologiesRes
+        categoriesRes
       ] = await Promise.all([
         fetch('http://localhost:8000/api/tasks/priorities'),
         fetch('http://localhost:8000/api/tasks/statuses'),
         fetch('http://localhost:8000/api/tasks/types'),
         fetch('http://localhost:8000/api/tasks/levels'),
         fetch('http://localhost:8000/api/tasks/sources'),
-        fetch('http://localhost:8000/api/tasks/categories'),
-        fetch('http://localhost:8000/api/tasks/technologies')
+        fetch('http://localhost:8000/api/tasks/categories')
       ])
 
-      if (!prioritiesRes.ok || !statusesRes.ok || !typesRes.ok || !levelsRes.ok || !sourcesRes.ok || !categoriesRes.ok || !technologiesRes.ok) {
+      if (!prioritiesRes.ok || !statusesRes.ok || !typesRes.ok || !levelsRes.ok || !sourcesRes.ok || !categoriesRes.ok) {
         throw new Error('Failed to fetch some options')
       }
 
@@ -706,16 +723,14 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
         typesData,
         levelsData,
         sourcesData,
-        categoriesData,
-        technologiesData
+        categoriesData
       ] = await Promise.all([
         prioritiesRes.json(),
         statusesRes.json(),
         typesRes.json(),
         levelsRes.json(),
         sourcesRes.json(),
-        categoriesRes.json(),
-        technologiesRes.json()
+        categoriesRes.json()
       ])
 
       setPriorities(prioritiesData)
@@ -724,7 +739,6 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
       setLevels(levelsData)
       setSources(sourcesData)
       setCategories(categoriesData)
-      setTechnologies(technologiesData)
 
       // Find all IDs that match the task's current values
       const priorityId = prioritiesData.find((p: { id: number; name: string }) => p.name === task.priority)?.id.toString()
@@ -733,11 +747,10 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
       const levelId = levelsData.find((l: { id: number; name: string }) => l.name === task.level)?.id.toString()
       const sourceId = sourcesData.find((s: { id: number; name: string }) => s.name === task.source)?.id.toString()
       const categoryId = categoriesData.find((c: { id: number; name: string }) => c.name === task.category)?.id.toString()
-      const technologyId = technologiesData.find((t: { id: number; name: string }) => t.name === task.technology)?.id.toString()
 
       setEditingTask(task.id)
       
-      // Set initial form state without subcategory
+      // Set initial form state without subcategory and technology
       const initialEditForm = { 
         ...task,
         priority: priorityId || task.priority,
@@ -745,8 +758,7 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
         type: typeId || task.type,
         level: levelId || task.level,
         source: sourceId || task.source,
-        category: categoryId || task.category,
-        technology: technologyId || task.technology
+        category: categoryId || task.category
       };
       
       setEditForm(initialEditForm);
@@ -755,7 +767,7 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
       if (categoryId) {
         await fetchSubcategoriesForCategory(categoryId);
         
-        // Once subcategories are loaded, add subcategory to the edit form
+        // Once subcategories are loaded, find the matching subcategory ID
         const subcategoriesRes = await fetch(`http://localhost:8000/api/tasks/subcategories/${categoryId}`);
         if (subcategoriesRes.ok) {
           const subcategoriesData = await subcategoriesRes.json();
@@ -764,10 +776,32 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
           )?.id.toString();
           
           if (subcategoryId) {
+            // Update form with subcategory
             setEditForm({
               ...initialEditForm,
               subcategory: subcategoryId
             });
+            
+            // Now fetch technologies based on the subcategory
+            await fetchTechnologiesForSubcategory(subcategoryId);
+            
+            // Once technologies are loaded, find the matching technology ID
+            const technologiesRes = await fetch(`http://localhost:8000/api/tasks/technologies/${subcategoryId}`);
+            if (technologiesRes.ok) {
+              const technologiesData = await technologiesRes.json();
+              const technologyId = technologiesData.find((t: { id: number; name: string }) => 
+                t.name === task.technology
+              )?.id.toString();
+              
+              if (technologyId) {
+                // Finally update the form with technology
+                setEditForm({
+                  ...initialEditForm,
+                  subcategory: subcategoryId,
+                  technology: technologyId
+                });
+              }
+            }
           }
         }
       }
@@ -786,7 +820,7 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
     setEditForm(null)
   }
 
-  // Update handleEditChange to fetch subcategories when category changes
+  // Update handleEditChange to fetch technologies when subcategory changes
   const handleEditChange = (field: keyof Task, value: string | number | boolean | string[] | Date | null) => {
     if (editForm) {
       let processedValue: any = value;
@@ -814,6 +848,28 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
       // When category changes, fetch related subcategories
       if (field === 'category' && typeof value === 'string') {
         fetchSubcategoriesForCategory(value);
+        
+        // Reset subcategory and technology when category changes
+        setEditForm({ 
+          ...editForm, 
+          [field]: processedValue,
+          subcategory: "",
+          technology: ""
+        });
+        return;
+      }
+      
+      // When subcategory changes, fetch related technologies
+      if (field === 'subcategory' && typeof value === 'string') {
+        fetchTechnologiesForSubcategory(value);
+        
+        // Reset technology when subcategory changes
+        setEditForm({ 
+          ...editForm, 
+          [field]: processedValue,
+          technology: ""
+        });
+        return;
       }
       
       setEditForm({ ...editForm, [field]: processedValue });

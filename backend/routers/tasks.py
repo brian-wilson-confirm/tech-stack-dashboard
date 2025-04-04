@@ -5,7 +5,7 @@ from sqlmodel import Session, select
 from sqlalchemy.orm import selectinload
 from backend.database.connection import get_session
 
-from backend.database.models.task_models import TaskTopicLink, Task, Category, Section, Source, Subcategory, Technology, TaskLevel, TaskPriority, TaskStatus, TaskType, Topic
+from backend.database.models.task_models import TaskTopicLink, Task, Category, Section, Source, Subcategory, Technology, TaskLevel, TaskPriority, TaskStatus, TaskType, TechnologySubcategory, Topic
 from backend.database.views.task_schemas import TaskCreate, TaskRead, TaskUpdate
 
 router = APIRouter(prefix="/tasks")
@@ -171,7 +171,7 @@ async def get_task_categories(session: Session = Depends(get_session)):
 """
 
 @router.get("/subcategories/{category_id}", response_model=List[Subcategory])
-async def get_task_subcategories(category_id: int, session: Session = Depends(get_session)):
+async def get_task_subcategories_by_category(category_id: int, session: Session = Depends(get_session)):
     return session.exec(select(Subcategory).where(Subcategory.category_id == category_id)).all()
 
 
@@ -179,10 +179,15 @@ async def get_task_subcategories(category_id: int, session: Session = Depends(ge
     Task Technology: CRUD operations
 """
 
-@router.get("/technologies", response_model=List[Technology])
-async def get_task_technologies(session: Session = Depends(get_session)):
-    return session.exec(select(Technology)).all()
-
+@router.get("/technologies/{subcategory_id}", response_model=List[Technology])
+async def get_task_technologies_by_subcategory(subcategory_id: int, session: Session = Depends(get_session)):
+    statement = (
+        select(Technology)
+        .join(TechnologySubcategory, Technology.id == TechnologySubcategory.technology_id)
+        .where(TechnologySubcategory.subcategory_id == subcategory_id)
+    )
+    results = session.exec(statement).all()
+    return results
 
 
 

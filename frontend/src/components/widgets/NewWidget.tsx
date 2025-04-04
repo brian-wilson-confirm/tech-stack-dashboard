@@ -1146,7 +1146,7 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
 
       <div className="flex items-center justify-between mt-4">
         <div className="text-sm text-muted-foreground">
-          {selectedRows.length} of {tasks.length} row(s) selected
+          {selectedRows.length} of {filteredTasks.length} row(s) selected
         </div>
 
         <div className="flex items-center gap-4">

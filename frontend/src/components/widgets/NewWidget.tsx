@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useTransition } from "react"
+import { useState, useEffect, useMemo, useTransition, useCallback } from "react"
 import {
   Table,
   TableBody,
@@ -65,6 +65,8 @@ import {
 import { Separator } from "@/components/ui/separator"
 import { VisibilityState } from "@tanstack/react-table"
 import { priorities, statuses } from "../data/data"
+import { TaskSheet } from "../ui/task-sheet"
+import { Task } from "@/components/data/schema"
 
 interface SortConfig {
   field: keyof Task
@@ -104,29 +106,6 @@ function SortableColumn({ field, children, sortConfigs, onSort }: SortableColumn
       </div>
     </div>
   )
-}
-
-interface Task {
-  id: string
-  task_id: string
-  done: boolean
-  task: string
-  technology: string
-  subcategory: string
-  category: string
-  order: number
-  status: 'not_started' | 'in_progress' | 'completed' | 'on_hold' | 'cancelled'
-  progress: number
-  priority: 'low' | 'medium' | 'high' | 'critical'
-  type: string
-  level: string
-  section: string
-  topics: string[]
-  source: string
-  estimated_duration: number
-  actual_duration?: number
-  start_date?: string
-  end_date?: string
 }
 
 interface NewWidgetProps {
@@ -584,6 +563,8 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
     done: false                 // Done
   })
   const [isPending, startTransition] = useTransition()
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null)
+  const [sheetOpen, setSheetOpen] = useState(false)
 
   // Initialize tasks only once
   useEffect(() => {
@@ -712,7 +693,7 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
     setTasks(tasks.filter(task => task.id !== taskId))
   }
 
-  const handleEditChange = (field: keyof Task, value: string | number | string[] | boolean | null) => {
+  const handleEditChange = (field: keyof Task, value: string | number | boolean | string[] | Date | null) => {
     if (editForm) {
       let processedValue: any = value
       
@@ -730,30 +711,38 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
       if (field === 'done') {
         processedValue = Boolean(value)
       }
+
+      // Handle date fields
+      if (['start_date', 'end_date'].includes(field)) {
+        processedValue = value instanceof Date ? value : null
+      }
       
       setEditForm({ ...editForm, [field]: processedValue })
     }
   }
 
-  const getStatusColor = (status: Task['status']) => {
-    const colors = {
-      not_started: "bg-gray-500",
-      in_progress: "bg-blue-500",
-      completed: "bg-green-500",
-      on_hold: "bg-yellow-500",
-      cancelled: "bg-red-500"
-    } as const
-    return colors[status]
+  type StatusType = 'not_started' | 'in_progress' | 'completed' | 'on_hold' | 'cancelled'
+  type PriorityType = 'low' | 'medium' | 'high' | 'critical'
+
+  const getStatusColor = (status: string) => {
+    const colors: Record<StatusType, string> = {
+      'not_started': "bg-gray-500",
+      'in_progress': "bg-blue-500",
+      'completed': "bg-green-500",
+      'on_hold': "bg-yellow-500",
+      'cancelled': "bg-red-500"
+    }
+    return colors[status as StatusType] || "bg-gray-500"
   }
 
-  const getPriorityColor = (priority: Task['priority']) => {
-    const colors = {
-      low: "bg-gray-500",
-      medium: "bg-blue-500",
-      high: "bg-yellow-500",
-      critical: "bg-red-500"
-    } as const
-    return colors[priority]
+  const getPriorityColor = (priority: string) => {
+    const colors: Record<PriorityType, string> = {
+      'low': "bg-gray-500",
+      'medium': "bg-blue-500",
+      'high': "bg-yellow-500",
+      'critical': "bg-red-500"
+    }
+    return colors[priority as PriorityType] || "bg-gray-500"
   }
 
   const addTask = async (newTask: TaskFormValues) => {
@@ -785,6 +774,13 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
     setSelectedStatus([])
     setSelectedPriority([])
   }
+
+  // Add handleTaskClick function
+  const handleTaskClick = useCallback((task: Task) => {
+    if (editingTask) return // Don't open sheet while editing
+    setSelectedTask(task)
+    setSheetOpen(true)
+  }, [editingTask])
 
   return (
     <div className="border rounded-lg p-6 col-span-full">
@@ -1253,7 +1249,17 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
                     aria-label={`Select task ${task.task}`}
                   />
                 </TableCell>
-                {columnVisibility["task_id"] && <TableCell>{task.task_id}</TableCell>}
+                {columnVisibility["task_id"] && (
+                  <TableCell>
+                    <Button
+                      variant="link"
+                      className="p-0 h-auto font-normal"
+                      onClick={() => handleTaskClick(task)}
+                    >
+                      {task.task_id}
+                    </Button>
+                  </TableCell>
+                )}
                 {columnVisibility["task"] && (
                   <TableCell>
                     {editingTask === task.id ? (
@@ -1416,11 +1422,11 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
                     {editingTask === task.id ? (
                       <Input
                         type="date"
-                        value={editForm?.start_date || ''}
-                        onChange={(e) => handleEditChange('start_date', e.target.value || null)}
+                        value={editForm?.start_date ? new Date(editForm.start_date).toISOString().split('T')[0] : ''}
+                        onChange={(e) => handleEditChange('start_date', e.target.value ? new Date(e.target.value) : null)}
                         className="w-[130px]"
                       />
-                    ) : task.start_date || '-'}
+                    ) : task.start_date ? new Date(task.start_date).toLocaleDateString() : '-'}
                   </TableCell>
                 )}
                 {columnVisibility["end_date"] && (
@@ -1428,11 +1434,11 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
                     {editingTask === task.id ? (
                       <Input
                         type="date"
-                        value={editForm?.end_date || ''}
-                        onChange={(e) => handleEditChange('end_date', e.target.value || null)}
+                        value={editForm?.end_date ? new Date(editForm.end_date).toISOString().split('T')[0] : ''}
+                        onChange={(e) => handleEditChange('end_date', e.target.value ? new Date(e.target.value) : null)}
                         className="w-[130px]"
                       />
-                    ) : task.end_date || '-'}
+                    ) : task.end_date ? new Date(task.end_date).toLocaleDateString() : '-'}
                   </TableCell>
                 )}
                 {columnVisibility["done"] && (
@@ -1527,6 +1533,12 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
           </div>
         </div>
       </div>
+
+      <TaskSheet
+        task={selectedTask}
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+      />
     </div>
   )
 }

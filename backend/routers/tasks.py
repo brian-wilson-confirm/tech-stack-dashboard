@@ -170,9 +170,9 @@ async def get_task_categories(session: Session = Depends(get_session)):
     Task Subcategory: CRUD operations
 """
 
-@router.get("/subcategories", response_model=List[Subcategory])
-async def get_task_subcategories(session: Session = Depends(get_session)):
-    return session.exec(select(Subcategory)).all()
+@router.get("/subcategories/{category_id}", response_model=List[Subcategory])
+async def get_task_subcategories(category_id: int, session: Session = Depends(get_session)):
+    return session.exec(select(Subcategory).where(Subcategory.category_id == category_id)).all()
 
 
 """

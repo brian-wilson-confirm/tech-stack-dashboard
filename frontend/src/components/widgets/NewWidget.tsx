@@ -656,6 +656,25 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
     })
   }
 
+  // Add a function to fetch subcategories for a specific category
+  const fetchSubcategoriesForCategory = async (categoryId: string) => {
+    try {
+      const response = await fetch(`http://localhost:8000/api/tasks/subcategories/${categoryId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch subcategories');
+      }
+      const data = await response.json();
+      setSubcategories(data);
+    } catch (error) {
+      console.error('Error fetching subcategories:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load subcategories for the selected category.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const startEditing = async (task: Task) => {
     try {
       // Fetch all dynamic data in parallel
@@ -666,7 +685,6 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
         levelsRes,
         sourcesRes,
         categoriesRes,
-        subcategoriesRes,
         technologiesRes
       ] = await Promise.all([
         fetch('http://localhost:8000/api/tasks/priorities'),
@@ -675,11 +693,10 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
         fetch('http://localhost:8000/api/tasks/levels'),
         fetch('http://localhost:8000/api/tasks/sources'),
         fetch('http://localhost:8000/api/tasks/categories'),
-        fetch('http://localhost:8000/api/tasks/subcategories'),
         fetch('http://localhost:8000/api/tasks/technologies')
       ])
 
-      if (!prioritiesRes.ok || !statusesRes.ok || !typesRes.ok || !levelsRes.ok || !sourcesRes.ok || !categoriesRes.ok || !subcategoriesRes.ok || !technologiesRes.ok) {
+      if (!prioritiesRes.ok || !statusesRes.ok || !typesRes.ok || !levelsRes.ok || !sourcesRes.ok || !categoriesRes.ok || !technologiesRes.ok) {
         throw new Error('Failed to fetch some options')
       }
 
@@ -690,7 +707,6 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
         levelsData,
         sourcesData,
         categoriesData,
-        subcategoriesData,
         technologiesData
       ] = await Promise.all([
         prioritiesRes.json(),
@@ -699,7 +715,6 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
         levelsRes.json(),
         sourcesRes.json(),
         categoriesRes.json(),
-        subcategoriesRes.json(),
         technologiesRes.json()
       ])
 
@@ -709,7 +724,6 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
       setLevels(levelsData)
       setSources(sourcesData)
       setCategories(categoriesData)
-      setSubcategories(subcategoriesData)
       setTechnologies(technologiesData)
 
       // Find all IDs that match the task's current values
@@ -719,11 +733,12 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
       const levelId = levelsData.find((l: { id: number; name: string }) => l.name === task.level)?.id.toString()
       const sourceId = sourcesData.find((s: { id: number; name: string }) => s.name === task.source)?.id.toString()
       const categoryId = categoriesData.find((c: { id: number; name: string }) => c.name === task.category)?.id.toString()
-      const subcategoryId = subcategoriesData.find((s: { id: number; name: string }) => s.name === task.subcategory)?.id.toString()
       const technologyId = technologiesData.find((t: { id: number; name: string }) => t.name === task.technology)?.id.toString()
 
       setEditingTask(task.id)
-      setEditForm({ 
+      
+      // Set initial form state without subcategory
+      const initialEditForm = { 
         ...task,
         priority: priorityId || task.priority,
         status: statusId || task.status,
@@ -731,9 +746,31 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
         level: levelId || task.level,
         source: sourceId || task.source,
         category: categoryId || task.category,
-        subcategory: subcategoryId || task.subcategory,
         technology: technologyId || task.technology
-      })
+      };
+      
+      setEditForm(initialEditForm);
+      
+      // Fetch subcategories based on the task's category
+      if (categoryId) {
+        await fetchSubcategoriesForCategory(categoryId);
+        
+        // Once subcategories are loaded, add subcategory to the edit form
+        const subcategoriesRes = await fetch(`http://localhost:8000/api/tasks/subcategories/${categoryId}`);
+        if (subcategoriesRes.ok) {
+          const subcategoriesData = await subcategoriesRes.json();
+          const subcategoryId = subcategoriesData.find((s: { id: number; name: string }) => 
+            s.name === task.subcategory
+          )?.id.toString();
+          
+          if (subcategoryId) {
+            setEditForm({
+              ...initialEditForm,
+              subcategory: subcategoryId
+            });
+          }
+        }
+      }
     } catch (error) {
       console.error('Error fetching options:', error)
       toast({
@@ -749,33 +786,39 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
     setEditForm(null)
   }
 
+  // Update handleEditChange to fetch subcategories when category changes
   const handleEditChange = (field: keyof Task, value: string | number | boolean | string[] | Date | null) => {
     if (editForm) {
-      let processedValue: any = value
+      let processedValue: any = value;
       
       // Handle numeric fields
       if (['order', 'progress', 'estimated_duration'].includes(field)) {
-        processedValue = Number(value)
+        processedValue = Number(value);
       }
       
       // Handle array fields
       if (field === 'topics' && typeof value === 'string') {
-        processedValue = value.split(',').map(t => t.trim())
+        processedValue = value.split(',').map(t => t.trim());
       }
       
       // Handle boolean fields
       if (field === 'done') {
-        processedValue = Boolean(value)
+        processedValue = Boolean(value);
       }
 
       // Handle date fields
       if (['start_date', 'end_date'].includes(field)) {
-        processedValue = value instanceof Date ? value : null
+        processedValue = value instanceof Date ? value : null;
       }
       
-      setEditForm({ ...editForm, [field]: processedValue })
+      // When category changes, fetch related subcategories
+      if (field === 'category' && typeof value === 'string') {
+        fetchSubcategoriesForCategory(value);
+      }
+      
+      setEditForm({ ...editForm, [field]: processedValue });
     }
-  }
+  };
 
   const saveEditing = async () => {
     if (editForm) {

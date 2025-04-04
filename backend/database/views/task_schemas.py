@@ -58,7 +58,7 @@ class TaskUpdate(SQLModel):
     category: str
     topics: List[str]
     section: str
-    source: str
+    source_id: int
     level_id: int
     type_id: int
     status_id: int

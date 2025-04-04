@@ -700,11 +700,12 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
       setSources(sourcesData)
       setCategories(categoriesData)
 
-      // Find the priority ID, status ID, type ID, and level ID that match the task's current values
+      // Find all IDs that match the task's current values
       const priorityId = prioritiesData.find((p: { id: number; name: string }) => p.name === task.priority)?.id.toString()
       const statusId = statusesData.find((s: { id: number; name: string }) => s.name === task.status)?.id.toString()
       const typeId = typesData.find((t: { id: number; name: string }) => t.name === task.type)?.id.toString()
       const levelId = levelsData.find((l: { id: number; name: string }) => l.name === task.level)?.id.toString()
+      const sourceId = sourcesData.find((s: { id: number; name: string }) => s.name === task.source)?.id.toString()
 
       setEditingTask(task.id)
       setEditForm({ 
@@ -712,7 +713,8 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
         priority: priorityId || task.priority,
         status: statusId || task.status,
         type: typeId || task.type,
-        level: levelId || task.level
+        level: levelId || task.level,
+        source: sourceId || task.source
       })
     } catch (error) {
       console.error('Error fetching options:', error)
@@ -760,14 +762,15 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
   const saveEditing = async () => {
     if (editForm) {
       try {
-        // Destructure priority, status, type, and level out and rename remaining fields
-        const { priority, status, type, level, ...rest } = editForm;
+        // Destructure all dropdown fields out and rename remaining fields
+        const { priority, status, type, level, source, ...rest } = editForm;
         const payload = {
           ...rest,
           priority_id: priority,
           status_id: status,
           type_id: type,
           level_id: level,
+          source_id: source,
         };
 
         const response = await fetch(`http://localhost:8000/api/tasks/${editForm.id}`, {
@@ -1405,11 +1408,13 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
                         onValueChange={(value) => handleEditChange('source', value)}
                       >
                         <SelectTrigger className="w-[150px]">
-                          <SelectValue>{editForm?.source}</SelectValue>
+                          <SelectValue>
+                            {sources.find((s: { id: number; name: string }) => s.id.toString() === editForm?.source)?.name ?? "Select"}
+                          </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
                           {sources.map((source) => (
-                            <SelectItem key={source.id} value={source.name}>
+                            <SelectItem key={source.id} value={source.id.toString()}>
                               {source.name}
                             </SelectItem>
                           ))}

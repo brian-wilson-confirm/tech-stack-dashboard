@@ -706,6 +706,7 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
       const typeId = typesData.find((t: { id: number; name: string }) => t.name === task.type)?.id.toString()
       const levelId = levelsData.find((l: { id: number; name: string }) => l.name === task.level)?.id.toString()
       const sourceId = sourcesData.find((s: { id: number; name: string }) => s.name === task.source)?.id.toString()
+      const categoryId = categoriesData.find((c: { id: number; name: string }) => c.name === task.category)?.id.toString()
 
       setEditingTask(task.id)
       setEditForm({ 
@@ -714,7 +715,8 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
         status: statusId || task.status,
         type: typeId || task.type,
         level: levelId || task.level,
-        source: sourceId || task.source
+        source: sourceId || task.source,
+        category: categoryId || task.category
       })
     } catch (error) {
       console.error('Error fetching options:', error)
@@ -763,7 +765,7 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
     if (editForm) {
       try {
         // Destructure all dropdown fields out and rename remaining fields
-        const { priority, status, type, level, source, ...rest } = editForm;
+        const { priority, status, type, level, source, category, ...rest } = editForm;
         const payload = {
           ...rest,
           priority_id: priority,
@@ -771,6 +773,7 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
           type_id: type,
           level_id: level,
           source_id: source,
+          category_id: category,
         };
 
         const response = await fetch(`http://localhost:8000/api/tasks/${editForm.id}`, {
@@ -1386,11 +1389,13 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
                         onValueChange={(value) => handleEditChange('category', value)}
                       >
                         <SelectTrigger className="w-[150px]">
-                          <SelectValue>{editForm?.category}</SelectValue>
+                          <SelectValue>
+                            {categories.find((c: { id: number; name: string }) => c.id.toString() === editForm?.category)?.name ?? "Select"}
+                          </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
                           {categories.map((category) => (
-                            <SelectItem key={category.id} value={category.name}>
+                            <SelectItem key={category.id} value={category.id.toString()}>
                               {category.name}
                             </SelectItem>
                           ))}

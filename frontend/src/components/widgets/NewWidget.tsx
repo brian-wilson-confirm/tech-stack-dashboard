@@ -924,7 +924,8 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
         console.error('Error updating task:', error);
         toast({
           title: "Error",
-          description: error instanceof Error ? error.message : "Failed to update the task. Please try again.",
+          //description: error instanceof Error ? error.message : "Failed to update the task. Please try again.",
+          description: "Failed to update the task. Please try again.",
           variant: "destructive",
           duration: 3000,
         });

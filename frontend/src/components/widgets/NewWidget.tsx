@@ -548,6 +548,7 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
   const [levels, setLevels] = useState<Array<{ id: number; name: string }>>([])
   const [sources, setSources] = useState<Array<{ id: number; name: string }>>([])
   const [categories, setCategories] = useState<Array<{ id: number; name: string }>>([])
+  const [subcategories, setSubcategories] = useState<Array<{ id: number; name: string }>>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
     task_id: true,              // ✓ Task ID
     task: true,                 // ✓ Task
@@ -663,17 +664,19 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
         typesRes,
         levelsRes,
         sourcesRes,
-        categoriesRes
+        categoriesRes,
+        subcategoriesRes
       ] = await Promise.all([
         fetch('http://localhost:8000/api/tasks/priorities'),
         fetch('http://localhost:8000/api/tasks/statuses'),
         fetch('http://localhost:8000/api/tasks/types'),
         fetch('http://localhost:8000/api/tasks/levels'),
         fetch('http://localhost:8000/api/tasks/sources'),
-        fetch('http://localhost:8000/api/tasks/categories')
+        fetch('http://localhost:8000/api/tasks/categories'),
+        fetch('http://localhost:8000/api/tasks/subcategories')
       ])
 
-      if (!prioritiesRes.ok || !statusesRes.ok || !typesRes.ok || !levelsRes.ok || !sourcesRes.ok || !categoriesRes.ok) {
+      if (!prioritiesRes.ok || !statusesRes.ok || !typesRes.ok || !levelsRes.ok || !sourcesRes.ok || !categoriesRes.ok || !subcategoriesRes.ok) {
         throw new Error('Failed to fetch some options')
       }
 
@@ -683,14 +686,16 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
         typesData,
         levelsData,
         sourcesData,
-        categoriesData
+        categoriesData,
+        subcategoriesData
       ] = await Promise.all([
         prioritiesRes.json(),
         statusesRes.json(),
         typesRes.json(),
         levelsRes.json(),
         sourcesRes.json(),
-        categoriesRes.json()
+        categoriesRes.json(),
+        subcategoriesRes.json()
       ])
 
       setPriorities(prioritiesData)
@@ -699,6 +704,7 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
       setLevels(levelsData)
       setSources(sourcesData)
       setCategories(categoriesData)
+      setSubcategories(subcategoriesData)
 
       // Find all IDs that match the task's current values
       const priorityId = prioritiesData.find((p: { id: number; name: string }) => p.name === task.priority)?.id.toString()
@@ -707,6 +713,7 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
       const levelId = levelsData.find((l: { id: number; name: string }) => l.name === task.level)?.id.toString()
       const sourceId = sourcesData.find((s: { id: number; name: string }) => s.name === task.source)?.id.toString()
       const categoryId = categoriesData.find((c: { id: number; name: string }) => c.name === task.category)?.id.toString()
+      const subcategoryId = subcategoriesData.find((s: { id: number; name: string }) => s.name === task.subcategory)?.id.toString()
 
       setEditingTask(task.id)
       setEditForm({ 
@@ -716,7 +723,8 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
         type: typeId || task.type,
         level: levelId || task.level,
         source: sourceId || task.source,
-        category: categoryId || task.category
+        category: categoryId || task.category,
+        subcategory: subcategoryId || task.subcategory
       })
     } catch (error) {
       console.error('Error fetching options:', error)
@@ -765,7 +773,7 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
     if (editForm) {
       try {
         // Destructure all dropdown fields out and rename remaining fields
-        const { priority, status, type, level, source, category, ...rest } = editForm;
+        const { priority, status, type, level, source, category, subcategory, ...rest } = editForm;
         const payload = {
           ...rest,
           priority_id: priority,
@@ -774,6 +782,7 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
           level_id: level,
           source_id: source,
           category_id: category,
+          subcategory_id: subcategory,
         };
 
         const response = await fetch(`http://localhost:8000/api/tasks/${editForm.id}`, {
@@ -1380,7 +1389,29 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
                     ) : task.technology}
                   </TableCell>
                 )}
-                {columnVisibility["subcategory"] && <TableCell>{task.subcategory}</TableCell>}
+                {columnVisibility["subcategory"] && (
+                  <TableCell>
+                    {editingTask === task.id ? (
+                      <Select
+                        value={editForm?.subcategory}
+                        onValueChange={(value) => handleEditChange('subcategory', value)}
+                      >
+                        <SelectTrigger className="w-[150px]">
+                          <SelectValue>
+                            {subcategories.find((s: { id: number; name: string }) => s.id.toString() === editForm?.subcategory)?.name ?? "Select"}
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {subcategories.map((subcategory) => (
+                            <SelectItem key={subcategory.id} value={subcategory.id.toString()}>
+                              {subcategory.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : task.subcategory}
+                  </TableCell>
+                )}
                 {columnVisibility["category"] && (
                   <TableCell>
                     {editingTask === task.id ? (

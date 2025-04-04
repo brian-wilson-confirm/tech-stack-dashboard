@@ -544,6 +544,7 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
   const [editingTask, setEditingTask] = useState<string | null>(null)
   const [editForm, setEditForm] = useState<Task | null>(null)
   const [sortConfigs, setSortConfigs] = useState<SortConfig[]>([])
+  const [selectedRows, setSelectedRows] = useState<string[]>([])
 
   // Initialize tasks only once
   useEffect(() => {
@@ -616,16 +617,6 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
         }
       }
     })
-  }
-
-  const toggleTaskDone = (taskId: string, checked: boolean) => {
-    setTasks(prevTasks => 
-      prevTasks.map(task => 
-        task.id === taskId 
-          ? { ...task, done: checked } 
-          : task
-      )
-    )
   }
 
   const startEditing = (task: Task) => {
@@ -749,8 +740,15 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-12"></TableHead>
-              <TableHead className="w-12">Done</TableHead>
+              <TableHead className="w-12">
+                <Checkbox
+                  checked={currentTasks.length > 0 && selectedRows.length === currentTasks.length}
+                  onCheckedChange={(checked: boolean) => {
+                    setSelectedRows(checked ? currentTasks.map(t => t.id) : [])
+                  }}
+                  aria-label="Select all rows"
+                />
+              </TableHead>
               <TableHead className="min-w-[200px] group">
                 <SortableColumn field="task" sortConfigs={sortConfigs} onSort={handleSort}>
                   Task
@@ -788,12 +786,16 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
             {currentTasks.map((task) => (
               <TableRow key={task.id}>
                 <TableCell>
-                  <GripVertical className="h-4 w-4 text-muted-foreground" />
-                </TableCell>
-                <TableCell>
                   <Checkbox
-                    checked={task.done}
-                    onCheckedChange={(checked) => toggleTaskDone(task.id, checked as boolean)}
+                    checked={selectedRows.includes(task.id)}
+                    onCheckedChange={(checked: boolean) => {
+                      setSelectedRows(prev =>
+                        checked
+                          ? [...prev, task.id]
+                          : prev.filter(id => id !== task.id)
+                      )
+                    }}
+                    aria-label={`Select task ${task.task}`}
                   />
                 </TableCell>
                 <TableCell>

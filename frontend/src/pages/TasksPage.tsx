@@ -43,7 +43,7 @@ export default function TasksPage() {
         <CheckSquare className="h-8 w-8" />
         <h1 className="text-3xl font-bold">Tasks</h1>
       </div>
-
+{/*
       <div className="grid gap-6">
         <TasksWidget tasks={tasks} />
       </div>
@@ -54,7 +54,7 @@ export default function TasksPage() {
           onTaskUpdate={handleTaskUpdate}
         />
       </div>
-      <br />
+      <br />*/}
       <div className="grid gap-6">
         <NewWidget tasks={tasks} />
       </div>

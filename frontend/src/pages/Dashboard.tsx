@@ -126,6 +126,11 @@ export default function Dashboard() {
           metrics={metrics} 
         />
       </div>
+
+      <div className="grid grid-cols-1 gap-6 mb-8">
+        Task Distribution Bar Chart (by category)
+        Task Distribution Bar/Pie Chart (by priority)
+      </div>
     </div>
   )
 } 

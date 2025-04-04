@@ -531,6 +531,7 @@ function AddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskFormValu
 
 export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
   //console.log('(NewWidget) Initial tasks in widget:', initialTasks)
+  const { toast } = useToast()
   const [tasks, setTasks] = useState<Task[]>(initialTasks || [])
   const [page, setPage] = useState(1)
   const [rowsPerPage, setRowsPerPage] = useState(5)
@@ -541,6 +542,7 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
   const [searchQuery, setSearchQuery] = useState<string>("")
   const [selectedStatus, setSelectedStatus] = useState<string[]>([])
   const [selectedPriority, setSelectedPriority] = useState<string[]>([])
+  const [priorities, setPriorities] = useState<Array<{ id: number; name: string }>>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
     task_id: true,              // ✓ Task ID
     task: true,                 // ✓ Task
@@ -564,7 +566,6 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
   const [isPending, startTransition] = useTransition()
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   const [sheetOpen, setSheetOpen] = useState(false)
-  const { toast } = useToast()
 
   // Initialize tasks only once
   useEffect(() => {
@@ -648,7 +649,23 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
     })
   }
 
-  const startEditing = (task: Task) => {
+  const startEditing = async (task: Task) => {
+    try {
+      const response = await fetch('http://localhost:8000/api/tasks/priorities')
+      if (!response.ok) {
+        throw new Error('Failed to fetch priorities')
+      }
+      const prioritiesData = await response.json()
+      setPriorities(prioritiesData)
+    } catch (error) {
+      console.error('Error fetching priorities:', error)
+      toast({
+        title: "Error",
+        description: "Failed to load priorities. Some options may be unavailable.",
+        variant: "destructive",
+      })
+    }
+
     setEditingTask(task.id)
     setEditForm({ ...task })
   }
@@ -865,17 +882,17 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
             <DropdownMenuContent align="start" className="w-[200px]">
               {priorities.map((priority) => (
                 <DropdownMenuCheckboxItem
-                  key={priority.value}
-                  checked={selectedPriority.includes(priority.value)}
+                  key={priority.id}
+                  checked={selectedPriority.includes(priority.name)}
                   onCheckedChange={(checked) => {
                     startTransition(() => {
                       checked
-                        ? setSelectedPriority([...selectedPriority, priority.value])
-                        : setSelectedPriority(selectedPriority.filter((value) => value !== priority.value))
+                        ? setSelectedPriority([...selectedPriority, priority.name])
+                        : setSelectedPriority(selectedPriority.filter((value) => value !== priority.name))
                     })
                   }}
                 >
-                  {priority.label}
+                  {priority.name}
                 </DropdownMenuCheckboxItem>
               ))}
             </DropdownMenuContent>
@@ -1373,10 +1390,11 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
                           <SelectValue>{editForm?.priority}</SelectValue>
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="low">Low</SelectItem>
-                          <SelectItem value="medium">Medium</SelectItem>
-                          <SelectItem value="high">High</SelectItem>
-                          <SelectItem value="critical">Critical</SelectItem>
+                          {priorities.map((priority) => (
+                            <SelectItem key={priority.id} value={priority.name}>
+                              {priority.name}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     ) : (

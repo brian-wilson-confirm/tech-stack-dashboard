@@ -10,6 +10,9 @@ from backend.database.views.task_schemas import TaskCreate, TaskRead
 
 router = APIRouter(prefix="/tasks")
 
+"""
+    Task: CRUD operations
+"""
 
 @router.post("/", response_model=Task)
 async def create_task(task_in: TaskCreate, session: Session = Depends(get_session)):
@@ -33,29 +36,7 @@ async def get_tasks(session: Session = Depends(get_session)):
     
     result = []
     for task in tasks:
-        result.append(TaskRead(
-            id=task.id,
-            task_id=task.task_id,
-            task=task.task,
-            technology=session.get(Technology, task.technology_id).name,
-            subcategory=(sub := session.get(Subcategory, task.subcategory_id)) and sub.name,
-            category=(cat := session.get(Category, task.category_id)) and cat.name,
-            section=(sec := session.get(Section, task.section_id)) and sec.name,
-            source=(src := session.get(Source, task.source_id)) and src.name,
-            level=(lvl := session.get(TaskLevel, task.level_id)) and lvl.name,
-            type=(typ := session.get(TaskType, task.type_id)) and typ.name,
-            status=(stat := session.get(TaskStatus, task.status_id)) and stat.name,
-            priority=(prio := session.get(TaskPriority, task.priority_id)) and prio.name,
-            progress=task.progress,
-            order=task.order,
-            #due_date=task.due_date,
-            start_date=task.start_date,
-            end_date=task.end_date,
-            estimated_duration=task.estimated_duration,
-            actual_duration=task.actual_duration,
-            done=task.done,
-            topics=[t.name for t in task.topics]
-        ))
+        result.append(serialize_task(task, session))
     
     return result
 
@@ -113,29 +94,7 @@ async def update_task(id: int, task_update: TaskRead, session: Session = Depends
     session.refresh(task)
     
     # ❗️Return a transformed response matching TaskRead structure
-    return TaskRead(
-        id=task.id,
-        task_id=task.task_id,
-        task=task.task,
-        technology=session.get(Technology, task.technology_id).name,
-        subcategory=session.get(Subcategory, task.subcategory_id).name,
-        category=session.get(Category, task.category_id).name,
-        section=session.get(Section, task.section_id).name,
-        source=session.get(Source, task.source_id).name,
-        level=session.get(TaskLevel, task.level_id).name,
-        type=session.get(TaskType, task.type_id).name,
-        status=session.get(TaskStatus, task.status_id).name,
-        priority=session.get(TaskPriority, task.priority_id).name,
-        progress=task.progress,
-        order=task.order,
-        #due_date=task.due_date,
-        start_date=task.start_date,
-        end_date=task.end_date,
-        estimated_duration=task.estimated_duration,
-        actual_duration=task.actual_duration,
-        done=task.done,
-        topics=[t.name for t in task.topics]
-    )
+    return serialize_task(task, session)
 
 
 @router.delete("/{task_id}", status_code=204)
@@ -155,3 +114,42 @@ async def delete_task(task_id: str, session: Session = Depends(get_session)):
     # Delete the task
     session.delete(task)
     session.commit()
+
+
+"""
+    Task Priority: CRUD operations
+"""
+
+@router.get("/priorities", response_model=List[TaskPriority])
+async def get_task_priorities(session: Session = Depends(get_session)):
+    return session.exec(select(TaskPriority)).all()
+
+
+"""
+    Helper functions
+"""
+
+def serialize_task(task: Task, session: Session) -> TaskRead:
+    return TaskRead(
+            id=task.id,
+            task_id=task.task_id,
+            task=task.task,
+            technology=session.get(Technology, task.technology_id).name,
+            subcategory=(sub := session.get(Subcategory, task.subcategory_id)) and sub.name,
+            category=(cat := session.get(Category, task.category_id)) and cat.name,
+            section=(sec := session.get(Section, task.section_id)) and sec.name,
+            source=(src := session.get(Source, task.source_id)) and src.name,
+            level=(lvl := session.get(TaskLevel, task.level_id)) and lvl.name,
+            type=(typ := session.get(TaskType, task.type_id)) and typ.name,
+            status=(stat := session.get(TaskStatus, task.status_id)) and stat.name,
+            priority=(prio := session.get(TaskPriority, task.priority_id)) and prio.name,
+            progress=task.progress,
+            order=task.order,
+            #due_date=task.due_date,
+            start_date=task.start_date,
+            end_date=task.end_date,
+            estimated_duration=task.estimated_duration,
+            actual_duration=task.actual_duration,
+            done=task.done,
+            topics=[t.name for t in task.topics]
+        )

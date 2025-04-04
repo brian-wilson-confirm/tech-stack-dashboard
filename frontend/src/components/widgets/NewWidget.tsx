@@ -136,7 +136,7 @@ const taskFormSchema = z.object({
 type TaskFormValues = z.infer<typeof taskFormSchema>
 
 // Add the AddTaskDialog component
-function AddTaskDialog({ onAddTask }: { onAddTask: (task: TaskFormValues) => void }) {
+function AddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskFormValues) => void, disabled?: boolean }) {
   const [open, setOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -197,7 +197,7 @@ function AddTaskDialog({ onAddTask }: { onAddTask: (task: TaskFormValues) => voi
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
+        <Button variant="outline" size="sm" disabled={disabled}>
           <Plus className="h-4 w-4 mr-2" />
           Add Task
         </Button>
@@ -1088,7 +1088,7 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        <AddTaskDialog onAddTask={addTask} />
+        <AddTaskDialog onAddTask={addTask} disabled={!!editingTask} />
       </div>
 
       <div className="rounded-md border overflow-x-auto">

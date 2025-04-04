@@ -61,7 +61,7 @@ class TaskUpdate(SQLModel):
     source: str
     level: Optional[str] = None
     type: Optional[str] = None
-    status: Optional[str] = None
+    status_id: int
     priority_id: int
     progress: int
     order: Optional[int]

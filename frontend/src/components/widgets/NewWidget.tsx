@@ -700,13 +700,15 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
       setSources(sourcesData)
       setCategories(categoriesData)
 
-      // Find the priority ID that matches the task's priority name
+      // Find the priority ID and status ID that match the task's current values
       const priorityId = prioritiesData.find((p: { id: number; name: string }) => p.name === task.priority)?.id.toString()
+      const statusId = statusesData.find((s: { id: number; name: string }) => s.name === task.status)?.id.toString()
 
       setEditingTask(task.id)
       setEditForm({ 
         ...task,
-        priority: priorityId || task.priority // Use the found ID or fallback to current priority
+        priority: priorityId || task.priority,
+        status: statusId || task.status
       })
     } catch (error) {
       console.error('Error fetching options:', error)
@@ -754,11 +756,12 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
   const saveEditing = async () => {
     if (editForm) {
       try {
-        // Destructure priority out and rename remaining fields
-        const { priority, ...rest } = editForm;
+        // Destructure priority and status out and rename remaining fields
+        const { priority, status, ...rest } = editForm;
         const payload = {
           ...rest,
           priority_id: priority,
+          status_id: status,
         };
 
         const response = await fetch(`http://localhost:8000/api/tasks/${editForm.id}`, {
@@ -790,7 +793,6 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
         });
       } catch (error) {
         console.error('Error updating task:', error);
-        // TODO: Show error message to user
         toast({
           title: "Error",
           description: error instanceof Error ? error.message : "Failed to update the task. Please try again.",
@@ -1457,11 +1459,13 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
                         onValueChange={(value) => handleEditChange('status', value)}
                       >
                         <SelectTrigger className="w-[130px]">
-                          <SelectValue>{editForm?.status.replace('_', ' ')}</SelectValue>
+                          <SelectValue>
+                            {statuses.find((s: { id: number; name: string }) => s.id.toString() === editForm?.status)?.name ?? "Select"}
+                          </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
                           {statuses.map((status) => (
-                            <SelectItem key={status.id} value={status.name}>
+                            <SelectItem key={status.id} value={status.id.toString()}>
                               {status.name.replace('_', ' ')}
                             </SelectItem>
                           ))}

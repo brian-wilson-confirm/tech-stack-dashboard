@@ -73,6 +73,7 @@ async def update_task(id: int, task_update: TaskUpdate, session: Session = Depen
         elif field in model_mappings:
             model_class, id_field = model_mappings[field]
             # Look up the ID for the string value
+            print(f"model_class: {model_class}, id_field: {id_field}, value: {value}")
             result = session.exec(
                 select(model_class).where(model_class.name == value)
             ).first()

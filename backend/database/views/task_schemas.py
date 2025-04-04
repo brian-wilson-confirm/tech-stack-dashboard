@@ -53,7 +53,7 @@ class TaskUpdate(SQLModel):
     id: int
     task_id: str
     task: str
-    technology: str
+    technology_id: int
     subcategory_id: int
     category_id: int
     topics: List[str]

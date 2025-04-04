@@ -549,6 +549,7 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
   const [sources, setSources] = useState<Array<{ id: number; name: string }>>([])
   const [categories, setCategories] = useState<Array<{ id: number; name: string }>>([])
   const [subcategories, setSubcategories] = useState<Array<{ id: number; name: string }>>([])
+  const [technologies, setTechnologies] = useState<Array<{ id: number; name: string }>>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
     task_id: true,              // ✓ Task ID
     task: true,                 // ✓ Task
@@ -665,7 +666,8 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
         levelsRes,
         sourcesRes,
         categoriesRes,
-        subcategoriesRes
+        subcategoriesRes,
+        technologiesRes
       ] = await Promise.all([
         fetch('http://localhost:8000/api/tasks/priorities'),
         fetch('http://localhost:8000/api/tasks/statuses'),
@@ -673,10 +675,11 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
         fetch('http://localhost:8000/api/tasks/levels'),
         fetch('http://localhost:8000/api/tasks/sources'),
         fetch('http://localhost:8000/api/tasks/categories'),
-        fetch('http://localhost:8000/api/tasks/subcategories')
+        fetch('http://localhost:8000/api/tasks/subcategories'),
+        fetch('http://localhost:8000/api/tasks/technologies')
       ])
 
-      if (!prioritiesRes.ok || !statusesRes.ok || !typesRes.ok || !levelsRes.ok || !sourcesRes.ok || !categoriesRes.ok || !subcategoriesRes.ok) {
+      if (!prioritiesRes.ok || !statusesRes.ok || !typesRes.ok || !levelsRes.ok || !sourcesRes.ok || !categoriesRes.ok || !subcategoriesRes.ok || !technologiesRes.ok) {
         throw new Error('Failed to fetch some options')
       }
 
@@ -687,7 +690,8 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
         levelsData,
         sourcesData,
         categoriesData,
-        subcategoriesData
+        subcategoriesData,
+        technologiesData
       ] = await Promise.all([
         prioritiesRes.json(),
         statusesRes.json(),
@@ -695,7 +699,8 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
         levelsRes.json(),
         sourcesRes.json(),
         categoriesRes.json(),
-        subcategoriesRes.json()
+        subcategoriesRes.json(),
+        technologiesRes.json()
       ])
 
       setPriorities(prioritiesData)
@@ -705,6 +710,7 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
       setSources(sourcesData)
       setCategories(categoriesData)
       setSubcategories(subcategoriesData)
+      setTechnologies(technologiesData)
 
       // Find all IDs that match the task's current values
       const priorityId = prioritiesData.find((p: { id: number; name: string }) => p.name === task.priority)?.id.toString()
@@ -714,6 +720,7 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
       const sourceId = sourcesData.find((s: { id: number; name: string }) => s.name === task.source)?.id.toString()
       const categoryId = categoriesData.find((c: { id: number; name: string }) => c.name === task.category)?.id.toString()
       const subcategoryId = subcategoriesData.find((s: { id: number; name: string }) => s.name === task.subcategory)?.id.toString()
+      const technologyId = technologiesData.find((t: { id: number; name: string }) => t.name === task.technology)?.id.toString()
 
       setEditingTask(task.id)
       setEditForm({ 
@@ -724,7 +731,8 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
         level: levelId || task.level,
         source: sourceId || task.source,
         category: categoryId || task.category,
-        subcategory: subcategoryId || task.subcategory
+        subcategory: subcategoryId || task.subcategory,
+        technology: technologyId || task.technology
       })
     } catch (error) {
       console.error('Error fetching options:', error)
@@ -773,7 +781,7 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
     if (editForm) {
       try {
         // Destructure all dropdown fields out and rename remaining fields
-        const { priority, status, type, level, source, category, subcategory, ...rest } = editForm;
+        const { priority, status, type, level, source, category, subcategory, technology, ...rest } = editForm;
         const payload = {
           ...rest,
           priority_id: priority,
@@ -783,6 +791,7 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
           source_id: source,
           category_id: category,
           subcategory_id: subcategory,
+          technology_id: technology,
         };
 
         const response = await fetch(`http://localhost:8000/api/tasks/${editForm.id}`, {
@@ -1381,11 +1390,23 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
                 {columnVisibility["technology"] && (
                   <TableCell>
                     {editingTask === task.id ? (
-                      <Input
+                      <Select
                         value={editForm?.technology}
-                        onChange={(e) => handleEditChange('technology', e.target.value)}
-                        className="w-full"
-                      />
+                        onValueChange={(value) => handleEditChange('technology', value)}
+                      >
+                        <SelectTrigger className="w-[150px]">
+                          <SelectValue>
+                            {technologies.find((t: { id: number; name: string }) => t.id.toString() === editForm?.technology)?.name ?? "Select"}
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {technologies.map((technology) => (
+                            <SelectItem key={technology.id} value={technology.id.toString()}>
+                              {technology.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     ) : task.technology}
                   </TableCell>
                 )}

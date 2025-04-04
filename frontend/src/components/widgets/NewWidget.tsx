@@ -545,6 +545,13 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
   const [editForm, setEditForm] = useState<Task | null>(null)
   const [sortConfigs, setSortConfigs] = useState<SortConfig[]>([])
 
+  // Initialize tasks only once
+  useEffect(() => {
+    if (!tasks.length && initialTasks?.length) {
+      setTasks(initialTasks)
+    }
+  }, [initialTasks])
+
   const sortTasks = (tasksToSort: Task[]) => {
     if (sortConfigs.length === 0) return tasksToSort
 
@@ -576,12 +583,11 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
     })
   }
 
-  // Initialize tasks only once
-  useEffect(() => {
-    if (!tasks.length && initialTasks?.length) {
-      setTasks(initialTasks)
-    }
-  }, [initialTasks])
+  const totalPages = Math.ceil(tasks.length / rowsPerPage)
+  const start = (page - 1) * rowsPerPage
+  const end = start + rowsPerPage
+  const sortedTasks = sortTasks(tasks)
+  const currentTasks = sortedTasks.slice(start, end)
 
   const handleSort = (field: keyof Task, isMultiSort: boolean) => {
     setSortConfigs(prevConfigs => {
@@ -611,12 +617,6 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
       }
     })
   }
-
-  const totalPages = Math.ceil(tasks.length / rowsPerPage)
-  const start = (page - 1) * rowsPerPage
-  const end = start + rowsPerPage
-  const sortedTasks = sortTasks(tasks)
-  const currentTasks = sortedTasks.slice(start, end)
 
   const toggleTaskDone = (taskId: string, checked: boolean) => {
     setTasks(prevTasks => 
@@ -739,27 +739,10 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
     <div className="border rounded-lg p-6 col-span-full">
       <div className="flex items-center justify-between mb-6">
         <div className="flex flex-col gap-2">
-          <h2 className="text-xl font-semibold">Today's Tasks</h2>
-          {sortConfigs.length > 0 && (
-            <div className="text-sm text-muted-foreground">
-              Sorting by: {sortConfigs.map((config, i) => (
-                <span key={config.field}>
-                  {i > 0 && ", "}
-                  {config.field} ({config.direction})
-                </span>
-              ))}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="ml-2"
-                onClick={() => setSortConfigs([])}
-              >
-                Clear Sort
-              </Button>
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            <AddTaskDialog onAddTask={addTask} />
+          </div>
         </div>
-        <AddTaskDialog onAddTask={addTask} />
       </div>
 
       <div className="rounded-md border overflow-x-auto">
@@ -774,18 +757,13 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
                 </SortableColumn>
               </TableHead>
               <TableHead className="group">
-                <SortableColumn field="order" sortConfigs={sortConfigs} onSort={handleSort}>
-                  Order
+                <SortableColumn field="technology" sortConfigs={sortConfigs} onSort={handleSort}>
+                  Technology
                 </SortableColumn>
               </TableHead>
               <TableHead className="group">
                 <SortableColumn field="status" sortConfigs={sortConfigs} onSort={handleSort}>
                   Status
-                </SortableColumn>
-              </TableHead>
-              <TableHead className="group">
-                <SortableColumn field="progress" sortConfigs={sortConfigs} onSort={handleSort}>
-                  Progress
                 </SortableColumn>
               </TableHead>
               <TableHead className="group">
@@ -803,52 +781,6 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
                   Level
                 </SortableColumn>
               </TableHead>
-              <TableHead className="group">
-                <SortableColumn field="section" sortConfigs={sortConfigs} onSort={handleSort}>
-                  Section
-                </SortableColumn>
-              </TableHead>
-              <TableHead className="group">
-                <SortableColumn field="category" sortConfigs={sortConfigs} onSort={handleSort}>
-                  Category
-                </SortableColumn>
-              </TableHead>
-              <TableHead className="group">
-                <SortableColumn field="subcategory" sortConfigs={sortConfigs} onSort={handleSort}>
-                  Subcategory
-                </SortableColumn>
-              </TableHead>
-              <TableHead className="group">
-                <SortableColumn field="technology" sortConfigs={sortConfigs} onSort={handleSort}>
-                  Technology
-                </SortableColumn>
-              </TableHead>
-              <TableHead className="min-w-[150px]">Topics</TableHead>
-              <TableHead className="group">
-                <SortableColumn field="source" sortConfigs={sortConfigs} onSort={handleSort}>
-                  Source
-                </SortableColumn>
-              </TableHead>
-              <TableHead className="group">
-                <SortableColumn field="estimated_duration" sortConfigs={sortConfigs} onSort={handleSort}>
-                  Est. Duration
-                </SortableColumn>
-              </TableHead>
-              <TableHead className="group">
-                <SortableColumn field="actual_duration" sortConfigs={sortConfigs} onSort={handleSort}>
-                  Actual Duration
-                </SortableColumn>
-              </TableHead>
-              <TableHead className="group">
-                <SortableColumn field="start_date" sortConfigs={sortConfigs} onSort={handleSort}>
-                  Start Date
-                </SortableColumn>
-              </TableHead>
-              <TableHead className="group">
-                <SortableColumn field="end_date" sortConfigs={sortConfigs} onSort={handleSort}>
-                  End Date
-                </SortableColumn>
-              </TableHead>
               <TableHead className="w-[100px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -858,9 +790,8 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
                 <TableCell>
                   <GripVertical className="h-4 w-4 text-muted-foreground" />
                 </TableCell>
-                <TableCell className="flex items-center justify-center">
-                  <Checkbox 
-                    id={`task-${task.id}`}
+                <TableCell>
+                  <Checkbox
                     checked={task.done}
                     onCheckedChange={(checked) => toggleTaskDone(task.id, checked as boolean)}
                   />
@@ -877,12 +808,11 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
                 <TableCell>
                   {editingTask === task.id ? (
                     <Input
-                      type="number"
-                      value={editForm?.order}
-                      onChange={(e) => handleEditChange('order', e.target.value)}
-                      className="w-20"
+                      value={editForm?.technology}
+                      onChange={(e) => handleEditChange('technology', e.target.value)}
+                      className="w-full"
                     />
-                  ) : task.order}
+                  ) : task.technology}
                 </TableCell>
                 <TableCell>
                   {editingTask === task.id ? (
@@ -905,23 +835,6 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
                     <Badge variant="secondary" className={`${getStatusColor(task.status)} text-white`}>
                       {task.status.replace('_', ' ')}
                     </Badge>
-                  )}
-                </TableCell>
-                <TableCell>
-                  {editingTask === task.id ? (
-                    <Input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={editForm?.progress}
-                      onChange={(e) => handleEditChange('progress', e.target.value)}
-                      className="w-20"
-                    />
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <Progress value={task.progress} className="w-[60px]" />
-                      <span className="text-sm">{task.progress}%</span>
-                    </div>
                   )}
                 </TableCell>
                 <TableCell>
@@ -982,120 +895,6 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
                       </SelectContent>
                     </Select>
                   ) : task.level}
-                </TableCell>
-                <TableCell>
-                  {editingTask === task.id ? (
-                    <Input
-                      value={editForm?.section}
-                      onChange={(e) => handleEditChange('section', e.target.value)}
-                      className="w-full"
-                    />
-                  ) : task.section}
-                </TableCell>
-                <TableCell>
-                  {editingTask === task.id ? (
-                    <Input
-                      value={editForm?.category}
-                      onChange={(e) => handleEditChange('category', e.target.value)}
-                      className="w-full"
-                    />
-                  ) : task.category}
-                </TableCell>
-                <TableCell>
-                  {editingTask === task.id ? (
-                    <Input
-                      value={editForm?.subcategory}
-                      onChange={(e) => handleEditChange('subcategory', e.target.value)}
-                      className="w-full"
-                    />
-                  ) : task.subcategory}
-                </TableCell>
-                <TableCell>
-                  {editingTask === task.id ? (
-                    <Input
-                      value={editForm?.technology}
-                      onChange={(e) => handleEditChange('technology', e.target.value)}
-                      className="w-full"
-                    />
-                  ) : task.technology}
-                </TableCell>
-                <TableCell>
-                  {editingTask === task.id ? (
-                    <Input
-                      value={editForm?.topics.join(', ')}
-                      onChange={(e) => handleEditChange('topics', e.target.value.split(',').map(t => t.trim()))}
-                      className="w-full"
-                      placeholder="Comma-separated topics"
-                    />
-                  ) : (
-                    <div className="flex flex-wrap gap-1">
-                      {task.topics.map((topic, index) => (
-                        <Badge key={index} variant="outline" className="text-xs">
-                          {topic}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                </TableCell>
-                <TableCell>
-                  {editingTask === task.id ? (
-                    <Input
-                      value={editForm?.source}
-                      onChange={(e) => handleEditChange('source', e.target.value)}
-                      className="w-full"
-                    />
-                  ) : task.source}
-                </TableCell>
-                <TableCell>
-                  {editingTask === task.id ? (
-                    <Input
-                      type="number"
-                      value={editForm?.estimated_duration}
-                      onChange={(e) => handleEditChange('estimated_duration', e.target.value)}
-                      className="w-20"
-                    />
-                  ) : (
-                    <div className="flex items-center gap-1">
-                      <Clock className="h-4 w-4" />
-                      {task.estimated_duration}h
-                    </div>
-                  )}
-                </TableCell>
-                <TableCell>
-                  {editingTask === task.id ? (
-                    <Input
-                      type="number"
-                      value={editForm?.actual_duration || ''}
-                      onChange={(e) => handleEditChange('actual_duration', e.target.value || null)}
-                      className="w-20"
-                      placeholder="Hours"
-                    />
-                  ) : task.actual_duration && (
-                    <div className="flex items-center gap-1">
-                      <Clock className="h-4 w-4" />
-                      {task.actual_duration}h
-                    </div>
-                  )}
-                </TableCell>
-                <TableCell>
-                  {editingTask === task.id ? (
-                    <Input
-                      type="date"
-                      value={editForm?.start_date || ''}
-                      onChange={(e) => handleEditChange('start_date', e.target.value || null)}
-                      className="w-32"
-                    />
-                  ) : task.start_date || '-'}
-                </TableCell>
-                <TableCell>
-                  {editingTask === task.id ? (
-                    <Input
-                      type="date"
-                      value={editForm?.end_date || ''}
-                      onChange={(e) => handleEditChange('end_date', e.target.value || null)}
-                      className="w-32"
-                    />
-                  ) : task.end_date || '-'}
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import {
   Table,
   TableBody,
@@ -41,6 +41,7 @@ import {
   ArrowUp,
   ArrowDown,
   Plus,
+  X as CrossIcon,
 } from "lucide-react"
 import {
   Select,
@@ -545,6 +546,7 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
   const [editForm, setEditForm] = useState<Task | null>(null)
   const [sortConfigs, setSortConfigs] = useState<SortConfig[]>([])
   const [selectedRows, setSelectedRows] = useState<string[]>([])
+  const [searchQuery, setSearchQuery] = useState<string>("")
 
   // Initialize tasks only once
   useEffect(() => {
@@ -584,10 +586,17 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
     })
   }
 
-  const totalPages = Math.ceil(tasks.length / rowsPerPage)
+  const filteredTasks = useMemo(() => {
+    return tasks.filter((task) => {
+      const matchesSearch = task.task.toLowerCase().includes(searchQuery.toLowerCase())
+      return matchesSearch
+    })
+  }, [tasks, searchQuery])
+
+  const totalPages = Math.ceil(filteredTasks.length / rowsPerPage)
   const start = (page - 1) * rowsPerPage
   const end = start + rowsPerPage
-  const sortedTasks = sortTasks(tasks)
+  const sortedTasks = sortTasks(filteredTasks)
   const currentTasks = sortedTasks.slice(start, end)
 
   const handleSort = (field: keyof Task, isMultiSort: boolean) => {
@@ -729,8 +738,30 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
   return (
     <div className="border rounded-lg p-6 col-span-full">
       <div className="flex items-center justify-between mb-6">
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between">
+          <div className="flex flex-1 items-center space-x-2">
+            <div className="relative">
+              <Input
+                placeholder="Filter tasks..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="h-8 w-[150px] lg:w-[250px]"
+                disabled={!!editingTask}
+              />
+              {searchQuery && (
+                <Button
+                  variant="ghost"
+                  className="absolute right-0 top-0 h-8 px-2 hover:bg-transparent"
+                  onClick={() => setSearchQuery("")}
+                  disabled={!!editingTask}
+                >
+                  <CrossIcon className="h-4 w-4" />
+                  <span className="sr-only">Clear search</span>
+                </Button>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center space-x-2">
             <AddTaskDialog onAddTask={addTask} />
           </div>
         </div>

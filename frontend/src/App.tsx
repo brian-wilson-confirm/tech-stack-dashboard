@@ -54,6 +54,7 @@ import AlertingPage from './pages/monitoring/AlertingPage'
 import TravelPage from './pages/TravelPage'
 import TasksPage from './pages/TasksPage'
 import AssessmentsPage from './pages/AssessmentsPage'
+import { Toaster } from './components/ui/toaster'
 
 function App() {
   return (
@@ -117,6 +118,7 @@ function App() {
             <Route path="/travel" element={<TravelPage />} />
             <Route path="/tasks" element={<TasksPage />} />
           </Routes>
+          <Toaster />
         </main>
       </div>
     </div>

@@ -31,12 +31,10 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 import {
-  GripVertical,
   Pencil,
   Trash2,
   Check,
   X,
-  Clock,
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
@@ -52,12 +50,10 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
@@ -67,6 +63,7 @@ import { VisibilityState } from "@tanstack/react-table"
 import { priorities, statuses } from "../data/data"
 import { TaskSheet } from "../ui/task-sheet"
 import { Task } from "@/components/data/schema"
+import { useToast } from "@/components/ui/use-toast"
 
 interface SortConfig {
   field: keyof Task
@@ -531,7 +528,7 @@ function AddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskFormValu
 }
 
 export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
-  console.log('(NewWidget) Initial tasks in widget:', initialTasks)
+  //console.log('(NewWidget) Initial tasks in widget:', initialTasks)
   const [tasks, setTasks] = useState<Task[]>(initialTasks || [])
   const [page, setPage] = useState(1)
   const [rowsPerPage, setRowsPerPage] = useState(5)
@@ -565,6 +562,7 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
   const [isPending, startTransition] = useTransition()
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   const [sheetOpen, setSheetOpen] = useState(false)
+  const { toast } = useToast()
 
   // Initialize tasks only once
   useEffect(() => {
@@ -682,9 +680,21 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
         );
         setEditingTask(null);
         setEditForm(null);
+        console.log('Task Updated!')
+        toast({
+          title: "Task Updated",
+          description: "The task has been successfully updated.",
+          duration: 3000,
+        });
       } catch (error) {
         console.error('Error updating task:', error);
         // TODO: Show error message to user
+        toast({
+          title: "Error",
+          description: error instanceof Error ? error.message : "Failed to update the task. Please try again.",
+          variant: "destructive",
+          duration: 3000,
+        });
       }
     }
   }

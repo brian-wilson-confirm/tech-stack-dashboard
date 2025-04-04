@@ -25,7 +25,6 @@ interface TempWidgetProps {
 }
 
 export function TempWidget({ tasks, onTaskUpdate }: TempWidgetProps) {
-    console.log('TempWidget received tasks:', tasks)
     const [selectedStatus, setSelectedStatus] = React.useState<string[]>([])
     const [selectedPriority, setSelectedPriority] = React.useState<string[]>([])
     const [searchQuery, setSearchQuery] = React.useState<string>("")
@@ -61,7 +60,6 @@ export function TempWidget({ tasks, onTaskUpdate }: TempWidgetProps) {
             const matchesPriority = selectedPriority.length === 0 || selectedPriority.includes(task.priority)
             return matchesSearch && matchesStatus && matchesPriority
         })
-        console.log('Filtered tasks:', filtered)
         return filtered
     }, [tasks, searchQuery, selectedStatus, selectedPriority])
 

@@ -47,16 +47,16 @@ export default function TasksPage() {
       <div className="grid gap-6">
         {/*<TasksWidget tasks={tasks} />*/}
       </div>
-      <br></br>
+      <br />
       <div className="grid gap-6">
         <TempWidget 
           tasks={tasks} 
           onTaskUpdate={handleTaskUpdate}
         />
       </div>
-      <br></br>
+      <br />
       <div className="grid gap-6">
-        <NewWidget tasks={tasks} onTaskUpdate={handleTaskUpdate} />
+        <NewWidget tasks={tasks} />
       </div>
     </div>
   )

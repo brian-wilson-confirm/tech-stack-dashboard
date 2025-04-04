@@ -699,6 +699,15 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
       setLevels(levelsData)
       setSources(sourcesData)
       setCategories(categoriesData)
+
+      // Find the priority ID that matches the task's priority name
+      const priorityId = prioritiesData.find((p: { id: number; name: string }) => p.name === task.priority)?.id.toString()
+
+      setEditingTask(task.id)
+      setEditForm({ 
+        ...task,
+        priority: priorityId || task.priority // Use the found ID or fallback to current priority
+      })
     } catch (error) {
       console.error('Error fetching options:', error)
       toast({
@@ -707,9 +716,6 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
         variant: "destructive",
       })
     }
-
-    setEditingTask(task.id)
-    setEditForm({ ...task })
   }
 
   const cancelEditing = () => {
@@ -717,15 +723,50 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
     setEditForm(null)
   }
 
+  const handleEditChange = (field: keyof Task, value: string | number | boolean | string[] | Date | null) => {
+    if (editForm) {
+      let processedValue: any = value
+      
+      // Handle numeric fields
+      if (['order', 'progress', 'estimated_duration'].includes(field)) {
+        processedValue = Number(value)
+      }
+      
+      // Handle array fields
+      if (field === 'topics' && typeof value === 'string') {
+        processedValue = value.split(',').map(t => t.trim())
+      }
+      
+      // Handle boolean fields
+      if (field === 'done') {
+        processedValue = Boolean(value)
+      }
+
+      // Handle date fields
+      if (['start_date', 'end_date'].includes(field)) {
+        processedValue = value instanceof Date ? value : null
+      }
+      
+      setEditForm({ ...editForm, [field]: processedValue })
+    }
+  }
+
   const saveEditing = async () => {
     if (editForm) {
       try {
+        // Destructure priority out and rename remaining fields
+        const { priority, ...rest } = editForm;
+        const payload = {
+          ...rest,
+          priority_id: priority,
+        };
+
         const response = await fetch(`http://localhost:8000/api/tasks/${editForm.id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(editForm),
+          body: JSON.stringify(payload),
         });
 
         if (!response.ok) {
@@ -762,34 +803,6 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
 
   const deleteTask = (taskId: string) => {
     setTasks(tasks.filter(task => task.id !== taskId))
-  }
-
-  const handleEditChange = (field: keyof Task, value: string | number | boolean | string[] | Date | null) => {
-    if (editForm) {
-      let processedValue: any = value
-      
-      // Handle numeric fields
-      if (['order', 'progress', 'estimated_duration'].includes(field)) {
-        processedValue = Number(value)
-      }
-      
-      // Handle array fields
-      if (field === 'topics' && typeof value === 'string') {
-        processedValue = value.split(',').map(t => t.trim())
-      }
-      
-      // Handle boolean fields
-      if (field === 'done') {
-        processedValue = Boolean(value)
-      }
-
-      // Handle date fields
-      if (['start_date', 'end_date'].includes(field)) {
-        processedValue = value instanceof Date ? value : null
-      }
-      
-      setEditForm({ ...editForm, [field]: processedValue })
-    }
   }
 
   type StatusType = 'not_started' | 'in_progress' | 'completed' | 'on_hold' | 'cancelled'
@@ -1469,11 +1482,13 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
                         onValueChange={(value) => handleEditChange('priority', value)}
                       >
                         <SelectTrigger className="w-[100px]">
-                          <SelectValue>{editForm?.priority}</SelectValue>
+                          <SelectValue>
+                            {priorities.find((p: { id: number; name: string }) => p.id.toString() === editForm?.priority)?.name ?? "Select"}
+                          </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
                           {priorities.map((priority) => (
-                            <SelectItem key={priority.id} value={priority.name}>
+                            <SelectItem key={priority.id} value={priority.id.toString()}>
                               {priority.name}
                             </SelectItem>
                           ))}

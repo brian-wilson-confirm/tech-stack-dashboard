@@ -6,7 +6,7 @@ from sqlalchemy.orm import selectinload
 from backend.database.connection import get_session
 
 from backend.database.models.task_models import TaskTopicLink, Task, Category, Section, Source, Subcategory, Technology, TaskLevel, TaskPriority, TaskStatus, TaskType, Topic
-from backend.database.views.task_schemas import TaskCreate, TaskRead
+from backend.database.views.task_schemas import TaskCreate, TaskRead, TaskUpdate
 
 router = APIRouter(prefix="/tasks")
 
@@ -42,7 +42,7 @@ async def get_tasks(session: Session = Depends(get_session)):
 
 
 @router.put("/{id}", response_model=TaskRead)
-async def update_task(id: int, task_update: TaskRead, session: Session = Depends(get_session)):
+async def update_task(id: int, task_update: TaskUpdate, session: Session = Depends(get_session)):
     print(f"id: {id}")
     task = session.exec(
         select(Task).where(Task.id == id)

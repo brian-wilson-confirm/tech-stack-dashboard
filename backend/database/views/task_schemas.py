@@ -59,8 +59,8 @@ class TaskUpdate(SQLModel):
     topics: List[str]
     section: str
     source: str
-    level: Optional[str] = None
-    type: Optional[str] = None
+    level_id: int
+    type_id: int
     status_id: int
     priority_id: int
     progress: int

@@ -700,15 +700,19 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
       setSources(sourcesData)
       setCategories(categoriesData)
 
-      // Find the priority ID and status ID that match the task's current values
+      // Find the priority ID, status ID, type ID, and level ID that match the task's current values
       const priorityId = prioritiesData.find((p: { id: number; name: string }) => p.name === task.priority)?.id.toString()
       const statusId = statusesData.find((s: { id: number; name: string }) => s.name === task.status)?.id.toString()
+      const typeId = typesData.find((t: { id: number; name: string }) => t.name === task.type)?.id.toString()
+      const levelId = levelsData.find((l: { id: number; name: string }) => l.name === task.level)?.id.toString()
 
       setEditingTask(task.id)
       setEditForm({ 
         ...task,
         priority: priorityId || task.priority,
-        status: statusId || task.status
+        status: statusId || task.status,
+        type: typeId || task.type,
+        level: levelId || task.level
       })
     } catch (error) {
       console.error('Error fetching options:', error)
@@ -756,12 +760,14 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
   const saveEditing = async () => {
     if (editForm) {
       try {
-        // Destructure priority and status out and rename remaining fields
-        const { priority, status, ...rest } = editForm;
+        // Destructure priority, status, type, and level out and rename remaining fields
+        const { priority, status, type, level, ...rest } = editForm;
         const payload = {
           ...rest,
           priority_id: priority,
           status_id: status,
+          type_id: type,
+          level_id: level,
         };
 
         const response = await fetch(`http://localhost:8000/api/tasks/${editForm.id}`, {
@@ -1420,11 +1426,13 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
                         onValueChange={(value) => handleEditChange('type', value)}
                       >
                         <SelectTrigger className="w-[130px]">
-                          <SelectValue>{editForm?.type}</SelectValue>
+                          <SelectValue>
+                            {types.find((t: { id: number; name: string }) => t.id.toString() === editForm?.type)?.name ?? "Select"}
+                          </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
                           {types.map((type) => (
-                            <SelectItem key={type.id} value={type.name}>
+                            <SelectItem key={type.id} value={type.id.toString()}>
                               {type.name}
                             </SelectItem>
                           ))}
@@ -1513,11 +1521,13 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
                         onValueChange={(value) => handleEditChange('level', value)}
                       >
                         <SelectTrigger className="w-[120px]">
-                          <SelectValue>{editForm?.level}</SelectValue>
+                          <SelectValue>
+                            {levels.find((l: { id: number; name: string }) => l.id.toString() === editForm?.level)?.name ?? "Select"}
+                          </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
                           {levels.map((level) => (
-                            <SelectItem key={level.id} value={level.name}>
+                            <SelectItem key={level.id} value={level.id.toString()}>
                               {level.name}
                             </SelectItem>
                           ))}

@@ -932,44 +932,51 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
       </div>
 
       <div className="flex items-center justify-between mt-4">
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Rows per page:</span>
-          <Select
-            value={rowsPerPage.toString()}
-            onValueChange={(value: string) => setRowsPerPage(Number(value))}
-          >
-            <SelectTrigger className="w-16">
-              <SelectValue>{rowsPerPage}</SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="5">5</SelectItem>
-              <SelectItem value="10">10</SelectItem>
-              <SelectItem value="15">15</SelectItem>
-              <SelectItem value="20">20</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="text-sm text-muted-foreground">
+          {selectedRows.length} of {tasks.length} row(s) selected
         </div>
 
         <div className="flex items-center gap-4">
-          <span className="text-sm text-muted-foreground">
-            {start + 1}–{Math.min(end, tasks.length)} of {tasks.length}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Rows per page</span>
+            <Select
+              value={rowsPerPage.toString()}
+              onValueChange={(value: string) => setRowsPerPage(Number(value))}
+            >
+              <SelectTrigger className="h-8 w-[70px]">
+                <SelectValue>{rowsPerPage}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="5">5</SelectItem>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="15">15</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="text-sm text-muted-foreground">
+            Page {page} of {totalPages}
+          </div>
+
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
               size="icon"
+              className="h-8 w-8"
               onClick={() => setPage(p => Math.max(1, p - 1))}
               disabled={page === 1}
             >
-              ←
+              <span>←</span>
             </Button>
             <Button
               variant="outline"
               size="icon"
+              className="h-8 w-8"
               onClick={() => setPage(p => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
             >
-              →
+              <span>→</span>
             </Button>
           </div>
         </div>

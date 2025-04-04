@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useTransition } from "react"
 import {
   Table,
   TableBody,
@@ -42,6 +42,7 @@ import {
   ArrowDown,
   Plus,
   X as CrossIcon,
+  LayoutGrid,
 } from "lucide-react"
 import {
   Select,
@@ -52,6 +53,18 @@ import {
 } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Separator } from "@/components/ui/separator"
+import { VisibilityState } from "@tanstack/react-table"
+import { priorities, statuses } from "../data/data"
 
 interface SortConfig {
   field: keyof Task
@@ -547,6 +560,17 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
   const [sortConfigs, setSortConfigs] = useState<SortConfig[]>([])
   const [selectedRows, setSelectedRows] = useState<string[]>([])
   const [searchQuery, setSearchQuery] = useState<string>("")
+  const [selectedStatus, setSelectedStatus] = useState<string[]>([])
+  const [selectedPriority, setSelectedPriority] = useState<string[]>([])
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
+    task: true,
+    technology: true,
+    status: true,
+    priority: true,
+    type: true,
+    level: true,
+  })
+  const [isPending, startTransition] = useTransition()
 
   // Initialize tasks only once
   useEffect(() => {
@@ -589,9 +613,11 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
   const filteredTasks = useMemo(() => {
     return tasks.filter((task) => {
       const matchesSearch = task.task.toLowerCase().includes(searchQuery.toLowerCase())
-      return matchesSearch
+      const matchesStatus = selectedStatus.length === 0 || selectedStatus.includes(task.status)
+      const matchesPriority = selectedPriority.length === 0 || selectedPriority.includes(task.priority)
+      return matchesSearch && matchesStatus && matchesPriority
     })
-  }, [tasks, searchQuery])
+  }, [tasks, searchQuery, selectedStatus, selectedPriority])
 
   const totalPages = Math.ceil(filteredTasks.length / rowsPerPage)
   const start = (page - 1) * rowsPerPage
@@ -735,6 +761,13 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
     }
   }
 
+  // Add reset filters function
+  const resetFilters = () => {
+    setSearchQuery("")
+    setSelectedStatus([])
+    setSelectedPriority([])
+  }
+
   return (
     <div className="border rounded-lg p-6 col-span-full">
       <div className="flex items-center justify-between mb-6">
@@ -760,6 +793,155 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
                 </Button>
               )}
             </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-8 border-dashed" disabled={!!editingTask}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Status
+                  {selectedStatus.length > 0 && (
+                    <>
+                      <Separator orientation="vertical" className="mx-2 h-4" />
+                      <span className="text-xs">{selectedStatus.length}</span>
+                    </>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-[200px]">
+                {statuses.map((status) => (
+                  <DropdownMenuCheckboxItem
+                    key={status.value}
+                    checked={selectedStatus.includes(status.value)}
+                    onCheckedChange={(checked) => {
+                      startTransition(() => {
+                        checked
+                          ? setSelectedStatus([...selectedStatus, status.value])
+                          : setSelectedStatus(selectedStatus.filter((value) => value !== status.value))
+                      })
+                    }}
+                  >
+                    {status.label}
+                  </DropdownMenuCheckboxItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-8 border-dashed" disabled={!!editingTask}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Priority
+                  {selectedPriority.length > 0 && (
+                    <>
+                      <Separator orientation="vertical" className="mx-2 h-4" />
+                      <span className="text-xs">{selectedPriority.length}</span>
+                    </>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-[200px]">
+                {priorities.map((priority) => (
+                  <DropdownMenuCheckboxItem
+                    key={priority.value}
+                    checked={selectedPriority.includes(priority.value)}
+                    onCheckedChange={(checked) => {
+                      startTransition(() => {
+                        checked
+                          ? setSelectedPriority([...selectedPriority, priority.value])
+                          : setSelectedPriority(selectedPriority.filter((value) => value !== priority.value))
+                      })
+                    }}
+                  >
+                    {priority.label}
+                  </DropdownMenuCheckboxItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="h-8 border-dashed"
+              onClick={resetFilters}
+              disabled={(!searchQuery && selectedStatus.length === 0 && selectedPriority.length === 0) || !!editingTask}
+            >
+              Reset
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-8 border-dashed" disabled={!!editingTask}>
+                  <LayoutGrid className="mr-2 h-4 w-4" />
+                  Columns
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-[200px]">
+                <DropdownMenuLabel>Toggle Columns</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuCheckboxItem
+                  checked={columnVisibility["task"]}
+                  onCheckedChange={(value) =>
+                    setColumnVisibility((prev) => ({
+                      ...prev,
+                      task: value,
+                    }))
+                  }
+                >
+                  Task
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={columnVisibility["technology"]}
+                  onCheckedChange={(value) =>
+                    setColumnVisibility((prev) => ({
+                      ...prev,
+                      technology: value,
+                    }))
+                  }
+                >
+                  Technology
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={columnVisibility["status"]}
+                  onCheckedChange={(value) =>
+                    setColumnVisibility((prev) => ({
+                      ...prev,
+                      status: value,
+                    }))
+                  }
+                >
+                  Status
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={columnVisibility["priority"]}
+                  onCheckedChange={(value) =>
+                    setColumnVisibility((prev) => ({
+                      ...prev,
+                      priority: value,
+                    }))
+                  }
+                >
+                  Priority
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={columnVisibility["type"]}
+                  onCheckedChange={(value) =>
+                    setColumnVisibility((prev) => ({
+                      ...prev,
+                      type: value,
+                    }))
+                  }
+                >
+                  Type
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={columnVisibility["level"]}
+                  onCheckedChange={(value) =>
+                    setColumnVisibility((prev) => ({
+                      ...prev,
+                      level: value,
+                    }))
+                  }
+                >
+                  Level
+                </DropdownMenuCheckboxItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
           <div className="flex items-center space-x-2">
             <AddTaskDialog onAddTask={addTask} />

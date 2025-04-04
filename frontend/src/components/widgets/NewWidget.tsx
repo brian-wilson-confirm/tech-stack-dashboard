@@ -1399,7 +1399,17 @@ export function NewWidget({ tasks: initialTasks }: NewWidgetProps) {
                     ) : task.category}
                   </TableCell>
                 )}
-                {columnVisibility["section"] && <TableCell>{task.section}</TableCell>}
+                {columnVisibility["section"] && (
+                  <TableCell>
+                    {editingTask === task.id ? (
+                      <Input
+                        value={editForm?.section}
+                        onChange={(e) => handleEditChange('section', e.target.value)}
+                        className="w-full"
+                      />
+                    ) : task.section}
+                  </TableCell>
+                )}
                 {columnVisibility["source"] && (
                   <TableCell>
                     {editingTask === task.id ? (

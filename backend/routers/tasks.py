@@ -7,6 +7,7 @@ from backend.database.connection import get_session
 
 from backend.database.models.task_models import TaskTopicLink, Task, Category, Section, Source, Subcategory, Technology, TaskLevel, TaskPriority, TaskStatus, TaskType, TechnologySubcategory, Topic
 from backend.database.views.task_schemas import TaskCreate, TaskRead, TaskUpdate
+from backend.database.views.technology_schemas import TechnologyCreate
 
 router = APIRouter(prefix="/tasks")
 
@@ -71,7 +72,6 @@ async def update_task(id: int, task_update: TaskUpdate, session: Session = Depen
             value = session.exec(select(Topic).where(Topic.name.in_(value))).all()
             updates[field] = value
         elif field == "section":
-            print(f"section: {value}")
             resp = session.exec(select(Section).where(Section.name == value)).first()
             if not resp:
                 # Create a new section since it doesn't exist
@@ -81,7 +81,6 @@ async def update_task(id: int, task_update: TaskUpdate, session: Session = Depen
                 session.commit()
                 session.refresh(new_section)
                 resp = new_section
-                #print(f"new_section: {value}")
             updates["section_id"] = resp.id
         elif field in model_mappings:
             model_class, id_field = model_mappings[field]
@@ -191,6 +190,30 @@ async def get_task_subcategories_by_category(category_id: int, session: Session 
 """
     Task Technology: CRUD operations
 """
+
+@router.post("/technologies", response_model=Technology)
+async def create_technology(technology: TechnologyCreate, session: Session = Depends(get_session)):
+    print(f"technology: {technology.name}, subcategory_id: {technology.subcategory_id}")
+    existing = session.exec(
+        select(Technology).where(Technology.name == technology.name)
+    ).first()
+
+    if existing:
+        raise HTTPException(
+            status_code=409,
+            detail=f"Technology \"{technology.name}\" already exists"
+        )
+
+    new_tech = Technology(name=technology.name, subcategory_id=technology.subcategory_id)
+    session.add(new_tech)
+    session.commit()
+    session.refresh(new_tech)
+
+    #return new_tech
+    session.add(TechnologySubcategory(technology_id=new_tech.id, subcategory_id=technology.subcategory_id))
+    session.commit()
+    return new_tech
+
 
 @router.get("/technologies/{subcategory_id}", response_model=List[Technology])
 async def get_task_technologies_by_subcategory(subcategory_id: int, session: Session = Depends(get_session)):

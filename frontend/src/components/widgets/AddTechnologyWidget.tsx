@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/command"
 import { Check, ChevronsUpDown } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { debounce } from "lodash"
 
 interface Category {
   id: number
@@ -42,12 +43,20 @@ interface Subcategory {
   name: string
 }
 
+interface Technology {
+  id: number
+  name: string
+}
+
 export function AddTechnologyWidget() {
   const { toast } = useToast()
   const [categories, setCategories] = useState<Category[]>([])
   const [subcategories, setSubcategories] = useState<Subcategory[]>([])
+  const [technologies, setTechnologies] = useState<Technology[]>([])
+  const [filteredTechnologies, setFilteredTechnologies] = useState<Technology[]>([])
   const [categoryOpen, setCategoryOpen] = useState(false)
   const [subcategoryOpen, setSubcategoryOpen] = useState(false)
+  const [technologyOpen, setTechnologyOpen] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null)
   const [selectedSubcategory, setSelectedSubcategory] = useState<Subcategory | null>(null)
   const [technologyName, setTechnologyName] = useState("")
@@ -103,6 +112,47 @@ export function AddTechnologyWidget() {
     fetchSubcategories()
   }, [selectedCategory, toast])
 
+  useEffect(() => {
+    const fetchTechnologies = async () => {
+      if (!selectedSubcategory) {
+        setTechnologies([])
+        setFilteredTechnologies([])
+        return
+      }
+
+      try {
+        const response = await fetch(`http://localhost:8000/api/tasks/technologies/${selectedSubcategory.id}`)
+        if (!response.ok) {
+          throw new Error("Failed to fetch technologies")
+        }
+        const data = await response.json()
+        setTechnologies(data)
+        setFilteredTechnologies(data)
+      } catch (error) {
+        console.error("Error fetching technologies:", error)
+        toast({
+          title: "Error",
+          description: "Failed to load technologies",
+          variant: "destructive",
+        })
+      }
+    }
+
+    fetchTechnologies()
+  }, [selectedSubcategory, toast])
+
+  const handleTechnologySearch = debounce((search: string) => {
+    if (!search) {
+      setFilteredTechnologies(technologies)
+      return
+    }
+
+    const filtered = technologies.filter(tech => 
+      tech.name.toLowerCase().includes(search.toLowerCase())
+    )
+    setFilteredTechnologies(filtered)
+  }, 300)
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
@@ -142,6 +192,8 @@ export function AddTechnologyWidget() {
       setTechnologyName("")
       setSelectedCategory(null)
       setSelectedSubcategory(null)
+      setTechnologies([])
+      setFilteredTechnologies([])
     } catch (error) {
       console.error("Error adding technology:", error)
       toast({
@@ -171,12 +223,48 @@ export function AddTechnologyWidget() {
           <CardContent className="space-y-2">
             <div className="space-y-2">
               <Label htmlFor="technology">Technology Name</Label>
-              <Input
-                id="technology"
-                value={technologyName}
-                onChange={(e) => setTechnologyName(e.target.value)}
-                placeholder="Enter technology name"
-              />
+              <Popover open={technologyOpen} onOpenChange={setTechnologyOpen}>
+                <PopoverTrigger asChild>
+                  <div className="relative">
+                    <Input
+                      id="technology"
+                      value={technologyName}
+                      onChange={(e) => {
+                        setTechnologyName(e.target.value)
+                        handleTechnologySearch(e.target.value)
+                      }}
+                      placeholder="Enter technology name"
+                      disabled={!selectedSubcategory}
+                    />
+                  </div>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Search technology..." value={technologyName} />
+                    <CommandEmpty>No technology found.</CommandEmpty>
+                    <CommandGroup>
+                      {filteredTechnologies.map((tech) => (
+                        <CommandItem
+                          key={tech.id}
+                          value={tech.name}
+                          onSelect={() => {
+                            setTechnologyName(tech.name)
+                            setTechnologyOpen(false)
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              technologyName === tech.name ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          {tech.name}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
             <div className="space-y-2">
               <Label htmlFor="subcategory">Subcategory</Label>

@@ -7,7 +7,8 @@ from backend.database.connection import get_session
 
 from backend.database.models.task_models import TaskTopicLink, Task, Category, Section, Source, Subcategory, Technology, TaskLevel, TaskPriority, TaskStatus, TaskType, TechnologySubcategory, Topic
 from backend.database.views.task_schemas import TaskCreate, TaskRead, TaskUpdate
-from backend.database.views.technology_schemas import TechnologyCreate
+from backend.database.views.technology_schemas import TechnologyCreate, TechnologyRead
+from sqlalchemy import text
 
 router = APIRouter(prefix="/tasks")
 
@@ -213,6 +214,35 @@ async def create_technology(technology: TechnologyCreate, session: Session = Dep
     session.add(TechnologySubcategory(technology_id=new_tech.id, subcategory_id=technology.subcategory_id))
     session.commit()
     return new_tech
+
+
+@router.get("/technologies", response_model=List[TechnologyRead])
+async def get_task_technologies(session: Session = Depends(get_session)):
+    statement = (
+        select(
+            Technology.id.label("id"),
+            Technology.name.label("technology"),
+            Subcategory.name.label("subcategory"),
+            Category.name.label("category"),
+        )
+        .join(TechnologySubcategory, Technology.id == TechnologySubcategory.technology_id)
+        .join(Subcategory, TechnologySubcategory.subcategory_id == Subcategory.id)
+        .join(Category, Subcategory.category_id == Category.id)
+        .order_by(Technology.name, Category.name, Subcategory.name)
+    )
+
+    results = session.exec(statement).all()
+
+    # Each result is a tuple of (technology, subcategory, category), so convert to dicts
+    return [
+        TechnologyRead(
+            id=id,
+            name=tech, 
+            subcategory=sub, 
+            category=cat
+        )
+        for id, tech, sub, cat in results
+    ]
 
 
 @router.get("/technologies/{subcategory_id}", response_model=List[Technology])

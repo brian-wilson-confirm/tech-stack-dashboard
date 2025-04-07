@@ -1,6 +1,12 @@
-from sqlmodel import SQLModel
+from pydantic import BaseModel
 
 
-class TechnologyCreate(SQLModel):
+class TechnologyCreate(BaseModel):
     name: str
     subcategory_id: int
+
+class TechnologyRead(BaseModel):
+    id: int
+    name: str
+    subcategory: str
+    category: str

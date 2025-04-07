@@ -1,15 +1,28 @@
-import { Plane, MapPin, Calendar } from "lucide-react"
+import { Settings, MapPin, Calendar } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { AddTechnologyWidget } from "@/components/widgets/AddTechnologyWidget"
 
-export default function TravelPage() {
+export default function SettingsPage() {
   return (
     <div className="p-8">
       <div className="flex items-center gap-3 mb-8">
-        <Plane className="h-8 w-8" />
-        <h1 className="text-3xl font-bold">Travel Management</h1>
+        <Settings className="h-8 w-8" />
+        <h1 className="text-3xl font-bold">Settings Management</h1>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
+        
+        {/* Widget #1 */}
+        <div className="border rounded-lg p-6">
+          <AddTechnologyWidget />
+        </div>
+
+        {/* Widget #2 */}
+        <div className="border rounded-lg p-6">
+          <AddTechnologyWidget />
+        </div>
+
+        {/* Widget #3 */}
         <div className="border rounded-lg p-6">
           <h2 className="text-xl font-semibold mb-4">Upcoming Trips</h2>
           <div className="space-y-4">
@@ -47,8 +60,9 @@ export default function TravelPage() {
           </div>
         </div>
 
+        {/* Widget #4 */} 
         <div className="border rounded-lg p-6">
-          <h2 className="text-xl font-semibold mb-4">Travel Stats</h2>
+          <h2 className="text-xl font-semibold mb-4">Settings Stats</h2>
           <div className="grid grid-cols-2 gap-4">
             <div className="p-4 bg-secondary/50 rounded-lg">
               <p className="text-2xl font-bold">12</p>

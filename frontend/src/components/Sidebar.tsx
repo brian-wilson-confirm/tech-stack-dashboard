@@ -19,6 +19,7 @@ import {
   PanelLeftOpen,
   CheckSquare,
   ClipboardCheck,
+  Settings,
 } from "lucide-react"
 
 interface NavItem {
@@ -167,9 +168,9 @@ export function Sidebar({ className }: React.HTMLAttributes<HTMLDivElement>) {
           href: "/assessments"
         },
         {
-          label: "Travel",
-          icon: Plane,
-          href: "/travel"
+          label: "Settings",
+          icon: Settings,
+          href: "/settings"
         }
       ]
     }

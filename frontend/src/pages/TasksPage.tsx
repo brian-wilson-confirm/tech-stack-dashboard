@@ -5,6 +5,7 @@ import TempWidget from "@/components/widgets/TempWidget"
 import { TasksWidget } from "@/components/widgets/TasksWidget"
 import { Task } from "@/components/data/schema"
 import NewWidget from "@/components/widgets/NewWidget"
+import DataTableWidget from "@/components/widgets/DataTableWidget"
 
 export default function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>([])
@@ -43,7 +44,7 @@ export default function TasksPage() {
         <CheckSquare className="h-8 w-8" />
         <h1 className="text-3xl font-bold">Tasks</h1>
       </div>
-{/*
+      {/*
       <div className="grid gap-6">
         <TasksWidget tasks={tasks} />
       </div>
@@ -56,7 +57,13 @@ export default function TasksPage() {
       </div>
       <br />*/}
       <div className="grid gap-6">
+        <h2 className="text-2xl font-bold">New Widget</h2>
         <NewWidget tasks={tasks} />
+      </div>
+      <br />
+      <div className="grid gap-6">
+        <h2 className="text-2xl font-bold">DataTable Widget</h2>
+        <DataTableWidget rows={tasks} />
       </div>
     </div>
   )

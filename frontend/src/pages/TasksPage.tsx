@@ -1,42 +1,88 @@
-import { useState, useEffect, useCallback } from "react"
+// TasksPage.tsx
+import * as React from "react"
+import { z } from "zod"
+import { ColumnDef, SortingState } from "@tanstack/react-table"
+import { DataTableWidget, EditModeRenderer } from "@/components/widgets/DataTableWidget"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Input } from "@/components/ui/input"
+import NewWidget from "@/components/widgets/NewWidget"
 import { CheckSquare } from "lucide-react"
 
-import TempWidget from "@/components/widgets/TempWidget"
-import { TasksWidget } from "@/components/widgets/TasksWidget"
-import { Task } from "@/components/data/schema"
-import NewWidget from "@/components/widgets/NewWidget"
-import DataTableWidget from "@/components/widgets/DataTableWidget"
+const TaskSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  status: z.string(),
+  score: z.number(),
+  dueDate: z.string(),
+})
+
+type Task = z.infer<typeof TaskSchema>
+
+const initialTasks: Task[] = [
+  { id: "1", name: "Task A", status: "Open", score: 10, dueDate: "2024-04-10" },
+  { id: "2", name: "Task B", status: "In Progress", score: 20, dueDate: "2024-04-12" },
+  { id: "3", name: "Task C", status: "Done", score: 15, dueDate: "2024-04-15" },
+  { id: "4", name: "Task D", status: "Open", score: 8, dueDate: "2024-04-09" },
+  { id: "5", name: "Task E", status: "In Progress", score: 12, dueDate: "2024-04-13" },
+  { id: "6", name: "Task F", status: "Done", score: 18, dueDate: "2024-04-14" },
+  { id: "7", name: "Task G", status: "Open", score: 14, dueDate: "2024-04-11" },
+  { id: "8", name: "Task H", status: "Done", score: 16, dueDate: "2024-04-16" },
+  { id: "9", name: "Task I", status: "Open", score: 11, dueDate: "2024-04-08" },
+  { id: "10", name: "Task J", status: "In Progress", score: 9, dueDate: "2024-04-17" },
+]
+
+const statusOptions = ["Open", "In Progress", "Done"]
 
 export default function TasksPage() {
-  const [tasks, setTasks] = useState<Task[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [tasks, setTasks] = React.useState<Task[]>(initialTasks)
+  const [editingRow, setEditingRow] = React.useState<string | null>(null)
+  const [editForm, setEditForm] = React.useState<Task | null>(null)
+  const [globalFilter, setGlobalFilter] = React.useState("")
+  const [sortConfigs, setSortConfigs] = React.useState<SortingState>([])
 
-  /***********************
-   API: Get Tasks
-  ***********************/
-  const fetchTasks = useCallback(async () => {
-    try {
-      const response = await fetch('/api/tasks')
-      const data = await response.json()
-      setTasks(data)
-    } catch (error) {
-      console.error('Error fetching tasks:', error)
-    } finally {
-      setIsLoading(false)
+  const columns: ColumnDef<Task>[] = [
+    { accessorKey: "name", header: "Name" },
+    { accessorKey: "status", header: "Status" },
+    { accessorKey: "score", header: "Score" },
+    { accessorKey: "dueDate", header: "Due Date" },
+  ]
+
+  const startEditing = (row: Task) => {
+    setEditingRow(row.id)
+    setEditForm({ ...row })
+  }
+
+  const onEditChange = (field: keyof Task, value: Task[keyof Task]) => {
+    setEditForm(prev => prev ? { ...prev, [field]: value } : prev)
+  }
+
+  const onSaveEdit = () => {
+    if (editForm) {
+      setTasks(prev => prev.map(t => t.id === editForm.id ? editForm : t))
+      setEditingRow(null)
+      setEditForm(null)
     }
-  }, [])
+  }
 
-  useEffect(() => {
-    fetchTasks()
-  }, [fetchTasks])
+  const onCancelEdit = () => {
+    setEditingRow(null)
+    setEditForm(null)
+  }
 
-  /***********************
-   Handle Task Updates
-  ***********************/
-  const handleTaskUpdate = useCallback(async (updatedTask: Task) => {
-    // Refresh the entire task list to ensure we have the latest data
-    await fetchTasks()
-  }, [fetchTasks])
+  const editModeRenderers: EditModeRenderer<Task> = {
+    status: (value, onChange) => (
+      <Select value={value?.toString() ?? ""} onValueChange={onChange}>
+        <SelectTrigger className="w-[140px]">
+          <SelectValue placeholder="Select status" />
+        </SelectTrigger>
+        <SelectContent>
+          {statusOptions.map(status => (
+            <SelectItem key={status} value={status}>{status}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    ),
+  }
 
   return (
     <div className="p-8">
@@ -55,16 +101,30 @@ export default function TasksPage() {
           onTaskUpdate={handleTaskUpdate}
         />
       </div>
-      <br />*/}
+      <br />
       <div className="grid gap-6">
         <h2 className="text-2xl font-bold">New Widget</h2>
         <NewWidget tasks={tasks} />
       </div>
-      <br />
+      <br />*/}
       <div className="grid gap-6">
         <h2 className="text-2xl font-bold">DataTable Widget</h2>
-        <DataTableWidget rows={tasks} />
+        <DataTableWidget
+          data={tasks}
+          columns={columns}
+          editingRow={editingRow}
+          editForm={editForm}
+          onEditChange={onEditChange}
+          onStartEdit={startEditing}
+          onSaveEdit={onSaveEdit}
+          onCancelEdit={onCancelEdit}
+          globalFilter={globalFilter}
+          onGlobalFilterChange={setGlobalFilter}
+          sortConfigs={sortConfigs}
+          onSortChange={setSortConfigs}
+          editModeRenderers={editModeRenderers}
+        />
       </div>
     </div>
   )
-} 
+}

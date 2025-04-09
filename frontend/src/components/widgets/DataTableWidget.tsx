@@ -145,6 +145,7 @@ export function DataTableWidget<T extends Record<string, any>>({
                     {flexRender(header.column.columnDef.header, header.getContext())}
                   </TableHead>
                 ))}
+                  <TableHead className="w-[100px]">Actions</TableHead>
               </TableRow>
             ))}
           </TableHeader>

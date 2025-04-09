@@ -4,8 +4,11 @@ import { z } from "zod"
 import { ColumnDef, SortingState } from "@tanstack/react-table"
 import { DataTableWidget, EditModeRenderer } from "@/components/widgets/DataTableWidget"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { CheckSquare } from "lucide-react"
+import { CheckSquare, Clock } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
 import { capitalizeWords } from "@/lib/utils"
+import { StatusType } from "@/types/enums"
+import { PriorityType } from "@/types/enums"
 
 
 /*******************
@@ -13,11 +16,11 @@ import { capitalizeWords } from "@/lib/utils"
 ********************/
 const TaskSchema = z.object({
   id: z.string(),
-  task: z.string(),
+  task: z.string().min(1, "Task name is required"),
   status: z.string(),
   priority: z.string(),
-  estimated_duration: z.number(),
-  start_date: z.string(),
+  estimated_duration: z.number().min(0),
+  start_date: z.string().nullable(),
 })
 
 type Task = z.infer<typeof TaskSchema>
@@ -73,6 +76,32 @@ const statusOptions = [{"name":"not_started","id":1},{"name":"in_progress","id":
 const priorityOptions = [{"name":"low","id":1},{"name":"medium","id":2},{"name":"high","id":3},{"name":"critical","id":4}]
 
 
+/*******************
+  Option Formatting
+********************/
+const getStatusColor = (status: string) => {
+  const colors: Record<StatusType, string> = {
+    'not_started': "bg-gray-500",
+    'in_progress': "bg-blue-500",
+    'completed': "bg-green-500",
+    'on_hold': "bg-yellow-500",
+    'canceled': "bg-red-500"
+  }
+  return colors[status as StatusType] || "bg-gray-500"
+}
+
+const getPriorityColor = (priority: string) => {
+  const colors: Record<PriorityType, string> = {
+    'low': "bg-gray-500",
+    'medium': "bg-blue-500",
+    'high': "bg-yellow-500",
+    'critical': "bg-red-500"
+  }
+  return colors[priority as PriorityType] || "bg-gray-500"
+}
+
+
+
 export default function TasksPage() {
   const [tasks, setTasks] = React.useState<Task[]>(initialTasks)
   const [editingRow, setEditingRow] = React.useState<string | null>(null)
@@ -82,13 +111,26 @@ export default function TasksPage() {
 
 
   /*******************
-    Data to Columns
+    Data to Columns: Mapping, Ordering...
   ********************/
   const columns: ColumnDef<Task>[] = [
     { accessorKey: "task", header: "Task" },
-    { accessorKey: "status", header: "Status", cell: ({ row }) => capitalizeWords(row.original.status.replace('_', ' ')) },
-    { accessorKey: "priority", header: "Priority", cell: ({ row }) => capitalizeWords(row.original.priority) },
-    { accessorKey: "estimated_duration", header: "Estimated Duration" },
+    { accessorKey: "estimated_duration", header: "Est. Duration", cell: ({ row }) => (
+      <div className="flex items-center gap-1">
+        <Clock className="h-4 w-4" />
+        <span>{row.original.estimated_duration}h</span>
+      </div>
+    )},
+    { accessorKey: "status", header: "Status", cell: ({ row }) => (
+      <Badge variant="secondary" className={`${getStatusColor(row.original.status)} text-white`}>
+        {capitalizeWords(row.original.status.replace('_', ' '))}
+      </Badge>
+    )},
+    { accessorKey: "priority", header: "Priority", cell: ({ row }) => (
+      <Badge variant="secondary" className={`${getPriorityColor(row.original.priority)} text-white`}>
+        {capitalizeWords(row.original.priority)}
+      </Badge>
+    )},
     { accessorKey: "start_date", header: "Start Date" },
   ]
 

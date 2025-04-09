@@ -4,8 +4,6 @@ import { z } from "zod"
 import { ColumnDef, SortingState } from "@tanstack/react-table"
 import { DataTableWidget, EditModeRenderer } from "@/components/widgets/DataTableWidget"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Input } from "@/components/ui/input"
-import NewWidget from "@/components/widgets/NewWidget"
 import { CheckSquare } from "lucide-react"
 
 const TaskSchema = z.object({

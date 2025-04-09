@@ -1,129 +1,197 @@
-// TasksPage.tsx
+// DataTableWidget.tsx
 import * as React from "react"
-import { z } from "zod"
-import { ColumnDef, SortingState } from "@tanstack/react-table"
-import { DataTableWidget, EditModeRenderer } from "@/components/widgets/DataTableWidget"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+  ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  SortingState,
+  useReactTable,
+} from "@tanstack/react-table"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
-import NewWidget from "@/components/widgets/NewWidget"
-import { CheckSquare } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
-const TaskSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  status: z.string(),
-  score: z.number(),
-  dueDate: z.string(),
-})
+export type EditModeRenderer<T> = Partial<
+  Record<keyof T, (value: T[keyof T], onChange: (val: T[keyof T]) => void) => React.ReactNode>
+>
 
-type Task = z.infer<typeof TaskSchema>
+type Props<T extends Record<string, any>> = {
+  data: T[]
+  columns: ColumnDef<T>[]
+  editingRow: string | null
+  editForm: T | null
+  onEditChange: (field: keyof T, value: T[keyof T]) => void
+  onStartEdit: (row: T) => void
+  onSaveEdit: () => void
+  onCancelEdit: () => void
+  globalFilter: string
+  onGlobalFilterChange: (value: string) => void
+  sortConfigs: SortingState
+  onSortChange: (sort: SortingState) => void
+  editModeRenderers?: EditModeRenderer<T>
+}
 
-const initialTasks: Task[] = [
-  { id: "1", name: "Task A", status: "Open", score: 10, dueDate: "2024-04-10" },
-  { id: "2", name: "Task B", status: "In Progress", score: 20, dueDate: "2024-04-12" },
-  { id: "3", name: "Task C", status: "Done", score: 15, dueDate: "2024-04-15" },
-  { id: "4", name: "Task D", status: "Open", score: 8, dueDate: "2024-04-09" },
-  { id: "5", name: "Task E", status: "In Progress", score: 12, dueDate: "2024-04-13" },
-  { id: "6", name: "Task F", status: "Done", score: 18, dueDate: "2024-04-14" },
-  { id: "7", name: "Task G", status: "Open", score: 14, dueDate: "2024-04-11" },
-  { id: "8", name: "Task H", status: "Done", score: 16, dueDate: "2024-04-16" },
-  { id: "9", name: "Task I", status: "Open", score: 11, dueDate: "2024-04-08" },
-  { id: "10", name: "Task J", status: "In Progress", score: 9, dueDate: "2024-04-17" },
-]
+export function DataTableWidget<T extends Record<string, any>>({
+  data,
+  columns,
+  editingRow,
+  editForm,
+  onEditChange,
+  onStartEdit,
+  onSaveEdit,
+  onCancelEdit,
+  globalFilter,
+  onGlobalFilterChange,
+  sortConfigs,
+  onSortChange,
+  editModeRenderers,
+}: Props<T>) {
+  const table = useReactTable({
+    data,
+    columns,
+    state: {
+      globalFilter,
+      sorting: sortConfigs,
+    },
+    onSortingChange: (updaterOrValue) => {
+      const newSorting =
+        typeof updaterOrValue === "function"
+          ? updaterOrValue(sortConfigs)
+          : updaterOrValue
+    
+      onSortChange(newSorting)
+    },
+    onGlobalFilterChange,
+    getCoreRowModel: getCoreRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  })
 
-const statusOptions = ["Open", "In Progress", "Done"]
+  const renderEditableCell = (cell: any, rowId: string) => {
+    const field = cell.column.id as keyof T
+    const value = editForm?.[field]
+    const renderer = editModeRenderers?.[field]
 
-export default function TasksPage() {
-  const [tasks, setTasks] = React.useState<Task[]>(initialTasks)
-  const [editingRow, setEditingRow] = React.useState<string | null>(null)
-  const [editForm, setEditForm] = React.useState<Task | null>(null)
-  const [globalFilter, setGlobalFilter] = React.useState("")
-  const [sortConfigs, setSortConfigs] = React.useState<SortingState>([])
+    const fallback: T[keyof T] =
+      typeof value === "number" ? 0 as T[keyof T] :
+      typeof value === "boolean" ? false as T[keyof T] :
+      "" as T[keyof T]
 
-  const columns: ColumnDef<Task>[] = [
-    { accessorKey: "name", header: "Name" },
-    { accessorKey: "status", header: "Status" },
-    { accessorKey: "score", header: "Score" },
-    { accessorKey: "dueDate", header: "Due Date" },
-  ]
-
-  const startEditing = (row: Task) => {
-    setEditingRow(row.id)
-    setEditForm({ ...row })
-  }
-
-  const onEditChange = (field: keyof Task, value: Task[keyof Task]) => {
-    setEditForm(prev => prev ? { ...prev, [field]: value } : prev)
-  }
-
-  const onSaveEdit = () => {
-    if (editForm) {
-      setTasks(prev => prev.map(t => t.id === editForm.id ? editForm : t))
-      setEditingRow(null)
-      setEditForm(null)
+    if (renderer) {
+      return renderer(value ?? fallback, (newValue) => onEditChange(field, newValue))
     }
-  }
 
-  const onCancelEdit = () => {
-    setEditingRow(null)
-    setEditForm(null)
-  }
+    if (typeof value === "number") {
+      return (
+        <Input
+          type="number"
+          value={value ?? fallback}
+          onChange={(e) => onEditChange(field, Number(e.target.value) as T[keyof T])}
+        />
+      )
+    }
 
-  const editModeRenderers: EditModeRenderer<Task> = {
-    status: (value, onChange) => (
-      <Select value={value?.toString() ?? ""} onValueChange={onChange}>
-        <SelectTrigger className="w-[140px]">
-          <SelectValue placeholder="Select status" />
-        </SelectTrigger>
-        <SelectContent>
-          {statusOptions.map(status => (
-            <SelectItem key={status} value={status}>{status}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    ),
+    if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      return (
+        <Input
+          type="date"
+          value={value ?? fallback}
+          onChange={(e) => onEditChange(field, e.target.value as T[keyof T])}
+        />
+      )
+    }
+
+    return (
+      <Input
+        value={value as string || ""}
+        onChange={(e) => onEditChange(field, e.target.value as T[keyof T])}
+      />
+    )
   }
 
   return (
-    <div className="p-8">
-      <div className="flex items-center gap-3 mb-8">
-        <CheckSquare className="h-8 w-8" />
-        <h1 className="text-3xl font-bold">Tasks</h1>
-      </div>
-      {/*
-      <div className="grid gap-6">
-        <TasksWidget tasks={tasks} />
-      </div>
-      <br />
-      <div className="grid gap-6">
-        <TempWidget 
-          tasks={tasks} 
-          onTaskUpdate={handleTaskUpdate}
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <Input
+          placeholder="Search..."
+          value={globalFilter}
+          onChange={(e) => onGlobalFilterChange(e.target.value)}
+          className="w-[200px]"
         />
       </div>
-      <br />
-      <div className="grid gap-6">
-        <h2 className="text-2xl font-bold">New Widget</h2>
-        <NewWidget tasks={tasks} />
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id}>
+                    {flexRender(header.column.columnDef.header, header.getContext())}
+                  </TableHead>
+                ))}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows.map((row) => (
+              <TableRow key={row.id}>
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id}>
+                    {editingRow === row.original.id ? (
+                      renderEditableCell(cell, row.original.id)
+                    ) : (
+                      flexRender(cell.column.columnDef.cell, cell.getContext())
+                    )}
+                  </TableCell>
+                ))}
+                <TableCell>
+                  {editingRow === row.original.id ? (
+                    <>
+                      <Button onClick={onSaveEdit} size="sm">Save</Button>
+                      <Button onClick={onCancelEdit} size="sm" variant="ghost">Cancel</Button>
+                    </>
+                  ) : (
+                    <Button onClick={() => onStartEdit(row.original)} size="sm">Edit</Button>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </div>
-      <br />*/}
-      <div className="grid gap-6">
-        <h2 className="text-2xl font-bold">DataTable Widget</h2>
-        <DataTableWidget
-          data={tasks}
-          columns={columns}
-          editingRow={editingRow}
-          editForm={editForm}
-          onEditChange={onEditChange}
-          onStartEdit={startEditing}
-          onSaveEdit={onSaveEdit}
-          onCancelEdit={onCancelEdit}
-          globalFilter={globalFilter}
-          onGlobalFilterChange={setGlobalFilter}
-          sortConfigs={sortConfigs}
-          onSortChange={setSortConfigs}
-          editModeRenderers={editModeRenderers}
-        />
+      <div className="flex items-center justify-between py-2">
+        <div className="text-sm text-muted-foreground">
+          Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+        </div>
+        <div className="space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+          >
+            Previous
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+          >
+            Next
+          </Button>
+        </div>
       </div>
     </div>
   )

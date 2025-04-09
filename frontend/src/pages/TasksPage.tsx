@@ -17,6 +17,7 @@ import { PriorityType } from "@/types/enums"
 const TaskSchema = z.object({
   id: z.string(),
   task: z.string().min(1, "Task name is required"),
+  type: z.string(),
   status: z.string(),
   priority: z.string(),
   estimated_duration: z.number().min(0),
@@ -45,7 +46,7 @@ const initialTasks: Task[] = [
     //section: "Learning",
     //source: "PluralSight",
     //level: "beginner",
-    //type: "learning",
+    type: "learning",
     status: "completed",
     priority: "medium",
     //progress: 66,
@@ -56,22 +57,23 @@ const initialTasks: Task[] = [
     //actual_duration: 43,
     //done: false
   },
-  { id: "4", task: "Regenerate all cycle participants", status: "not_started", priority: "medium", estimated_duration: 10, start_date: "2024-04-10" },
-  { id: "5", task: "Modify Feedback", status: "in_progress", priority: "medium", estimated_duration: 20, start_date: "2024-04-12" },
-  { id: "6", task: "Delete Recognition", status: "completed", priority: "high", estimated_duration: 15, start_date: "2024-04-15" },
-  { id: "7", task: "Disable Campaign reports", status: "on_hold", priority: "medium", estimated_duration: 8, start_date: "2024-04-09" },
-  { id: "8", task: "Audit Jest Tests", status: "in_progress", priority: "medium", estimated_duration: 12, start_date: "2024-04-13" },
-  { id: "9", task: "Fix Inconsistent Data", status: "completed", priority: "medium", estimated_duration: 18, start_date: "2024-04-14" },
-  { id: "10", task: "Update Support Article", status: "not_started", priority: "low", estimated_duration: 14, start_date: "2024-04-11" },
-  { id: "11", task: "Defect: Error Sending Email", status: "on_hold", priority: "medium", estimated_duration: 16, start_date: "2024-04-16" },
-  { id: "12", task: "Pentest Changes", status: "not_started", priority: "medium", estimated_duration: 11, start_date: "2024-04-08" },
-  { id: "13", task: "Update Priority Endpoints", status: "in_progress", priority: "medium", estimated_duration: 9, start_date: "2024-04-17" },
+  { id: "4", task: "Regenerate all cycle participants", type: "learning", status: "not_started", priority: "medium", estimated_duration: 10, start_date: "2024-04-10" },
+  { id: "5", task: "Modify Feedback", type: "learning", status: "in_progress", priority: "medium", estimated_duration: 20, start_date: "2024-04-12" },
+  { id: "6", task: "Delete Recognition", type: "learning", status: "completed", priority: "high", estimated_duration: 15, start_date: "2024-04-15" },
+  { id: "7", task: "Disable Campaign reports", type: "learning", status: "on_hold", priority: "medium", estimated_duration: 8, start_date: "2024-04-09" },
+  { id: "8", task: "Audit Jest Tests", type: "learning", status: "in_progress", priority: "medium", estimated_duration: 12, start_date: "2024-04-13" },
+  { id: "9", task: "Fix Inconsistent Data", type: "learning", status: "completed", priority: "medium", estimated_duration: 18, start_date: "2024-04-14" },
+  { id: "10", task: "Update Support Article", type: "learning", status: "not_started", priority: "low", estimated_duration: 14, start_date: "2024-04-11" },
+  { id: "11", task: "Defect: Error Sending Email", type: "learning", status: "on_hold", priority: "medium", estimated_duration: 16, start_date: "2024-04-16" },
+  { id: "12", task: "Pentest Changes", type: "learning", status: "not_started", priority: "medium", estimated_duration: 11, start_date: "2024-04-08" },
+  { id: "13", task: "Update Priority Endpoints", type: "learning", status: "in_progress", priority: "medium", estimated_duration: 9, start_date: "2024-04-17" },
 ]
 
 
 /*******************
   Options Data
 ********************/
+const typeOptions = [{"id":1,"name":"learning"},{"id":2,"name":"implementation"},{"id":3,"name":"research"},{"id":4,"name":"documentation"},{"id":5,"name":"maintenance"}]
 const statusOptions = [{"name":"not_started","id":1},{"name":"in_progress","id":2},{"name":"completed","id":3},{"name":"on_hold","id":4},{"name":"canceled","id":5}]
 const priorityOptions = [{"name":"low","id":1},{"name":"medium","id":2},{"name":"high","id":3},{"name":"critical","id":4}]
 
@@ -115,6 +117,9 @@ export default function TasksPage() {
   ********************/
   const columns: ColumnDef<Task>[] = [
     { accessorKey: "task", header: "Task" },
+    { accessorKey: "type", header: "Type", cell: ({ row }) => (
+        <span>{capitalizeWords(row.original.type)}</span>
+    )},
     { accessorKey: "estimated_duration", header: "Est. Duration", cell: ({ row }) => (
       <div className="flex items-center gap-1">
         <Clock className="h-4 w-4" />
@@ -161,6 +166,26 @@ export default function TasksPage() {
     Edit Mode Renderers
   ********************/
   const editModeRenderers: EditModeRenderer<Task> = {
+    type: (value, onChange) => (
+      <Select
+        value={typeOptions.find((t) => t.name === value)?.id.toString() ?? ""}
+        onValueChange={(selectedId) => {
+          const selectedType = typeOptions.find((t) => t.id.toString() === selectedId);
+          if (selectedType) {
+            onChange(selectedType.name);
+          }
+        }}
+      >
+        <SelectTrigger className="w-[140px]">
+          <SelectValue placeholder="Select" />
+        </SelectTrigger>  
+        <SelectContent>
+          {typeOptions.map(type => (
+            <SelectItem key={type.id} value={type.id.toString()}>{capitalizeWords(type.name)}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    ),
     status: (value, onChange) => (
       <Select
         value={statusOptions.find((s) => s.name === value)?.id.toString() ?? ""}

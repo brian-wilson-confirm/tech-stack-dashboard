@@ -5,6 +5,7 @@ import { ColumnDef, SortingState } from "@tanstack/react-table"
 import { DataTableWidget, EditModeRenderer } from "@/components/widgets/DataTableWidget"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { CheckSquare } from "lucide-react"
+import { capitalizeWords } from "@/lib/utils"
 
 
 /*******************
@@ -12,10 +13,10 @@ import { CheckSquare } from "lucide-react"
 ********************/
 const TaskSchema = z.object({
   id: z.string(),
-  name: z.string(),
+  task: z.string(),
   status: z.string(),
-  score: z.number(),
-  dueDate: z.string(),
+  estimated_duration: z.number(),
+  start_date: z.string(),
 })
 
 type Task = z.infer<typeof TaskSchema>
@@ -25,23 +26,50 @@ type Task = z.infer<typeof TaskSchema>
   Initial Row Data
 ********************/
 const initialTasks: Task[] = [
-  { id: "1", name: "Task A", status: "Open", score: 10, dueDate: "2024-04-10" },
-  { id: "2", name: "Task B", status: "In Progress", score: 20, dueDate: "2024-04-12" },
-  { id: "3", name: "Task C", status: "Done", score: 15, dueDate: "2024-04-15" },
-  { id: "4", name: "Task D", status: "Open", score: 8, dueDate: "2024-04-09" },
-  { id: "5", name: "Task E", status: "In Progress", score: 12, dueDate: "2024-04-13" },
-  { id: "6", name: "Task F", status: "Done", score: 18, dueDate: "2024-04-14" },
-  { id: "7", name: "Task G", status: "Open", score: 14, dueDate: "2024-04-11" },
-  { id: "8", name: "Task H", status: "Done", score: 16, dueDate: "2024-04-16" },
-  { id: "9", name: "Task I", status: "Open", score: 11, dueDate: "2024-04-08" },
-  { id: "10", name: "Task J", status: "In Progress", score: 9, dueDate: "2024-04-17" },
+  {
+    id: "1",
+    //task_id: "TASK-8782",
+    task: "Learn FastAPI",
+    //technology: "React",
+    //subcategory: "Runtime Environment",
+    //category: "Backend",
+    //topics: [
+    //  "Python",
+    //  "FastAPI",
+    //  "REST API"
+    //],
+    //section: "Learning",
+    //source: "PluralSight",
+    //level: "beginner",
+    //type: "learning",
+    status: "completed",
+    //priority: "medium",
+    //progress: 66,
+    //order: 1,
+    start_date: "2025-03-15",
+    //end_date: "2025-04-02",
+    estimated_duration: 40,
+    //actual_duration: 43,
+    //done: false
+  },
+  { id: "4", task: "Regenerate all cycle participants", status: "not_started", estimated_duration: 10, start_date: "2024-04-10" },
+  { id: "5", task: "Modify Feedback", status: "in_progress", estimated_duration: 20, start_date: "2024-04-12" },
+  { id: "6", task: "Delete Recognition", status: "completed", estimated_duration: 15, start_date: "2024-04-15" },
+  { id: "7", task: "Disable Campaign reports", status: "on_hold", estimated_duration: 8, start_date: "2024-04-09" },
+  { id: "8", task: "Audit Jest Tests", status: "in_progress", estimated_duration: 12, start_date: "2024-04-13" },
+  { id: "9", task: "Fix Inconsistent Data", status: "completed", estimated_duration: 18, start_date: "2024-04-14" },
+  { id: "10", task: "Update Support Article", status: "not_started", estimated_duration: 14, start_date: "2024-04-11" },
+  { id: "11", task: "Defect: Error Sending Email", status: "on_hold", estimated_duration: 16, start_date: "2024-04-16" },
+  { id: "12", task: "Pentest Changes", status: "not_started", estimated_duration: 11, start_date: "2024-04-08" },
+  { id: "13", task: "Update Priority Endpoints", status: "in_progress", estimated_duration: 9, start_date: "2024-04-17" },
 ]
 
 
 /*******************
   Options Data
 ********************/
-const statusOptions = ["Open", "In Progress", "Done"]
+//const statusOptions = ["Open", "In Progress", "Completed"]
+const statusOptions = [{"name":"not_started","id":1},{"name":"in_progress","id":2},{"name":"completed","id":3},{"name":"on_hold","id":4},{"name":"canceled","id":5}]
 
 
 
@@ -52,11 +80,15 @@ export default function TasksPage() {
   const [globalFilter, setGlobalFilter] = React.useState("")
   const [sortConfigs, setSortConfigs] = React.useState<SortingState>([])
 
+
+  /*******************
+    Data to Columns
+  ********************/
   const columns: ColumnDef<Task>[] = [
-    { accessorKey: "name", header: "Name" },
-    { accessorKey: "status", header: "Status" },
-    { accessorKey: "score", header: "Score" },
-    { accessorKey: "dueDate", header: "Due Date" },
+    { accessorKey: "task", header: "Task" },
+    { accessorKey: "status", header: "Status", cell: ({ row }) => capitalizeWords(row.original.status.replace('_', ' ')) },
+    { accessorKey: "estimated_duration", header: "Estimated Duration" },
+    { accessorKey: "start_date", header: "Start Date" },
   ]
 
   const startEditing = (row: Task) => {
@@ -87,13 +119,21 @@ export default function TasksPage() {
   ********************/
   const editModeRenderers: EditModeRenderer<Task> = {
     status: (value, onChange) => (
-      <Select value={value?.toString() ?? ""} onValueChange={onChange}>
+      <Select
+        value={statusOptions.find((s) => s.name === value)?.id.toString() ?? ""}
+        onValueChange={(selectedId) => {
+          const selectedStatus = statusOptions.find((s) => s.id.toString() === selectedId);
+          if (selectedStatus) {
+            onChange(selectedStatus.name);
+          }
+        }}
+      >
         <SelectTrigger className="w-[140px]">
-          <SelectValue placeholder="Select status" />
+          <SelectValue placeholder="Select" />
         </SelectTrigger>
         <SelectContent>
           {statusOptions.map(status => (
-            <SelectItem key={status} value={status}>{status}</SelectItem>
+            <SelectItem key={status.id} value={status.id.toString()}>{capitalizeWords(status.name.replace('_', ' '))}</SelectItem>
           ))}
         </SelectContent>
       </Select>

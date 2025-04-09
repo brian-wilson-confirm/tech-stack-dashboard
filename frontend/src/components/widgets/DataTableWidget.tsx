@@ -20,6 +20,8 @@ import {
 } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { Check, Trash2, X } from "lucide-react"
+import { Pencil } from "lucide-react"
 
 export type EditModeRenderer<T> = Partial<
   Record<keyof T, (value: T[keyof T], onChange: (val: T[keyof T]) => void) => React.ReactNode>
@@ -132,6 +134,9 @@ export function DataTableWidget<T extends Record<string, any>>({
       </div>
       <div className="rounded-md border">
         <Table>
+
+
+          {/* Table Header */}
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
@@ -143,6 +148,9 @@ export function DataTableWidget<T extends Record<string, any>>({
               </TableRow>
             ))}
           </TableHeader>
+
+
+          {/* Table Body */}
           <TableBody>
             {table.getRowModel().rows.map((row) => (
               <TableRow key={row.id}>
@@ -158,11 +166,26 @@ export function DataTableWidget<T extends Record<string, any>>({
                 <TableCell>
                   {editingRow === row.original.id ? (
                     <>
-                      <Button onClick={onSaveEdit} size="sm">Save</Button>
-                      <Button onClick={onCancelEdit} size="sm" variant="ghost">Cancel</Button>
+                      <Button variant="ghost" size="icon" onClick={onSaveEdit}>
+                        <Check className="h-4 w-4 text-green-500" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={onCancelEdit}>
+                        <X className="h-4 w-4 text-red-500" />
+                      </Button>
                     </>
                   ) : (
-                    <Button onClick={() => onStartEdit(row.original)} size="sm">Edit</Button>
+                    <>
+                        <Button variant="ghost" size="icon" onClick={() => onStartEdit(row.original)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => deleteRow(rowData.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </>
                   )}
                 </TableCell>
               </TableRow>
@@ -170,6 +193,9 @@ export function DataTableWidget<T extends Record<string, any>>({
           </TableBody>
         </Table>
       </div>
+
+
+      {/* Pagination */}
       <div className="flex items-center justify-between py-2">
         <div className="text-sm text-muted-foreground">
           Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}

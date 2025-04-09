@@ -6,6 +6,10 @@ import { DataTableWidget, EditModeRenderer } from "@/components/widgets/DataTabl
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { CheckSquare } from "lucide-react"
 
+
+/*******************
+  Schema Model
+********************/
 const TaskSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -16,6 +20,10 @@ const TaskSchema = z.object({
 
 type Task = z.infer<typeof TaskSchema>
 
+
+/*******************
+  Initial Row Data
+********************/
 const initialTasks: Task[] = [
   { id: "1", name: "Task A", status: "Open", score: 10, dueDate: "2024-04-10" },
   { id: "2", name: "Task B", status: "In Progress", score: 20, dueDate: "2024-04-12" },
@@ -29,7 +37,13 @@ const initialTasks: Task[] = [
   { id: "10", name: "Task J", status: "In Progress", score: 9, dueDate: "2024-04-17" },
 ]
 
+
+/*******************
+  Options Data
+********************/
 const statusOptions = ["Open", "In Progress", "Done"]
+
+
 
 export default function TasksPage() {
   const [tasks, setTasks] = React.useState<Task[]>(initialTasks)
@@ -67,6 +81,10 @@ export default function TasksPage() {
     setEditForm(null)
   }
 
+  
+  /*******************
+    Edit Mode Renderers
+  ********************/
   const editModeRenderers: EditModeRenderer<Task> = {
     status: (value, onChange) => (
       <Select value={value?.toString() ?? ""} onValueChange={onChange}>

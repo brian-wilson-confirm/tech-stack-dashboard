@@ -23,6 +23,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Check, Trash2, X } from "lucide-react"
 import { Pencil } from "lucide-react"
+import { Checkbox } from "@/components/ui/checkbox"
 
 export type EditModeRenderer<T> = Partial<
   Record<keyof T, (value: T[keyof T], onChange: (val: T[keyof T]) => void) => React.ReactNode>
@@ -69,6 +70,7 @@ export function DataTableWidget<T extends Record<string, any>>({
       sorting: sortConfigs,
       columnVisibility: visibleColumns,
     },
+    enableRowSelection: true,
     onSortingChange: (updaterOrValue) => {
       const newSorting =
         typeof updaterOrValue === "function"
@@ -144,18 +146,24 @@ export function DataTableWidget<T extends Record<string, any>>({
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  // Only render visible headers
-                  if (header.column.id in visibleColumns && visibleColumns[header.column.id]) {
-                    return (
-                      <TableHead key={header.id}>
-                        {flexRender(header.column.columnDef.header, header.getContext())}
-                      </TableHead>
-                    );
-                  }
-                  return null;
-                })}
-                      <TableHead className="w-[100px]">Actions</TableHead>
+                {/* Select All checkbox */}
+                <TableHead className="w-12">
+                  <Checkbox
+                    checked={table.getIsAllPageRowsSelected()}
+                    onCheckedChange={(checked) => table.toggleAllPageRowsSelected(!!checked)}
+                    aria-label="Select all rows"
+                  />
+                </TableHead>
+
+                {headerGroup.headers.map((header) =>
+                  header.column.id in visibleColumns && visibleColumns[header.column.id] ? (
+                    <TableHead key={header.id}>
+                      {flexRender(header.column.columnDef.header, header.getContext())}
+                    </TableHead>
+                  ) : null
+                )}
+
+                <TableHead className="w-[100px]">Actions</TableHead>
               </TableRow>
             ))}
           </TableHeader>
@@ -164,7 +172,17 @@ export function DataTableWidget<T extends Record<string, any>>({
           {/* Table Body */}
           <TableBody>
             {table.getRowModel().rows.map((row) => (
-              <TableRow key={row.id}>
+              <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
+
+                {/* Row checkbox */}
+                <TableCell className="w-12">
+                  <Checkbox
+                    checked={row.getIsSelected()}
+                    onCheckedChange={(checked) => row.toggleSelected(!!checked)}
+                    aria-label={`Select row ${row.id}`}
+                  />
+                </TableCell>
+
                 {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id}>
                     {editingRow === row.original.id ? (

@@ -14,13 +14,13 @@ export const taskSchema = z.object({
   type: z.string(),
   status: z.string(),
   priority: z.string(),
-  //progress: z.number(),
+  progress: z.number(),
   order: z.number(),
   start_date: z.date(),
   end_date: z.date(),
   estimated_duration: z.number(),
   actual_duration: z.number(),
-  //done: z.boolean(),
+  done: z.boolean(),
 })
 
 export type Task = z.infer<typeof taskSchema> 

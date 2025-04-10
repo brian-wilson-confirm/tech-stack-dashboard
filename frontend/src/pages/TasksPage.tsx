@@ -204,13 +204,28 @@ export default function TasksPage() {
   const handleRowUpdate = async (updatedRow: Task) => {
     setIsLoading(true);
     setError(null);
+
+    // Destructure all dropdown fields out and rename remaining fields
+    const { priority, status, type, level, source, category, subcategory, technology, ...rest } = updatedRow;
+    const payload = {
+      ...rest,
+      priority_id: priority,
+      status_id: status,
+      type_id: type,
+      level_id: level,
+      source_id: source,
+      category_id: category,
+      subcategory_id: subcategory,
+      technology_id: technology,
+    };
+
     try {
       const response = await fetch(`/api/tasks/${updatedRow.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(updatedRow),
+        body: JSON.stringify(payload),
       });
       if (!response.ok) {
         throw new Error('Failed to update task');
@@ -566,20 +581,17 @@ export default function TasksPage() {
     ),
     priority: (value, onChange) => (
       <Select
-        value={priorityOptions.find((p) => p.name === value)?.id.toString() ?? ""}
+        value={priorityOptions.find((p) => p.name === value || p.id === value)?.id.toString() ?? ""}
         onValueChange={(selectedId) => {
-          const selectedPriority = priorityOptions.find((p) => p.id.toString() === selectedId);
-          if (selectedPriority) {
-            onChange(selectedPriority.name);
-          }
+          onChange(Number(selectedId));
         }}
       >
         <SelectTrigger className="w-[100px]">
-          <SelectValue placeholder="Select" />
+        <SelectValue placeholder="Select" />
         </SelectTrigger>
         <SelectContent>
           {priorityOptions.map(priority => (
-            <SelectItem key={priority.id} value={priority.id.toString()}>{capitalizeWords(priority.name)}</SelectItem>
+            <SelectItem key={priority.id} value={String(priority.id)}>{capitalizeWords(priority.name)}</SelectItem>
           ))}
         </SelectContent>
       </Select>

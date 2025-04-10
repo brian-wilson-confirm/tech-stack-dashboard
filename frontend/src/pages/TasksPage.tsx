@@ -1,5 +1,5 @@
 // TasksPage.tsx
-import * as React from "react"
+import { useState, useEffect, useMemo, useTransition, useCallback } from "react"
 import { z } from "zod"
 import { ColumnDef, SortingState } from "@tanstack/react-table"
 import { DataTableWidget, EditModeRenderer } from "@/components/widgets/DataTableWidget"
@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge"
 import { capitalizeWords } from "@/lib/utils"
 import { StatusType } from "@/types/enums"
 import { PriorityType } from "@/types/enums"
+import { Button } from "@/components/ui/button"
+import { TaskSheet } from "@/components/ui/task-sheet"
 
 
 /*******************
@@ -16,12 +18,14 @@ import { PriorityType } from "@/types/enums"
 ********************/
 const TaskSchema = z.object({
   id: z.string(),
+  task_id: z.string(),
   task: z.string().min(1, "Task name is required"),
+  source: z.string(),
   type: z.string(),
   status: z.string(),
   priority: z.string(),
   estimated_duration: z.number().min(0),
-  start_date: z.string().nullable(),
+  start_date: z.date(),
 })
 
 type Task = z.infer<typeof TaskSchema>
@@ -33,7 +37,7 @@ type Task = z.infer<typeof TaskSchema>
 const initialTasks: Task[] = [
   {
     id: "1",
-    //task_id: "TASK-8782",
+    task_id: "TASK-8782",
     task: "Learn FastAPI",
     //technology: "React",
     //subcategory: "Runtime Environment",
@@ -44,35 +48,36 @@ const initialTasks: Task[] = [
     //  "REST API"
     //],
     //section: "Learning",
-    //source: "PluralSight",
+    source: "PluralSight",
     //level: "beginner",
     type: "learning",
     status: "completed",
     priority: "medium",
     //progress: 66,
     //order: 1,
-    start_date: "2025-03-15",
+    start_date: new Date("2025-03-15"),
     //end_date: "2025-04-02",
     estimated_duration: 40,
     //actual_duration: 43,
     //done: false
   },
-  { id: "4", task: "Regenerate all cycle participants", type: "learning", status: "not_started", priority: "medium", estimated_duration: 10, start_date: "2024-04-10" },
-  { id: "5", task: "Modify Feedback", type: "learning", status: "in_progress", priority: "medium", estimated_duration: 20, start_date: "2024-04-12" },
-  { id: "6", task: "Delete Recognition", type: "learning", status: "completed", priority: "high", estimated_duration: 15, start_date: "2024-04-15" },
-  { id: "7", task: "Disable Campaign reports", type: "learning", status: "on_hold", priority: "medium", estimated_duration: 8, start_date: "2024-04-09" },
-  { id: "8", task: "Audit Jest Tests", type: "learning", status: "in_progress", priority: "medium", estimated_duration: 12, start_date: "2024-04-13" },
-  { id: "9", task: "Fix Inconsistent Data", type: "learning", status: "completed", priority: "medium", estimated_duration: 18, start_date: "2024-04-14" },
-  { id: "10", task: "Update Support Article", type: "learning", status: "not_started", priority: "low", estimated_duration: 14, start_date: "2024-04-11" },
-  { id: "11", task: "Defect: Error Sending Email", type: "learning", status: "on_hold", priority: "medium", estimated_duration: 16, start_date: "2024-04-16" },
-  { id: "12", task: "Pentest Changes", type: "learning", status: "not_started", priority: "medium", estimated_duration: 11, start_date: "2024-04-08" },
-  { id: "13", task: "Update Priority Endpoints", type: "learning", status: "in_progress", priority: "medium", estimated_duration: 9, start_date: "2024-04-17" },
+  { id: "4", task_id: "TASK-8783", task: "Regenerate all cycle participants", source: "PluralSight", type: "learning", status: "not_started", priority: "medium", estimated_duration: 10, start_date: new Date("2024-04-10") },
+  { id: "5", task_id: "TASK-8784", task: "Modify Feedback", source: "PluralSight", type: "learning", status: "in_progress", priority: "medium", estimated_duration: 20, start_date: new Date("2024-04-12") },
+  { id: "6", task_id: "TASK-8785", task: "Delete Recognition", source: "PluralSight", type: "learning", status: "completed", priority: "high", estimated_duration: 15, start_date: new Date("2024-04-15") },
+  { id: "7", task_id: "TASK-8786", task: "Disable Campaign reports", source: "PluralSight", type: "learning", status: "on_hold", priority: "medium", estimated_duration: 8, start_date: new Date("2024-04-09") },
+  { id: "8", task_id: "TASK-8787", task: "Audit Jest Tests", source: "PluralSight", type: "learning", status: "in_progress", priority: "medium", estimated_duration: 12, start_date: new Date("2024-04-13") },
+  { id: "9", task_id: "TASK-8788", task: "Fix Inconsistent Data", source: "PluralSight", type: "learning", status: "completed", priority: "medium", estimated_duration: 18, start_date: new Date("2024-04-14") },
+  { id: "10", task_id: "TASK-8789", task: "Update Support Article", source: "PluralSight", type: "learning", status: "not_started", priority: "low", estimated_duration: 14, start_date: new Date("2024-04-11") },
+  { id: "11", task_id: "TASK-8790", task: "Defect: Error Sending Email", source: "PluralSight", type: "learning", status: "on_hold", priority: "medium", estimated_duration: 16, start_date: new Date("2024-04-16") },
+  { id: "12", task_id: "TASK-8791", task: "Pentest Changes", source: "PluralSight", type: "learning", status: "not_started", priority: "medium", estimated_duration: 11, start_date: new Date("2024-04-08") },
+  { id: "13", task_id: "TASK-8792", task: "Update Priority Endpoints", source: "PluralSight", type: "learning", status: "in_progress", priority: "medium", estimated_duration: 9, start_date: new Date("2024-04-17") },
 ]
 
 
 /*******************
   Options Data
 ********************/
+const sourceOptions = [{"id":16,"name":"Internal Project"},{"id":17,"name":"Architecture Review"},{"id":18,"name":"Security Audit"},{"id":19,"name":"Performance Optimization"},{"id":20,"name":"Bug Report"},{"id":21,"name":"Feature Request"},{"id":22,"name":"Technical Debt"},{"id":23,"name":"Learning Path"},{"id":24,"name":"Research Initiative"},{"id":25,"name":"Compliance Requirement"},{"id":26,"name":"Customer Feedback"},{"id":27,"name":"Team Initiative"},{"id":28,"name":"Infrastructure Upgrade"},{"id":29,"name":"Documentation Sprint"},{"id":30,"name":"PluralSight"}]
 const typeOptions = [{"id":1,"name":"learning"},{"id":2,"name":"implementation"},{"id":3,"name":"research"},{"id":4,"name":"documentation"},{"id":5,"name":"maintenance"}]
 const statusOptions = [{"name":"not_started","id":1},{"name":"in_progress","id":2},{"name":"completed","id":3},{"name":"on_hold","id":4},{"name":"canceled","id":5}]
 const priorityOptions = [{"name":"low","id":1},{"name":"medium","id":2},{"name":"high","id":3},{"name":"critical","id":4}]
@@ -105,18 +110,32 @@ const getPriorityColor = (priority: string) => {
 
 
 export default function TasksPage() {
-  const [tasks, setTasks] = React.useState<Task[]>(initialTasks)
-  const [editingRow, setEditingRow] = React.useState<string | null>(null)
-  const [editForm, setEditForm] = React.useState<Task | null>(null)
-  const [globalFilter, setGlobalFilter] = React.useState("")
-  const [sortConfigs, setSortConfigs] = React.useState<SortingState>([])
+  const [tasks, setTasks] = useState<Task[]>(initialTasks)
+  const [editingRow, setEditingRow] = useState<string | null>(null)
+  const [editForm, setEditForm] = useState<Task | null>(null)
+  const [globalFilter, setGlobalFilter] = useState("")
+  const [sortConfigs, setSortConfigs] = useState<SortingState>([])
+  const [selectedRow, setSelectedRow] = useState<Task | null>(null)
+  const [sheetOpen, setSheetOpen] = useState(false)
 
 
   /*******************
-    Data to Columns: Mapping, Ordering...
+    Data to Columns: Mapping, Ordering, Read-Only Format...
   ********************/
   const columns: ColumnDef<Task>[] = [
+    { accessorKey: "task_id", header: "Task ID", cell: ({ row }) => (
+        <Button
+          variant="link"
+          className="p-0 h-auto font-normal"
+          onClick={() => handleRowClick(row.original)}
+        >
+          {row.original.task_id}
+        </Button>
+    )},
     { accessorKey: "task", header: "Task" },
+    { accessorKey: "source", header: "Source", cell: ({ row }) => (
+        <span>{capitalizeWords(row.original.source)}</span>
+    )},
     { accessorKey: "type", header: "Type", cell: ({ row }) => (
         <span>{capitalizeWords(row.original.type)}</span>
     )},
@@ -139,6 +158,11 @@ export default function TasksPage() {
     { accessorKey: "start_date", header: "Start Date" },
   ]
 
+
+
+  /*******************
+    Functions()
+  ********************/
   const startEditing = (row: Task) => {
     setEditingRow(row.id)
     setEditForm({ ...row })
@@ -161,11 +185,37 @@ export default function TasksPage() {
     setEditForm(null)
   }
 
+  const handleRowClick = useCallback((row: Task) => {
+    if (editingRow) return // Don't open sheet while editing
+    setSelectedRow(row)
+    setSheetOpen(true)
+  }, [editingRow])
+
   
   /*******************
     Edit Mode Renderers
   ********************/
   const editModeRenderers: EditModeRenderer<Task> = {
+    source: (value, onChange) => (  
+      <Select
+        value={sourceOptions.find((s) => s.name === value)?.id.toString() ?? ""}
+        onValueChange={(selectedId) => {
+          const selectedSource = sourceOptions.find((s) => s.id.toString() === selectedId);
+          if (selectedSource) {
+            onChange(selectedSource.name);
+          }
+        }}
+      >
+        <SelectTrigger className="w-[140px]">
+          <SelectValue placeholder="Select" />
+        </SelectTrigger>
+        <SelectContent>
+          {sourceOptions.map(source => (
+            <SelectItem key={source.id} value={source.id.toString()}>{capitalizeWords(source.name)}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    ),
     type: (value, onChange) => (
       <Select
         value={typeOptions.find((t) => t.name === value)?.id.toString() ?? ""}
@@ -269,6 +319,12 @@ export default function TasksPage() {
           editModeRenderers={editModeRenderers}
         />
       </div>
+
+      <TaskSheet
+        task={selectedRow}
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+      />
     </div>
   )
 }

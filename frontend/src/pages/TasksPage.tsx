@@ -21,6 +21,7 @@ const TaskSchema = z.object({
   id: z.string(),
   task_id: z.string(),
   task: z.string().min(1, "Task name is required"),
+  technology: z.string(),
   subcategory: z.string(),
   category: z.string(),
   source: z.string(),
@@ -42,7 +43,7 @@ const initialTasks: Task[] = [
     id: "1",
     task_id: "TASK-8782",
     task: "Learn FastAPI",
-    //technology: "React",
+    technology: "React",
     subcategory: "Runtime Environment",
     category: "Backend",
     //topics: [
@@ -64,22 +65,23 @@ const initialTasks: Task[] = [
     //actual_duration: 43,
     //done: false
   },
-  { id: "4", task_id: "TASK-8783", task: "Regenerate all cycle participants", subcategory: "Runtime Environment", category: "Backend", source: "PluralSight", type: "learning", status: "not_started", priority: "medium", estimated_duration: 10, start_date: new Date("2024-04-10") },
-  { id: "5", task_id: "TASK-8784", task: "Modify Feedback", subcategory: "Runtime Environment", category: "Backend", source: "PluralSight", type: "learning", status: "in_progress", priority: "medium", estimated_duration: 20, start_date: new Date("2024-04-12") },
-  { id: "6", task_id: "TASK-8785", task: "Delete Recognition", subcategory: "Runtime Environment", category: "Backend", source: "PluralSight", type: "learning", status: "completed", priority: "high", estimated_duration: 15, start_date: new Date("2024-04-15") },
-  { id: "7", task_id: "TASK-8786", task: "Disable Campaign reports", subcategory: "Runtime Environment", category: "Backend", source: "PluralSight", type: "learning", status: "on_hold", priority: "medium", estimated_duration: 8, start_date: new Date("2024-04-09") },
-  { id: "8", task_id: "TASK-8787", task: "Audit Jest Tests", subcategory: "Runtime Environment", category: "Backend", source: "PluralSight", type: "learning", status: "in_progress", priority: "medium", estimated_duration: 12, start_date: new Date("2024-04-13") },
-  { id: "9", task_id: "TASK-8788", task: "Fix Inconsistent Data", subcategory: "Runtime Environment", category: "Backend", source: "PluralSight", type: "learning", status: "completed", priority: "medium", estimated_duration: 18, start_date: new Date("2024-04-14") },
-  { id: "10", task_id: "TASK-8789", task: "Update Support Article", subcategory: "Runtime Environment", category: "Backend", source: "PluralSight", type: "learning", status: "not_started", priority: "low", estimated_duration: 14, start_date: new Date("2024-04-11") },
-  { id: "11", task_id: "TASK-8790", task: "Defect: Error Sending Email", subcategory: "Runtime Environment", category: "Backend", source: "PluralSight", type: "learning", status: "on_hold", priority: "medium", estimated_duration: 16, start_date: new Date("2024-04-16") },
-  { id: "12", task_id: "TASK-8791", task: "Pentest Changes", subcategory: "Runtime Environment", category: "Backend", source: "PluralSight", type: "learning", status: "not_started", priority: "medium", estimated_duration: 11, start_date: new Date("2024-04-08") },
-  { id: "13", task_id: "TASK-8792", task: "Update Priority Endpoints", subcategory: "Runtime Environment", category: "Backend", source: "PluralSight", type: "learning", status: "in_progress", priority: "medium", estimated_duration: 9, start_date: new Date("2024-04-17") },
+  { id: "4", task_id: "TASK-8783", task: "Regenerate all cycle participants", technology: "React", subcategory: "Runtime Environment", category: "Backend", source: "PluralSight", type: "learning", status: "not_started", priority: "medium", estimated_duration: 10, start_date: new Date("2024-04-10") },
+  { id: "5", task_id: "TASK-8784", task: "Modify Feedback", technology: "React", subcategory: "Runtime Environment", category: "Backend", source: "PluralSight", type: "learning", status: "in_progress", priority: "medium", estimated_duration: 20, start_date: new Date("2024-04-12") },
+  { id: "6", task_id: "TASK-8785", task: "Delete Recognition", technology: "React", subcategory: "Runtime Environment", category: "Backend", source: "PluralSight", type: "learning", status: "completed", priority: "high", estimated_duration: 15, start_date: new Date("2024-04-15") },
+  { id: "7", task_id: "TASK-8786", task: "Disable Campaign reports", technology: "React", subcategory: "Runtime Environment", category: "Backend", source: "PluralSight", type: "learning", status: "on_hold", priority: "medium", estimated_duration: 8, start_date: new Date("2024-04-09") },
+  { id: "8", task_id: "TASK-8787", task: "Audit Jest Tests", technology: "React", subcategory: "Runtime Environment", category: "Backend", source: "PluralSight", type: "learning", status: "in_progress", priority: "medium", estimated_duration: 12, start_date: new Date("2024-04-13") },
+  { id: "9", task_id: "TASK-8788", task: "Fix Inconsistent Data", technology: "React", subcategory: "Runtime Environment", category: "Backend", source: "PluralSight", type: "learning", status: "completed", priority: "medium", estimated_duration: 18, start_date: new Date("2024-04-14") },
+  { id: "10", task_id: "TASK-8789", task: "Update Support Article", technology: "React", subcategory: "Runtime Environment", category: "Backend", source: "PluralSight", type: "learning", status: "not_started", priority: "low", estimated_duration: 14, start_date: new Date("2024-04-11") },
+  { id: "11", task_id: "TASK-8790", task: "Defect: Error Sending Email", technology: "React", subcategory: "Runtime Environment", category: "Backend", source: "PluralSight", type: "learning", status: "on_hold", priority: "medium", estimated_duration: 16, start_date: new Date("2024-04-16") },
+  { id: "12", task_id: "TASK-8791", task: "Pentest Changes", technology: "React", subcategory: "Runtime Environment", category: "Backend", source: "PluralSight", type: "learning", status: "not_started", priority: "medium", estimated_duration: 11, start_date: new Date("2024-04-08") },
+  { id: "13", task_id: "TASK-8792", task: "Update Priority Endpoints", technology: "React", subcategory: "Runtime Environment", category: "Backend", source: "PluralSight", type: "learning", status: "in_progress", priority: "medium", estimated_duration: 9, start_date: new Date("2024-04-17") },
 ]
 
 
 /*******************
   Options Data
 ********************/
+const technologyOptions = [{"name":"FastAPI","id":42},{"name":"Django","id":43}]
 const subcategoryOptions = [{"id":33,"name":"Runtime Environment","category_id":10},{"id":34,"name":"Build & Compile Tool","category_id":10},{"id":35,"name":"UI Framework","category_id":10},{"id":36,"name":"JS Library","category_id":10},{"id":37,"name":"Testing & Debugging","category_id":10},{"id":64,"name":"Language","category_id":10}]
 const categoryOptions = [{"id":10,"name":"Frontend"},{"id":11,"name":"Middleware"},{"id":12,"name":"Backend"},{"id":13,"name":"Database"},{"id":14,"name":"Messaging"},{"id":15,"name":"DevOps"},{"id":16,"name":"Security"},{"id":17,"name":"Monitoring"}]
 const sourceOptions = [{"id":16,"name":"Internal Project"},{"id":17,"name":"Architecture Review"},{"id":18,"name":"Security Audit"},{"id":19,"name":"Performance Optimization"},{"id":20,"name":"Bug Report"},{"id":21,"name":"Feature Request"},{"id":22,"name":"Technical Debt"},{"id":23,"name":"Learning Path"},{"id":24,"name":"Research Initiative"},{"id":25,"name":"Compliance Requirement"},{"id":26,"name":"Customer Feedback"},{"id":27,"name":"Team Initiative"},{"id":28,"name":"Infrastructure Upgrade"},{"id":29,"name":"Documentation Sprint"},{"id":30,"name":"PluralSight"}]
@@ -138,6 +140,7 @@ export default function TasksPage() {
         </Button>
     )},
     { accessorKey: "task", header: "Task" },
+    { accessorKey: "technology", header: "Technology" },
     { accessorKey: "subcategory", header: "Subcategory" },
     { accessorKey: "category", header: "Category" },
     { accessorKey: "source", header: "Source", cell: ({ row }) => (
@@ -209,6 +212,26 @@ export default function TasksPage() {
     Edit Mode Renderers
   ********************/
   const editModeRenderers: EditModeRenderer<Task> = {
+    technology: (value, onChange) => (
+      <Select
+        value={technologyOptions.find((t) => t.name === value)?.id.toString() ?? ""}
+        onValueChange={(selectedId) => {
+          const selectedTechnology = technologyOptions.find((t) => t.id.toString() === selectedId);
+          if (selectedTechnology) {
+            onChange(selectedTechnology.name);
+          }
+        }}
+      >
+        <SelectTrigger className="w-[140px]">
+          <SelectValue placeholder="Select" />
+        </SelectTrigger>
+        <SelectContent>
+          {technologyOptions.map(technology => (
+            <SelectItem key={technology.id} value={technology.id.toString()}>{technology.name}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    ),
     subcategory: (value, onChange) => (
       <Select
         value={subcategoryOptions.find((s) => s.name === value)?.id.toString() ?? ""}

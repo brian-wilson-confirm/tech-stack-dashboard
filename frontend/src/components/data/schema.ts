@@ -1,10 +1,10 @@
-import { date, z } from "zod"
+import { z } from "zod"
 
 export const taskSchema = z.object({
   id: z.string(),
   task_id: z.string(),
   task: z.string(),
-  //technology: z.string(),
+  technology: z.string(),
   subcategory: z.string(),
   category: z.string(),
   //topics: z.array(z.string()),

@@ -1,7 +1,7 @@
 // TasksPage.tsx
 import { useState, useEffect, useMemo, useTransition, useCallback } from "react"
 import { z } from "zod"
-import { ColumnDef, SortingState } from "@tanstack/react-table"
+import { ColumnDef, SortingState, VisibilityState } from "@tanstack/react-table"
 import { DataTableWidget, EditModeRenderer } from "@/components/widgets/DataTableWidget"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { CheckSquare, Clock } from "lucide-react"
@@ -115,6 +115,34 @@ const getPriorityColor = (priority: string) => {
 }
 
 
+/*******************
+  Visible Columns
+********************/
+  const initialVisibleColumns = {
+    id: false,                   // ✓ ID  
+    task_id: true,              // ✓ Task ID
+    task: true,                 // ✓ Task
+    technology: true,           // ✓ Technology
+    subcategory: true,         // Subcategory
+    category: true,             // ✓ Category
+    //topics: false,              // Topics
+    //section: false,             // Section
+    source: true,               // ✓ Source
+    //level: false,               // Level
+    type: true,                 // ✓ Type
+    status: true,               // ✓ Status
+    priority: true,             // ✓ Priority
+    //progress: false,            // Progress
+    //order: false,               // Order
+    //due_date: false,            // Due Date
+    start_date: true,          // Start Date
+    //end_date: false,            // End Date
+    estimated_duration: true,   // ✓ Est. Duration
+    //actual_duration: false,     // Actual Duration
+    //done: false                 // Done
+  }
+  
+
 
 export default function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>(initialTasks)
@@ -124,6 +152,7 @@ export default function TasksPage() {
   const [sortConfigs, setSortConfigs] = useState<SortingState>([])
   const [selectedRow, setSelectedRow] = useState<Task | null>(null)
   const [sheetOpen, setSheetOpen] = useState(false)
+  const [visibleColumns, setVisibleColumns] = useState<VisibilityState>(initialVisibleColumns)
 
 
   /*******************
@@ -173,6 +202,7 @@ export default function TasksPage() {
       return <span>{toLocalInputDate(row.original.start_date)}</span>
   }},
   ]
+
 
 
 
@@ -403,6 +433,7 @@ export default function TasksPage() {
         <DataTableWidget
           data={tasks}
           columns={columns}
+          visibleColumns={visibleColumns}
           editingRow={editingRow}
           editForm={editForm}
           onEditChange={onEditChange}

@@ -9,6 +9,7 @@ import {
   getSortedRowModel,
   SortingState,
   useReactTable,
+  VisibilityState,
 } from "@tanstack/react-table"
 import {
   Table,
@@ -30,6 +31,7 @@ export type EditModeRenderer<T> = Partial<
 type Props<T extends Record<string, any>> = {
   data: T[]
   columns: ColumnDef<T>[]
+  visibleColumns: VisibilityState
   editingRow: string | null
   editForm: T | null
   onEditChange: (field: keyof T, value: T[keyof T]) => void
@@ -46,6 +48,7 @@ type Props<T extends Record<string, any>> = {
 export function DataTableWidget<T extends Record<string, any>>({
   data,
   columns,
+  visibleColumns,
   editingRow,
   editForm,
   onEditChange,
@@ -64,6 +67,7 @@ export function DataTableWidget<T extends Record<string, any>>({
     state: {
       globalFilter,
       sorting: sortConfigs,
+      columnVisibility: visibleColumns,
     },
     onSortingChange: (updaterOrValue) => {
       const newSorting =
@@ -140,12 +144,18 @@ export function DataTableWidget<T extends Record<string, any>>({
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
-                    {flexRender(header.column.columnDef.header, header.getContext())}
-                  </TableHead>
-                ))}
-                  <TableHead className="w-[100px]">Actions</TableHead>
+                {headerGroup.headers.map((header) => {
+                  // Only render visible headers
+                  if (header.column.id in visibleColumns && visibleColumns[header.column.id]) {
+                    return (
+                      <TableHead key={header.id}>
+                        {flexRender(header.column.columnDef.header, header.getContext())}
+                      </TableHead>
+                    );
+                  }
+                  return null;
+                })}
+                      <TableHead className="w-[100px]">Actions</TableHead>
               </TableRow>
             ))}
           </TableHeader>

@@ -609,10 +609,12 @@ export default function TasksPage() {
         return new Date(localDate.getTime() + tzOffsetMs)
       }
 
+      const typedValue = value as string | Date | null;
+
       return (
         <Input
           type="date"
-          value={value instanceof Date ? toLocalInputDate(value) : ''}
+          value={toLocalInputDate(typedValue)}
           onChange={(e) => onChange(fromLocalInputDate(e.target.value))}
           className="w-[130px]"
         />
@@ -633,10 +635,12 @@ export default function TasksPage() {
         return new Date(localDate.getTime() + tzOffsetMs)
       }
 
+      const typedValue = value as string | Date | null;
+
       return (
         <Input
           type="date"
-          value={value instanceof Date ? toLocalInputDate(value) : ''}
+          value={toLocalInputDate(typedValue)}
           onChange={(e) => onChange(fromLocalInputDate(e.target.value))}
           className="w-[130px]"
         />
@@ -657,10 +661,12 @@ export default function TasksPage() {
         return new Date(localDate.getTime() + tzOffsetMs)
       }
 
+      const typedValue = value as string | Date | null;
+
       return (
         <Input
           type="date"
-          value={value instanceof Date ? toLocalInputDate(value) : ''}
+          value={toLocalInputDate(typedValue)}
           onChange={(e) => onChange(fromLocalInputDate(e.target.value))}
           className="w-[130px]"
         />
@@ -670,7 +676,7 @@ export default function TasksPage() {
 
 
   return (
-    <div className="container mx-auto py-10">
+    <div className="p-8">
       <div className="flex items-center gap-3 mb-8">
         <CheckSquare className="h-8 w-8" />
         <h1 className="text-3xl font-bold">Tasks</h1>

@@ -95,7 +95,7 @@ const initialTasks: Task[] = [
   Options Data
 ********************/
 const technologyOptions = [{"name":"FastAPI","id":42},{"name":"Django","id":43}]
-const subcategoryOptions = [{"id":33,"name":"Runtime Environment","category_id":10},{"id":34,"name":"Build & Compile Tool","category_id":10},{"id":35,"name":"UI Framework","category_id":10},{"id":36,"name":"JS Library","category_id":10},{"id":37,"name":"Testing & Debugging","category_id":10},{"id":64,"name":"Language","category_id":10}]
+const subcategoryOptions = [{"category_id":12,"id":40,"name":"Runtime Environment"},{"category_id":12,"id":41,"name":"Language"},{"category_id":12,"id":42,"name":"Web Framework"},{"category_id":12,"id":43,"name":"API Framework"},{"category_id":12,"id":44,"name":"Testing & Debugging"}]
 const categoryOptions = [{"id":10,"name":"Frontend"},{"id":11,"name":"Middleware"},{"id":12,"name":"Backend"},{"id":13,"name":"Database"},{"id":14,"name":"Messaging"},{"id":15,"name":"DevOps"},{"id":16,"name":"Security"},{"id":17,"name":"Monitoring"}]
 const sourceOptions = [{"id":16,"name":"Internal Project"},{"id":17,"name":"Architecture Review"},{"id":18,"name":"Security Audit"},{"id":19,"name":"Performance Optimization"},{"id":20,"name":"Bug Report"},{"id":21,"name":"Feature Request"},{"id":22,"name":"Technical Debt"},{"id":23,"name":"Learning Path"},{"id":24,"name":"Research Initiative"},{"id":25,"name":"Compliance Requirement"},{"id":26,"name":"Customer Feedback"},{"id":27,"name":"Team Initiative"},{"id":28,"name":"Infrastructure Upgrade"},{"id":29,"name":"Documentation Sprint"},{"id":30,"name":"PluralSight"}]
 const levelOptions = [{"id":1,"name":"beginner"},{"id":2,"name":"intermediate"},{"id":3,"name":"advanced"},{"id":4,"name":"expert"}]
@@ -132,29 +132,29 @@ const getPriorityColor = (priority: string) => {
 /*******************
   Visible Columns
 ********************/
-  const initialVisibleColumns = {
-    id: false,                  // ✓ ID  
-    task_id: true,              // ✓ Task ID
-    task: true,                 // ✓ Task
-    technology: true,           // ✓ Technology
-    subcategory: false,         // Subcategory
-    category: true,             // ✓ Category
-    topics: false,              // Topics
-    section: false,             // Section
-    source: true,               // ✓ Source
-    level: false,               // Level
-    type: true,                 // ✓ Type
-    status: true,               // ✓ Status
-    priority: true,             // ✓ Priority
-    progress: false,            // Progress
-    order: false,               // Order
-    due_date: false,            // Due Date
-    start_date: true,           // Start Date
-    end_date: false,            // End Date
-    estimated_duration: true,   // ✓ Est. Duration
-    actual_duration: false,     // Actual Duration
-    done: false                 // Done
-  }
+const initialVisibleColumns = {
+  id: false,                  // ✓ ID  
+  task_id: true,              // ✓ Task ID
+  task: true,                 // ✓ Task
+  technology: true,           // ✓ Technology
+  subcategory: true,         // Subcategory
+  category: true,             // ✓ Category
+  topics: false,              // Topics
+  section: false,             // Section
+  source: true,               // ✓ Source
+  level: false,               // Level
+  type: true,                 // ✓ Type
+  status: true,               // ✓ Status
+  priority: true,             // ✓ Priority
+  progress: false,            // Progress
+  order: false,               // Order
+  due_date: false,            // Due Date
+  start_date: true,           // Start Date
+  end_date: false,            // End Date
+  estimated_duration: true,   // ✓ Est. Duration
+  actual_duration: false,     // Actual Duration
+  done: false                 // Done
+}
   
 
 
@@ -341,8 +341,7 @@ export default function TasksPage() {
         if (!date) return '';
         const dateObj = date instanceof Date ? date : new Date(date);
         if (isNaN(dateObj.getTime())) return '';
-        const tzOffsetMs = dateObj.getTimezoneOffset() * 60000;
-        return new Date(dateObj.getTime() - tzOffsetMs).toISOString().split('T')[0];
+        return dateObj.toISOString().split('T')[0]; // Return the date part directly
       }
       return <span>{toLocalInputDate(row.original.due_date)}</span>
     }}, 
@@ -351,8 +350,7 @@ export default function TasksPage() {
         if (!date) return '';
         const dateObj = date instanceof Date ? date : new Date(date);
         if (isNaN(dateObj.getTime())) return '';
-        const tzOffsetMs = dateObj.getTimezoneOffset() * 60000;
-        return new Date(dateObj.getTime() - tzOffsetMs).toISOString().split('T')[0];
+        return dateObj.toISOString().split('T')[0]; // Return the date part directly
       }
       return <span>{toLocalInputDate(row.original.start_date)}</span>
     }},
@@ -361,8 +359,7 @@ export default function TasksPage() {
         if (!date) return '';
         const dateObj = date instanceof Date ? date : new Date(date);
         if (isNaN(dateObj.getTime())) return '';
-        const tzOffsetMs = dateObj.getTimezoneOffset() * 60000;
-        return new Date(dateObj.getTime() - tzOffsetMs).toISOString().split('T')[0];
+        return dateObj.toISOString().split('T')[0]; // Return the date part directly
       }
       return <span>{toLocalInputDate(row.original.end_date)}</span>
     }},
@@ -408,7 +405,16 @@ export default function TasksPage() {
   ********************/
   const startEditing = (row: Task) => {
     setEditingRow(row.id)
-    setEditForm({ ...row })
+    setEditForm({ ...row,
+      priority: typeof row.priority === "string" ? priorityOptions.find((p) => p.name === row.priority)?.id.toString() ?? "": row.priority,
+      status: typeof row.status === "string" ? statusOptions.find((s) => s.name === row.status)?.id.toString() ?? "": row.status,
+      type: typeof row.type === "string" ? typeOptions.find((t) => t.name === row.type)?.id.toString() ?? "": row.type,
+      level: typeof row.level === "string" ? levelOptions.find((l) => l.name === row.level)?.id.toString() ?? "": row.level,
+      source: typeof row.source === "string" ? sourceOptions.find((s) => s.name === row.source)?.id.toString() ?? "": row.source,
+      category: typeof row.category === "string" ? categoryOptions.find((c) => c.name === row.category)?.id.toString() ?? "": row.category,
+      subcategory: typeof row.subcategory === "string" ? subcategoryOptions.find((s) => s.name === row.subcategory)?.id.toString() ?? "": row.subcategory,
+      technology: typeof row.technology === "string" ? technologyOptions.find((t) => t.name === row.technology)?.id.toString() ?? "": row.technology,
+     })
   }
 
   const onEditChange = (field: keyof Task, value: Task[keyof Task]) => {
@@ -441,13 +447,8 @@ export default function TasksPage() {
   const editModeRenderers: EditModeRenderer<Task> = {
     technology: (value, onChange) => (
       <Select
-        value={technologyOptions.find((t) => t.name === value)?.id.toString() ?? ""}
-        onValueChange={(selectedId) => {
-          const selectedTechnology = technologyOptions.find((t) => t.id.toString() === selectedId);
-          if (selectedTechnology) {
-            onChange(selectedTechnology.name);
-          }
-        }}
+        value={ technologyOptions.find((t) => t.name === value || t.id.toString() === value?.toString())?.id.toString() ?? "" }
+        onValueChange={(selectedId) => { onChange(Number(selectedId)); }}
       >
         <SelectTrigger className="w-[140px]">
           <SelectValue placeholder="Select" />
@@ -461,13 +462,8 @@ export default function TasksPage() {
     ),
     subcategory: (value, onChange) => (
       <Select
-        value={subcategoryOptions.find((s) => s.name === value)?.id.toString() ?? ""}
-        onValueChange={(selectedId) => {
-          const selectedSubcategory = subcategoryOptions.find((s) => s.id.toString() === selectedId);
-          if (selectedSubcategory) {
-            onChange(selectedSubcategory.name);
-          }
-        }}
+        value={ subcategoryOptions.find((s) => s.name === value || s.id.toString() === value?.toString())?.id.toString() ?? "" }
+        onValueChange={(selectedId) => { onChange(Number(selectedId)); }}
       >
         <SelectTrigger className="w-[140px]">
           <SelectValue placeholder="Select" />
@@ -481,13 +477,8 @@ export default function TasksPage() {
     ),
     category: (value, onChange) => (
       <Select
-        value={categoryOptions.find((c) => c.name === value)?.id.toString() ?? ""}
-        onValueChange={(selectedId) => {
-          const selectedCategory = categoryOptions.find((c) => c.id.toString() === selectedId);
-          if (selectedCategory) {
-            onChange(selectedCategory.name);
-          }
-        }}
+        value={ categoryOptions.find((c) => c.name === value || c.id.toString() === value?.toString())?.id.toString() ?? "" }
+        onValueChange={(selectedId) => { onChange(Number(selectedId)); }}
       >
         <SelectTrigger className="w-[140px]">
           <SelectValue placeholder="Select" />
@@ -501,13 +492,8 @@ export default function TasksPage() {
     ),
     source: (value, onChange) => (  
       <Select
-        value={sourceOptions.find((s) => s.name === value)?.id.toString() ?? ""}
-        onValueChange={(selectedId) => {
-          const selectedSource = sourceOptions.find((s) => s.id.toString() === selectedId);
-          if (selectedSource) {
-            onChange(selectedSource.name);
-          }
-        }}
+        value={ sourceOptions.find((s) => s.name === value || s.id.toString() === value?.toString())?.id.toString() ?? "" }
+        onValueChange={(selectedId) => { onChange(Number(selectedId)); }}
       >
         <SelectTrigger className="w-[140px]">
           <SelectValue placeholder="Select" />
@@ -521,13 +507,8 @@ export default function TasksPage() {
     ),
     level: (value, onChange) => (
       <Select
-        value={levelOptions.find((l) => l.name === value)?.id.toString() ?? ""}
-        onValueChange={(selectedId) => {
-          const selectedLevel = levelOptions.find((l) => l.id.toString() === selectedId);
-          if (selectedLevel) {
-            onChange(selectedLevel.name);
-          }
-        }}
+        value={ levelOptions.find((l) => l.name === value || l.id.toString() === value?.toString())?.id.toString() ?? "" }
+        onValueChange={(selectedId) => { onChange(Number(selectedId)); }}
       >
         <SelectTrigger className="w-[140px]">
           <SelectValue placeholder="Select" />
@@ -541,13 +522,8 @@ export default function TasksPage() {
     ),
     type: (value, onChange) => (
       <Select
-        value={typeOptions.find((t) => t.name === value)?.id.toString() ?? ""}
-        onValueChange={(selectedId) => {
-          const selectedType = typeOptions.find((t) => t.id.toString() === selectedId);
-          if (selectedType) {
-            onChange(selectedType.name);
-          }
-        }}
+        value={ typeOptions.find((t) => t.name === value || t.id.toString() === value?.toString())?.id.toString() ?? "" }
+        onValueChange={(selectedId) => { onChange(Number(selectedId)); }}
       >
         <SelectTrigger className="w-[140px]">
           <SelectValue placeholder="Select" />
@@ -561,13 +537,8 @@ export default function TasksPage() {
     ),
     status: (value, onChange) => (
       <Select
-        value={statusOptions.find((s) => s.name === value)?.id.toString() ?? ""}
-        onValueChange={(selectedId) => {
-          const selectedStatus = statusOptions.find((s) => s.id.toString() === selectedId);
-          if (selectedStatus) {
-            onChange(selectedStatus.name);
-          }
-        }}
+        value={ statusOptions.find((s) => s.name === value || s.id.toString() === value?.toString())?.id.toString() ?? "" }
+        onValueChange={(selectedId) => { onChange(Number(selectedId)); }}
       >
         <SelectTrigger className="w-[140px]">
           <SelectValue placeholder="Select" />
@@ -581,10 +552,8 @@ export default function TasksPage() {
     ),
     priority: (value, onChange) => (
       <Select
-        value={priorityOptions.find((p) => p.name === value || p.id === value)?.id.toString() ?? ""}
-        onValueChange={(selectedId) => {
-          onChange(Number(selectedId));
-        }}
+        value={ priorityOptions.find((p) => p.name === value || p.id.toString() === value?.toString())?.id.toString() ?? "" }
+        onValueChange={(selectedId) => { onChange(Number(selectedId)); }}
       >
         <SelectTrigger className="w-[100px]">
         <SelectValue placeholder="Select" />
@@ -611,18 +580,12 @@ export default function TasksPage() {
         if (!date) return '';
         const dateObj = date instanceof Date ? date : new Date(date);
         if (isNaN(dateObj.getTime())) return '';
-        const tzOffsetMs = dateObj.getTimezoneOffset() * 60000;
-        return new Date(dateObj.getTime() - tzOffsetMs).toISOString().split('T')[0];
-      }
-
-      const fromLocalInputDate = (dateStr: string) => {
-        const localDate = new Date(dateStr)
-        const tzOffsetMs = localDate.getTimezoneOffset() * 60000
-        return new Date(localDate.getTime() + tzOffsetMs)
-      }
-
+        return dateObj.toISOString().split('T')[0]; // Return the date part directly
+      };
+    
+      const fromLocalInputDate = (dateStr: string) => dateStr; // already in YYYY-MM-DD  
       const typedValue = value as string | Date | null;
-
+    
       return (
         <Input
           type="date"
@@ -630,25 +593,19 @@ export default function TasksPage() {
           onChange={(e) => onChange(fromLocalInputDate(e.target.value))}
           className="w-[130px]"
         />
-      )
-    },  
+      );
+    }, 
     start_date: (value, onChange) => {
       const toLocalInputDate = (date: Date | string | null) => {
         if (!date) return '';
         const dateObj = date instanceof Date ? date : new Date(date);
         if (isNaN(dateObj.getTime())) return '';
-        const tzOffsetMs = dateObj.getTimezoneOffset() * 60000;
-        return new Date(dateObj.getTime() - tzOffsetMs).toISOString().split('T')[0];
-      }
+        return dateObj.toISOString().split('T')[0]; // Return the date part directly
+      };
     
-      const fromLocalInputDate = (dateStr: string) => {
-        const localDate = new Date(dateStr)
-        const tzOffsetMs = localDate.getTimezoneOffset() * 60000
-        return new Date(localDate.getTime() + tzOffsetMs)
-      }
-
+      const fromLocalInputDate = (dateStr: string) => dateStr; // already in YYYY-MM-DD  
       const typedValue = value as string | Date | null;
-
+    
       return (
         <Input
           type="date"
@@ -656,25 +613,19 @@ export default function TasksPage() {
           onChange={(e) => onChange(fromLocalInputDate(e.target.value))}
           className="w-[130px]"
         />
-      )
+      );
     },
     end_date: (value, onChange) => {
       const toLocalInputDate = (date: Date | string | null) => {
         if (!date) return '';
         const dateObj = date instanceof Date ? date : new Date(date);
         if (isNaN(dateObj.getTime())) return '';
-        const tzOffsetMs = dateObj.getTimezoneOffset() * 60000;
-        return new Date(dateObj.getTime() - tzOffsetMs).toISOString().split('T')[0];
-      }
+        return dateObj.toISOString().split('T')[0]; // Return the date part directly
+      };
     
-      const fromLocalInputDate = (dateStr: string) => {
-        const localDate = new Date(dateStr)
-        const tzOffsetMs = localDate.getTimezoneOffset() * 60000
-        return new Date(localDate.getTime() + tzOffsetMs)
-      }
-
+      const fromLocalInputDate = (dateStr: string) => dateStr; // already in YYYY-MM-DD  
       const typedValue = value as string | Date | null;
-
+    
       return (
         <Input
           type="date"
@@ -682,7 +633,7 @@ export default function TasksPage() {
           onChange={(e) => onChange(fromLocalInputDate(e.target.value))}
           className="w-[130px]"
         />
-      )
+      );
     }
   }
 

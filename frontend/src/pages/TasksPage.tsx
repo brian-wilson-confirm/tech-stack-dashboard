@@ -174,25 +174,6 @@ export default function TasksPage() {
       options: priorityOptions,
       selected: selectedPriority,
       onSelect: setSelectedPriority
-    },
-    {
-      field: "columns",
-      label: "Columns",
-      options: Object.entries(visibleColumns).map(([key, value]) => ({
-        id: key,
-        name: key
-      })),
-      selected: selectedColumns,
-      onSelect: (values: string[]) => {
-        setSelectedColumns(values)
-        setVisibleColumns(prev => {
-          const newColumns = { ...prev }
-          values.forEach(col => {
-            newColumns[col] = true
-          })
-          return newColumns
-        })
-      }
     }
   ]
 
@@ -461,6 +442,12 @@ export default function TasksPage() {
     },
   }
 
+  // Add column options
+  const columnOptions = columns.map(column => ({
+    accessorKey: (column as any).accessorKey,
+    header: typeof column.header === 'string' ? column.header : 'Column'
+  }))
+
   return (
     <div className="p-8">
       <div className="flex items-center gap-3 mb-8">
@@ -490,6 +477,7 @@ export default function TasksPage() {
           data={tasks}
           columns={columns}
           visibleColumns={visibleColumns}
+          onColumnVisibilityChange={setVisibleColumns}
           editingRow={editingRow}
           editForm={editForm}
           onEditChange={onEditChange}
@@ -502,6 +490,7 @@ export default function TasksPage() {
           onSortChange={setSortConfigs}
           editModeRenderers={editModeRenderers}
           filterConfigs={filterConfigs}
+          columnOptions={columnOptions}
         />
       </div>
 

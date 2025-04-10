@@ -29,6 +29,7 @@ import {
   X,
   Plus,
   X as CrossIcon,
+  LayoutGrid,
 } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useState } from "react"
@@ -60,10 +61,16 @@ export type FilterConfig = {
   onSelect: (values: string[]) => void
 }
 
+export type ColumnOption = {
+  accessorKey: string
+  header: string
+}
+
 type Props<T extends Record<string, any>> = {
   data: T[]
   columns: ColumnDef<T>[]
   visibleColumns: VisibilityState
+  onColumnVisibilityChange: (value: VisibilityState) => void
   editingRow: string | null
   editForm: T | null
   onEditChange: (field: keyof T, value: T[keyof T]) => void
@@ -76,6 +83,7 @@ type Props<T extends Record<string, any>> = {
   onSortChange: (sort: SortingState) => void
   editModeRenderers?: EditModeRenderer<T>
   filterConfigs?: FilterConfig[]
+  columnOptions?: ColumnOption[]
 }
 
 const FilterDropdown = ({ config, editingRow }: { config: FilterConfig, editingRow: string | null }) => {
@@ -115,10 +123,54 @@ const FilterDropdown = ({ config, editingRow }: { config: FilterConfig, editingR
   )
 }
 
+const ColumnVisibilityDropdown = ({ 
+  columnOptions, 
+  visibleColumns, 
+  onColumnVisibilityChange,
+  editingRow 
+}: { 
+  columnOptions?: ColumnOption[]
+  visibleColumns: VisibilityState
+  onColumnVisibilityChange: (value: VisibilityState) => void
+  editingRow: string | null
+}) => {
+  if (!columnOptions) return null
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" size="sm" className="h-8 border-dashed" disabled={!!editingRow}>
+          <LayoutGrid className="mr-2 h-4 w-4" />
+          Columns
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="w-[200px]">
+        <DropdownMenuLabel>Toggle Columns</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {columnOptions.map((column) => (
+          <DropdownMenuCheckboxItem
+            key={column.accessorKey}
+            checked={visibleColumns[column.accessorKey]}
+            onCheckedChange={(value) => {
+              onColumnVisibilityChange({
+                ...visibleColumns,
+                [column.accessorKey]: value
+              })
+            }}
+          >
+            {column.header}
+          </DropdownMenuCheckboxItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
 export function DataTableWidget<T extends Record<string, any>>({
   data,
   columns,
   visibleColumns,
+  onColumnVisibilityChange,
   editingRow,
   editForm,
   onEditChange,
@@ -131,6 +183,7 @@ export function DataTableWidget<T extends Record<string, any>>({
   onSortChange,
   editModeRenderers,
   filterConfigs,
+  columnOptions,
 }: Props<T>) {
   // Add pagination state
   const [pageIndex, setPageIndex] = useState(0);
@@ -318,217 +371,15 @@ export function DataTableWidget<T extends Record<string, any>>({
               Reset
             </Button>
             
-            {/*
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="h-8 border-dashed" disabled={!!editingTask}>
-                  <LayoutGrid className="mr-2 h-4 w-4" />
-                  Columns
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-[200px]">
-                <DropdownMenuLabel>Toggle Columns</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuCheckboxItem
-                  checked={columnVisibility["task_id"]}
-                  onCheckedChange={(value) =>
-                    setColumnVisibility((prev) => ({
-                      ...prev,
-                      task_id: value,
-                    }))
-                  }
-                >
-                  Task ID
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={columnVisibility["task"]}
-                  onCheckedChange={(value) =>
-                    setColumnVisibility((prev) => ({
-                      ...prev,
-                      task: value,
-                    }))
-                  }
-                >
-                  Task
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={columnVisibility["technology"]}
-                  onCheckedChange={(value) =>
-                    setColumnVisibility((prev) => ({
-                      ...prev,
-                      technology: value,
-                    }))
-                  }
-                >
-                  Technology
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={columnVisibility["subcategory"]}
-                  onCheckedChange={(value) =>
-                    setColumnVisibility((prev) => ({
-                      ...prev,
-                      subcategory: value,
-                    }))
-                  }
-                >
-                  Subcategory
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={columnVisibility["category"]}
-                  onCheckedChange={(value) =>
-                    setColumnVisibility((prev) => ({
-                      ...prev,
-                      category: value,
-                    }))
-                  }
-                >
-                  Category
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={columnVisibility["section"]}
-                  onCheckedChange={(value) =>
-                    setColumnVisibility((prev) => ({
-                      ...prev,
-                      section: value,
-                    }))
-                  }
-                >
-                  Section
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={columnVisibility["source"]}
-                  onCheckedChange={(value) =>
-                    setColumnVisibility((prev) => ({
-                      ...prev,
-                      source: value,
-                    }))
-                  }
-                >
-                  Source
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={columnVisibility["status"]}
-                  onCheckedChange={(value) =>
-                    setColumnVisibility((prev) => ({
-                      ...prev,
-                      status: value,
-                    }))
-                  }
-                >
-                  Status
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={columnVisibility["priority"]}
-                  onCheckedChange={(value) =>
-                    setColumnVisibility((prev) => ({
-                      ...prev,
-                      priority: value,
-                    }))
-                  }
-                >
-                  Priority
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={columnVisibility["type"]}
-                  onCheckedChange={(value) =>
-                    setColumnVisibility((prev) => ({
-                      ...prev,
-                      type: value,
-                    }))
-                  }
-                >
-                  Type
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={columnVisibility["level"]}
-                  onCheckedChange={(value) =>
-                    setColumnVisibility((prev) => ({
-                      ...prev,
-                      level: value,
-                    }))
-                  }
-                >
-                  Level
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={columnVisibility["progress"]}
-                  onCheckedChange={(value) =>
-                    setColumnVisibility((prev) => ({
-                      ...prev,
-                      progress: value,
-                    }))
-                  }
-                >
-                  Progress
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={columnVisibility["order"]}
-                  onCheckedChange={(value) =>
-                    setColumnVisibility((prev) => ({
-                      ...prev,
-                      order: value,
-                    }))
-                  }
-                >
-                  Order
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={columnVisibility["estimated_duration"]}
-                  onCheckedChange={(value) =>
-                    setColumnVisibility((prev) => ({
-                      ...prev,
-                      estimated_duration: value,
-                    }))
-                  }
-                >
-                  Est. Duration
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={columnVisibility["actual_duration"]}
-                  onCheckedChange={(value) =>
-                    setColumnVisibility((prev) => ({
-                      ...prev,
-                      actual_duration: value,
-                    }))
-                  }
-                >
-                  Actual Duration
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={columnVisibility["start_date"]}
-                  onCheckedChange={(value) =>
-                    setColumnVisibility((prev) => ({
-                      ...prev,
-                      start_date: value,
-                    }))
-                  }
-                >
-                  Start Date
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={columnVisibility["end_date"]}
-                  onCheckedChange={(value) =>
-                    setColumnVisibility((prev) => ({
-                      ...prev,
-                      end_date: value,
-                    }))
-                  }
-                >
-                  End Date
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem
-                  checked={columnVisibility["done"]}
-                  onCheckedChange={(value) =>
-                    setColumnVisibility((prev) => ({
-                      ...prev,
-                      done: value,
-                    }))
-                  }
-                >
-                  Done
-                </DropdownMenuCheckboxItem>
-              </DropdownMenuContent>
-            </DropdownMenu>*/}
+
+            
+            {/* Column Visibility Dropdown */}
+            <ColumnVisibilityDropdown
+              columnOptions={columnOptions}
+              visibleColumns={visibleColumns}
+              onColumnVisibilityChange={onColumnVisibilityChange}
+              editingRow={editingRow}
+            />
           </div>
           {/* <AddTaskDialog onAddTask={addRow} disabled={!!editingRow} /> */}
         </div>

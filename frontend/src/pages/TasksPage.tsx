@@ -148,7 +148,7 @@ export default function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>(initialTasks)
   const [editingRow, setEditingRow] = useState<string | null>(null)
   const [editForm, setEditForm] = useState<Task | null>(null)
-  const [globalFilter, setGlobalFilter] = useState("")
+  const [searchQuery, setSearchQuery] = useState<string>("")
   const [sortConfigs, setSortConfigs] = useState<SortingState>([])
   const [selectedRow, setSelectedRow] = useState<Task | null>(null)
   const [sheetOpen, setSheetOpen] = useState(false)
@@ -440,8 +440,8 @@ export default function TasksPage() {
           onStartEdit={startEditing}
           onSaveEdit={onSaveEdit}
           onCancelEdit={onCancelEdit}
-          globalFilter={globalFilter}
-          onGlobalFilterChange={setGlobalFilter}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
           sortConfigs={sortConfigs}
           onSortChange={setSortConfigs}
           editModeRenderers={editModeRenderers}

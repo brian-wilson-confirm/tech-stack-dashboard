@@ -101,7 +101,7 @@ const sourceOptions = [{"id":16,"name":"Internal Project"},{"id":17,"name":"Arch
 const levelOptions = [{"id":1,"name":"beginner"},{"id":2,"name":"intermediate"},{"id":3,"name":"advanced"},{"id":4,"name":"expert"}]
 const typeOptions = [{"id":1,"name":"learning"},{"id":2,"name":"implementation"},{"id":3,"name":"research"},{"id":4,"name":"documentation"},{"id":5,"name":"maintenance"}]
 const statusOptions = [{"name":"not_started","id":1},{"name":"in_progress","id":2},{"name":"completed","id":3},{"name":"on_hold","id":4},{"name":"canceled","id":5}]
-const priorityOptions = [{"name":"low","id":1},{"name":"medium","id":2},{"name":"high","id":3},{"name":"critical","id":4}]
+//const priorityOptions = [{"name":"low","id":1},{"name":"medium","id":2},{"name":"high","id":3},{"name":"critical","id":4}]
 
 
 /*******************
@@ -174,6 +174,8 @@ export default function TasksPage() {
   const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
   const [selectedPriority, setSelectedPriority] = useState<string[]>([]);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [priorityOptions, setPriorityOptions] = useState<{ name: string; id: number }[]>([]);
+  const [priorityOptionsLoaded, setPriorityOptionsLoaded] = useState(false);
 
 
   
@@ -403,19 +405,47 @@ export default function TasksPage() {
   /*******************
     Functions()
   ********************/
+  const fetchPriorityOptions = async () => {
+    try {
+      const response = await fetch('/api/tasks/priorities');
+      if (!response.ok) {
+        throw new Error('Failed to fetch priority options');
+      }
+      const data = await response.json();
+      setPriorityOptions(data);
+      setPriorityOptionsLoaded(true);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const startEditing = (row: Task) => {
-    setEditingRow(row.id)
-    setEditForm({ ...row,
-      priority: typeof row.priority === "string" ? priorityOptions.find((p) => p.name === row.priority)?.id.toString() ?? "": row.priority,
-      status: typeof row.status === "string" ? statusOptions.find((s) => s.name === row.status)?.id.toString() ?? "": row.status,
-      type: typeof row.type === "string" ? typeOptions.find((t) => t.name === row.type)?.id.toString() ?? "": row.type,
-      level: typeof row.level === "string" ? levelOptions.find((l) => l.name === row.level)?.id.toString() ?? "": row.level,
-      source: typeof row.source === "string" ? sourceOptions.find((s) => s.name === row.source)?.id.toString() ?? "": row.source,
-      category: typeof row.category === "string" ? categoryOptions.find((c) => c.name === row.category)?.id.toString() ?? "": row.category,
-      subcategory: typeof row.subcategory === "string" ? subcategoryOptions.find((s) => s.name === row.subcategory)?.id.toString() ?? "": row.subcategory,
-      technology: typeof row.technology === "string" ? technologyOptions.find((t) => t.name === row.technology)?.id.toString() ?? "": row.technology,
-     })
-  }
+    setEditingRow(row.id);
+    fetchPriorityOptions();
+  };
+
+  useEffect(() => {
+    if (priorityOptionsLoaded && editingRow) {
+      const row = rows.find(r => r.id === editingRow);
+      if (row) {
+        const priorityId = typeof row.priority === "string"
+          ? priorityOptions.find((p) => p.name === row.priority)?.id.toString() ?? ""
+          : row.priority;
+
+        setEditForm({
+          ...row,
+          priority: priorityId,
+          status: typeof row.status === "string" ? statusOptions.find((s) => s.name === row.status)?.id.toString() ?? "" : row.status,
+          type: typeof row.type === "string" ? typeOptions.find((t) => t.name === row.type)?.id.toString() ?? "" : row.type,
+          level: typeof row.level === "string" ? levelOptions.find((l) => l.name === row.level)?.id.toString() ?? "" : row.level,
+          source: typeof row.source === "string" ? sourceOptions.find((s) => s.name === row.source)?.id.toString() ?? "" : row.source,
+          category: typeof row.category === "string" ? categoryOptions.find((c) => c.name === row.category)?.id.toString() ?? "" : row.category,
+          subcategory: typeof row.subcategory === "string" ? subcategoryOptions.find((s) => s.name === row.subcategory)?.id.toString() ?? "" : row.subcategory,
+          technology: typeof row.technology === "string" ? technologyOptions.find((t) => t.name === row.technology)?.id.toString() ?? "" : row.technology,
+        });
+      }
+    }
+  }, [priorityOptionsLoaded, editingRow, rows, priorityOptions]);
 
   const onEditChange = (field: keyof Task, value: Task[keyof Task]) => {
     setEditForm(prev => prev ? { ...prev, [field]: value } : prev)
@@ -572,7 +602,7 @@ export default function TasksPage() {
         max="100"
         value={typeof value === 'number' ? value : 0}
         onChange={(e) => onChange(parseInt(e.target.value))}
-        className="w-[80px]"
+        className="w-[70px]"
       />  
     ),
     due_date: (value, onChange) => {

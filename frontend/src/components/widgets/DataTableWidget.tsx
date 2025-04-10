@@ -170,13 +170,6 @@ const ColumnVisibilityDropdown = ({
   )
 }
 
-const toLocalInputDate = (date: Date | string | null) => {
-  if (!date) return '';
-  const dateObj = date instanceof Date ? date : new Date(date);
-  if (isNaN(dateObj.getTime())) return '';
-  return dateObj.toISOString().split('T')[0]; // Return the date part directly
-};
-
 export function DataTableWidget<T extends Record<string, any>>({
   data,
   columns,
@@ -326,7 +319,7 @@ export function DataTableWidget<T extends Record<string, any>>({
       return (
         <Input
           type="date"
-          value={toLocalInputDate(value)}
+          value={value ?? fallback}
           onChange={(e) => onEditChange(field, e.target.value as T[keyof T])}
         />
       )

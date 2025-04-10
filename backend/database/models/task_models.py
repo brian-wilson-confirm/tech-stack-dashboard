@@ -28,7 +28,7 @@ class Task(SQLModel, table=True):
     progress: int = 0
     order: Optional[int]
     priority_id: int = Field(foreign_key="task_priority.id")
-    #due_date: Optional[date]
+    due_date: Optional[date]
     start_date: Optional[date]
     end_date: Optional[date]
     estimated_duration: Optional[int]

@@ -25,6 +25,7 @@ const TaskSchema = z.object({
   technology: z.string(),
   subcategory: z.string(),
   category: z.string(),
+  topics: z.array(z.string()),
   section: z.string(),
   source: z.string(),
   level: z.string(),
@@ -34,6 +35,7 @@ const TaskSchema = z.object({
   progress: z.number().min(0).max(100),
   order: z.number(),
   estimated_duration: z.number().min(0),
+  due_date: z.date(),
   start_date: z.date(),
   end_date: z.date(),
   actual_duration: z.number().min(0),
@@ -54,11 +56,11 @@ const initialTasks: Task[] = [
     technology: "React",
     subcategory: "Runtime Environment",
     category: "Backend",
-    //topics: [
-    //  "Python",
-    //  "FastAPI",
-    //  "REST API"
-    //],
+    topics: [
+      "Python",
+      "FastAPI",
+      "REST API"
+    ],
     section: "Chapter 1",
     source: "PluralSight",
     level: "beginner",
@@ -67,22 +69,23 @@ const initialTasks: Task[] = [
     priority: "medium",
     progress: 66,
     order: 1,
+    due_date: new Date("2025-04-10"),
     start_date: new Date("2025-03-15"),
     end_date: new Date("2025-04-02"),
     estimated_duration: 40,
     actual_duration: 43,
     done: false
   },
-  { id: "4", task_id: "TASK-8783", task: "Regenerate all cycle participants", technology: "React", subcategory: "Runtime Environment", category: "Backend", section: "Chapter 1", source: "PluralSight", level: "beginner", type: "learning", status: "not_started", priority: "medium", progress: 0, order: 2, estimated_duration: 10, start_date: new Date("2024-04-10"), end_date: new Date("2024-04-12"), actual_duration: 12, done: false },
-  { id: "5", task_id: "TASK-8784", task: "Modify Feedback", technology: "React", subcategory: "Runtime Environment", category: "Backend", section: "Chapter 2", source: "PluralSight", level: "beginner", type: "learning", status: "in_progress", priority: "medium", progress: 50, order: 3, estimated_duration: 20, start_date: new Date("2024-04-12"), end_date: new Date("2024-04-15"), actual_duration: 23, done: false },
-  { id: "6", task_id: "TASK-8785", task: "Delete Recognition", technology: "React", subcategory: "Runtime Environment", category: "Backend", section: "Chapter 3", source: "PluralSight", level: "beginner", type: "learning", status: "completed", priority: "high", progress: 100, order: 4, estimated_duration: 15, start_date: new Date("2024-04-15"), end_date: new Date("2024-04-15"), actual_duration: 15, done: false },
-  { id: "7", task_id: "TASK-8786", task: "Disable Campaign reports", technology: "React", subcategory: "Runtime Environment", category: "Backend", section: "Chapter 4", source: "PluralSight", level: "beginner", type: "learning", status: "on_hold", priority: "medium", progress: 24, order: 5, estimated_duration: 8, start_date: new Date("2024-04-09"), end_date: new Date("2024-04-10"), actual_duration: 10, done: false },
-  { id: "8", task_id: "TASK-8787", task: "Audit Jest Tests", technology: "React", subcategory: "Runtime Environment", category: "Backend", section: "Chapter 5", source: "PluralSight", level: "beginner", type: "learning", status: "in_progress", priority: "medium", progress: 63, order: 6, estimated_duration: 12, start_date: new Date("2024-04-13"), end_date: new Date("2024-04-15"), actual_duration: 14, done: false },
-  { id: "9", task_id: "TASK-8788", task: "Fix Inconsistent Data", technology: "React", subcategory: "Runtime Environment", category: "Backend", section: "Chapter 6", source: "PluralSight", level: "beginner", type: "learning", status: "completed", priority: "medium", progress: 100, order: 7, estimated_duration: 18, start_date: new Date("2024-04-14"), end_date: new Date("2024-04-14"), actual_duration: 18, done: false },
-  { id: "10", task_id: "TASK-8789", task: "Update Support Article", technology: "React", subcategory: "Runtime Environment", category: "Backend", section: "Chapter 7", source: "PluralSight", level: "beginner", type: "learning", status: "not_started", priority: "low", progress: 7, order: 8, estimated_duration: 14, start_date: new Date("2024-04-11"), end_date: new Date("2024-04-12"), actual_duration: 14, done: false },
-  { id: "11", task_id: "TASK-8790", task: "Defect: Error Sending Email", technology: "React", subcategory: "Runtime Environment", category: "Backend", section: "Chapter 8", source: "PluralSight", level: "beginner", type: "learning", status: "on_hold", priority: "medium", progress: 12, order: 9, estimated_duration: 16, start_date: new Date("2024-04-16"), end_date: new Date("2024-04-17"), actual_duration: 17, done: false },
-  { id: "12", task_id: "TASK-8791", task: "Pentest Changes", technology: "React", subcategory: "Runtime Environment", category: "Backend", section: "Chapter 9", source: "PluralSight", level: "beginner", type: "learning", status: "not_started", priority: "medium", progress: 89, order: 10, estimated_duration: 11, start_date: new Date("2024-04-08"), end_date: new Date("2024-04-10"), actual_duration: 11, done: false },
-  { id: "13", task_id: "TASK-8792", task: "Update Priority Endpoints", technology: "React", subcategory: "Runtime Environment", category: "Backend", section: "Chapter 10", source: "PluralSight", level: "beginner", type: "learning", status: "in_progress", priority: "medium", progress: 50, order: 11, estimated_duration: 9, start_date: new Date("2024-04-17"), end_date: new Date("2024-04-18"), actual_duration: 10, done: false },
+  { id: "4", task_id: "TASK-8783", task: "Regenerate all cycle participants", technology: "React", subcategory: "Runtime Environment", category: "Backend", topics: ["Python","FastAPI","REST API"], section: "Chapter 1", source: "PluralSight", level: "beginner", type: "learning", status: "not_started", priority: "medium", progress: 0, order: 2, estimated_duration: 10, due_date: new Date("2025-04-10"), start_date: new Date("2024-04-10"), end_date: new Date("2024-04-12"), actual_duration: 12, done: false },
+  { id: "5", task_id: "TASK-8784", task: "Modify Feedback", technology: "React", subcategory: "Runtime Environment", category: "Backend", topics: ["Python","FastAPI","REST API"], section: "Chapter 2", source: "PluralSight", level: "beginner", type: "learning", status: "in_progress", priority: "medium", progress: 50, order: 3, estimated_duration: 20, due_date: new Date("2025-04-10"), start_date: new Date("2024-04-12"), end_date: new Date("2024-04-15"), actual_duration: 23, done: false },
+  { id: "6", task_id: "TASK-8785", task: "Delete Recognition", technology: "React", subcategory: "Runtime Environment", category: "Backend", topics: ["Python","FastAPI","REST API"], section: "Chapter 3", source: "PluralSight", level: "beginner", type: "learning", status: "completed", priority: "high", progress: 100, order: 4, estimated_duration: 15, due_date: new Date("2025-04-10"), start_date: new Date("2024-04-15"), end_date: new Date("2024-04-15"), actual_duration: 15, done: false },
+  { id: "7", task_id: "TASK-8786", task: "Disable Campaign reports", technology: "React", subcategory: "Runtime Environment", category: "Backend", topics: ["Python","FastAPI","REST API"], section: "Chapter 4", source: "PluralSight", level: "beginner", type: "learning", status: "on_hold", priority: "medium", progress: 24, order: 5, estimated_duration: 8, due_date: new Date("2025-04-10"), start_date: new Date("2024-04-09"), end_date: new Date("2024-04-10"), actual_duration: 10, done: false },
+  { id: "8", task_id: "TASK-8787", task: "Audit Jest Tests", technology: "React", subcategory: "Runtime Environment", category: "Backend", topics: ["Python","FastAPI","REST API"], section: "Chapter 5", source: "PluralSight", level: "beginner", type: "learning", status: "in_progress", priority: "medium", progress: 63, order: 6, estimated_duration: 12, due_date: new Date("2025-04-10"), start_date: new Date("2024-04-13"), end_date: new Date("2024-04-15"), actual_duration: 14, done: false },
+  { id: "9", task_id: "TASK-8788", task: "Fix Inconsistent Data", technology: "React", subcategory: "Runtime Environment", category: "Backend", topics: ["Python","FastAPI","REST API"], section: "Chapter 6", source: "PluralSight", level: "beginner", type: "learning", status: "completed", priority: "medium", progress: 100, order: 7, estimated_duration: 18, due_date: new Date("2025-04-10"), start_date: new Date("2024-04-14"), end_date: new Date("2024-04-14"), actual_duration: 18, done: false },
+  { id: "10", task_id: "TASK-8789", task: "Update Support Article", technology: "React", subcategory: "Runtime Environment", category: "Backend", topics: ["Python","FastAPI","REST API"], section: "Chapter 7", source: "PluralSight", level: "beginner", type: "learning", status: "not_started", priority: "low", progress: 7, order: 8, estimated_duration: 14, due_date: new Date("2025-04-10"), start_date: new Date("2024-04-11"), end_date: new Date("2024-04-12"), actual_duration: 14, done: false },
+  { id: "11", task_id: "TASK-8790", task: "Defect: Error Sending Email", technology: "React", subcategory: "Runtime Environment", category: "Backend", topics: ["Python","FastAPI","REST API"], section: "Chapter 8", source: "PluralSight", level: "beginner", type: "learning", status: "on_hold", priority: "medium", progress: 12, order: 9, estimated_duration: 16, due_date: new Date("2025-04-10"), start_date: new Date("2024-04-16"), end_date: new Date("2024-04-17"), actual_duration: 17, done: false },
+  { id: "12", task_id: "TASK-8791", task: "Pentest Changes", technology: "React", subcategory: "Runtime Environment", category: "Backend", topics: ["Python","FastAPI","REST API"], section: "Chapter 9", source: "PluralSight", level: "beginner", type: "learning", status: "not_started", priority: "medium", progress: 89, order: 10, estimated_duration: 11, due_date: new Date("2025-04-10"), start_date: new Date("2024-04-08"), end_date: new Date("2024-04-10"), actual_duration: 11, done: false },
+  { id: "13", task_id: "TASK-8792", task: "Update Priority Endpoints", technology: "React", subcategory: "Runtime Environment", category: "Backend", topics: ["Python","FastAPI","REST API"], section: "Chapter 10", source: "PluralSight", level: "beginner", type: "learning", status: "in_progress", priority: "medium", progress: 50, order: 11, estimated_duration: 9, due_date: new Date("2025-04-10"), start_date: new Date("2024-04-17"), end_date: new Date("2024-04-18"), actual_duration: 10, done: false },
 ]
 
 
@@ -134,7 +137,7 @@ const getPriorityColor = (priority: string) => {
     technology: true,           // ✓ Technology
     subcategory: false,         // Subcategory
     category: true,             // ✓ Category
-    //topics: false,              // Topics
+    topics: false,              // Topics
     section: false,             // Section
     source: true,               // ✓ Source
     level: false,               // Level
@@ -143,7 +146,7 @@ const getPriorityColor = (priority: string) => {
     priority: true,             // ✓ Priority
     progress: false,            // Progress
     order: false,               // Order
-    //due_date: false,            // Due Date
+    due_date: false,            // Due Date
     start_date: true,          // Start Date
     end_date: false,            // End Date
     estimated_duration: true,   // ✓ Est. Duration
@@ -187,6 +190,15 @@ export default function TasksPage() {
     { accessorKey: "technology", header: "Technology" },
     { accessorKey: "subcategory", header: "Subcategory" },
     { accessorKey: "category", header: "Category" },
+    { accessorKey: "topics", header: "Topics", cell: ({ row }) => (
+      <div className="flex flex-wrap gap-2">
+        {row.original.topics.map((topic, index) => (
+          <Badge key={index} variant="secondary" className="bg-gray-200 text-gray-800">
+            {topic}
+          </Badge>
+        ))}
+      </div>
+    )},
     { accessorKey: "section", header: "Section" },
     { accessorKey: "source", header: "Source", cell: ({ row }) => (
         <span>{capitalizeWords(row.original.source)}</span>
@@ -236,6 +248,13 @@ export default function TasksPage() {
       </div>
     )},
     { accessorKey: "order", header: "Order" },
+    { accessorKey: "due_date", header: "Due Date", cell: ({ row }) => {
+      const toLocalInputDate = (date: Date) => {
+        const tzOffsetMs = date.getTimezoneOffset() * 60000
+        return new Date(date.getTime() - tzOffsetMs).toISOString().split('T')[0]
+      }
+      return <span>{toLocalInputDate(row.original.due_date)}</span>
+    }}, 
     { accessorKey: "start_date", header: "Start Date", cell: ({ row }) => {
       const toLocalInputDate = (date: Date) => {
         const tzOffsetMs = date.getTimezoneOffset() * 60000
@@ -495,6 +514,27 @@ export default function TasksPage() {
         className="w-[80px]"
       />  
     ),
+    due_date: (value, onChange) => {
+      const toLocalInputDate = (date: Date) => {
+        const tzOffsetMs = date.getTimezoneOffset() * 60000
+        return new Date(date.getTime() - tzOffsetMs).toISOString().split('T')[0]
+      }
+
+      const fromLocalInputDate = (dateStr: string) => {
+        const localDate = new Date(dateStr)
+        const tzOffsetMs = localDate.getTimezoneOffset() * 60000
+        return new Date(localDate.getTime() + tzOffsetMs)
+      }
+
+      return (
+        <Input
+          type="date"
+          value={value instanceof Date ? toLocalInputDate(value) : ''}
+          onChange={(e) => onChange(fromLocalInputDate(e.target.value))}
+          className="w-[130px]"
+        />
+      )
+    },  
     start_date: (value, onChange) => {
       const toLocalInputDate = (date: Date) => {
         const tzOffsetMs = date.getTimezoneOffset() * 60000

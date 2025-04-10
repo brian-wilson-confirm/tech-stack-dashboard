@@ -18,6 +18,7 @@ class TaskCreate(SQLModel):
     priority_id: int
     progress: int = 0
     order: Optional[int]
+    due_date: Optional[date]
     start_date: Optional[date]
     end_date: Optional[date]
     estimated_duration: Optional[int]
@@ -41,7 +42,7 @@ class TaskRead(SQLModel):
     priority: Optional[str] = None
     progress: int
     order: Optional[int]
-    #due_date: Optional[date]
+    due_date: Optional[date]
     start_date: Optional[date]
     end_date: Optional[date]
     estimated_duration: Optional[int]
@@ -65,7 +66,7 @@ class TaskUpdate(SQLModel):
     priority_id: int
     progress: int
     order: Optional[int]
-    #due_date: Optional[date]
+    due_date: Optional[date]
     start_date: Optional[date]
     end_date: Optional[date]
     estimated_duration: Optional[int]

@@ -36,6 +36,13 @@ export function TaskSheet({ task, open, onOpenChange }: TaskSheetProps) {
           <SheetDescription className="text-base">
             {task.task}
           </SheetDescription>
+          <div className="flex flex-wrap gap-2">
+            {task.topics.map((topic, index) => (
+              <Badge key={index} variant="secondary" className="bg-gray-200 text-gray-800">
+                {topic}
+              </Badge>
+            ))}
+          </div>
         </SheetHeader>
         <ScrollArea className="h-[calc(100vh-200px)] pr-4">
           <div className="space-y-6 mt-6">

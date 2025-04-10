@@ -282,7 +282,7 @@ def serialize_task(task: Task, session: Session) -> TaskRead:
             priority=(prio := session.get(TaskPriority, task.priority_id)) and prio.name,
             progress=task.progress,
             order=task.order,
-            #due_date=task.due_date,
+            due_date=task.due_date,
             start_date=task.start_date,
             end_date=task.end_date,
             estimated_duration=task.estimated_duration,

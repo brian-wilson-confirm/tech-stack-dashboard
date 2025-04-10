@@ -145,38 +145,21 @@ const getPriorityColor = (priority: string) => {
 
 
 export default function TasksPage() {
-  const [tasks, setTasks] = useState<Task[]>(initialTasks)
+  /*******************
+    State Variables
+  ********************/
+  const [rows, setRows] = useState<Task[]>(initialTasks)
   const [editingRow, setEditingRow] = useState<string | null>(null)
   const [editForm, setEditForm] = useState<Task | null>(null)
   const [searchQuery, setSearchQuery] = useState<string>("")
   const [sortConfigs, setSortConfigs] = useState<SortingState>([])
   const [selectedRow, setSelectedRow] = useState<Task | null>(null)
-  const [sheetOpen, setSheetOpen] = useState(false)
   const [visibleColumns, setVisibleColumns] = useState<VisibilityState>(initialVisibleColumns)
-
-  // Add filter states
   const [selectedStatus, setSelectedStatus] = useState<string[]>([])
   const [selectedPriority, setSelectedPriority] = useState<string[]>([])
-  const [selectedColumns, setSelectedColumns] = useState<string[]>([])
+  const [sheetOpen, setSheetOpen] = useState(false)
 
-  // Create filter configurations
-  const filterConfigs = [
-    {
-      field: "status",
-      label: "Status",
-      options: statusOptions,
-      selected: selectedStatus,
-      onSelect: setSelectedStatus
-    },
-    {
-      field: "priority",
-      label: "Priority",
-      options: priorityOptions,
-      selected: selectedPriority,
-      onSelect: setSelectedPriority
-    }
-  ]
-
+  
 
   /*******************
     Data to Columns: Mapping, Ordering, Read-Only Format...
@@ -207,9 +190,7 @@ export default function TasksPage() {
         <span>{row.original.estimated_duration}h</span>
       </div>
     )},
-    { 
-      accessorKey: "status", 
-      header: "Status", 
+    { accessorKey: "status", header: "Status", 
       filterFn: ((row, columnId, filterValue) => {
         return filterValue.includes(row.getValue(columnId))
       }) as FilterFn<Task>,
@@ -219,9 +200,7 @@ export default function TasksPage() {
         </Badge>
       )
     },
-    { 
-      accessorKey: "priority", 
-      header: "Priority", 
+    { accessorKey: "priority", header: "Priority", 
       filterFn: ((row, columnId, filterValue) => {
         return filterValue.includes(row.getValue(columnId))
       }) as FilterFn<Task>,
@@ -242,6 +221,38 @@ export default function TasksPage() {
 
 
 
+  /*******************
+    Custom Filter Configs
+  ********************/
+  const filterConfigs = [
+    {
+      field: "status",
+      label: "Status",
+      options: statusOptions,
+      selected: selectedStatus,
+      onSelect: setSelectedStatus
+    },
+    {
+      field: "priority",
+      label: "Priority",
+      options: priorityOptions,
+      selected: selectedPriority,
+      onSelect: setSelectedPriority
+    }
+  ]
+
+
+
+  /*******************
+    Column Toggle
+  ********************/
+  const columnOptions = columns.map(column => ({
+    accessorKey: (column as any).accessorKey,
+    header: typeof column.header === 'string' ? column.header : 'Column'
+  }))
+
+
+
 
   /*******************
     Functions()
@@ -257,7 +268,7 @@ export default function TasksPage() {
 
   const onSaveEdit = () => {
     if (editForm) {
-      setTasks(prev => prev.map(t => t.id === editForm.id ? editForm : t))
+      setRows(prev => prev.map(t => t.id === editForm.id ? editForm : t))
       setEditingRow(null)
       setEditForm(null)
     }
@@ -275,6 +286,8 @@ export default function TasksPage() {
   }, [editingRow])
 
   
+
+
   /*******************
     Edit Mode Renderers
   ********************/
@@ -442,11 +455,6 @@ export default function TasksPage() {
     },
   }
 
-  // Add column options
-  const columnOptions = columns.map(column => ({
-    accessorKey: (column as any).accessorKey,
-    header: typeof column.header === 'string' ? column.header : 'Column'
-  }))
 
   return (
     <div className="p-8">
@@ -474,23 +482,23 @@ export default function TasksPage() {
       <div className="grid gap-6">
         <h2 className="text-2xl font-bold">DataTable Widget</h2>
         <DataTableWidget
-          data={tasks}
+          data={rows}
           columns={columns}
+          columnOptions={columnOptions}
           visibleColumns={visibleColumns}
           onColumnVisibilityChange={setVisibleColumns}
           editingRow={editingRow}
           editForm={editForm}
+          editModeRenderers={editModeRenderers}
           onEditChange={onEditChange}
           onStartEdit={startEditing}
           onSaveEdit={onSaveEdit}
           onCancelEdit={onCancelEdit}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
+          filterConfigs={filterConfigs}
           sortConfigs={sortConfigs}
           onSortChange={setSortConfigs}
-          editModeRenderers={editModeRenderers}
-          filterConfigs={filterConfigs}
-          columnOptions={columnOptions}
         />
       </div>
 

@@ -1,7 +1,7 @@
 // TasksPage.tsx
 import { useState, useEffect, useMemo, useTransition, useCallback } from "react"
 import { z } from "zod"
-import { ColumnDef, SortingState, VisibilityState } from "@tanstack/react-table"
+import { ColumnDef, SortingState, VisibilityState, FilterFn } from "@tanstack/react-table"
 import { DataTableWidget, EditModeRenderer } from "@/components/widgets/DataTableWidget"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { CheckSquare, Clock } from "lucide-react"
@@ -154,6 +154,48 @@ export default function TasksPage() {
   const [sheetOpen, setSheetOpen] = useState(false)
   const [visibleColumns, setVisibleColumns] = useState<VisibilityState>(initialVisibleColumns)
 
+  // Add filter states
+  const [selectedStatus, setSelectedStatus] = useState<string[]>([])
+  const [selectedPriority, setSelectedPriority] = useState<string[]>([])
+  const [selectedColumns, setSelectedColumns] = useState<string[]>([])
+
+  // Create filter configurations
+  const filterConfigs = [
+    {
+      field: "status",
+      label: "Status",
+      options: statusOptions,
+      selected: selectedStatus,
+      onSelect: setSelectedStatus
+    },
+    {
+      field: "priority",
+      label: "Priority",
+      options: priorityOptions,
+      selected: selectedPriority,
+      onSelect: setSelectedPriority
+    },
+    {
+      field: "columns",
+      label: "Columns",
+      options: Object.entries(visibleColumns).map(([key, value]) => ({
+        id: key,
+        name: key
+      })),
+      selected: selectedColumns,
+      onSelect: (values: string[]) => {
+        setSelectedColumns(values)
+        setVisibleColumns(prev => {
+          const newColumns = { ...prev }
+          values.forEach(col => {
+            newColumns[col] = true
+          })
+          return newColumns
+        })
+      }
+    }
+  ]
+
 
   /*******************
     Data to Columns: Mapping, Ordering, Read-Only Format...
@@ -184,23 +226,37 @@ export default function TasksPage() {
         <span>{row.original.estimated_duration}h</span>
       </div>
     )},
-    { accessorKey: "status", header: "Status", cell: ({ row }) => (
-      <Badge variant="secondary" className={`${getStatusColor(row.original.status)} text-white`}>
-        {capitalizeWords(row.original.status.replace('_', ' '))}
-      </Badge>
-    )},
-    { accessorKey: "priority", header: "Priority", cell: ({ row }) => (
-      <Badge variant="secondary" className={`${getPriorityColor(row.original.priority)} text-white`}>
-        {capitalizeWords(row.original.priority)}
-      </Badge>
-    )},
+    { 
+      accessorKey: "status", 
+      header: "Status", 
+      filterFn: ((row, columnId, filterValue) => {
+        return filterValue.includes(row.getValue(columnId))
+      }) as FilterFn<Task>,
+      cell: ({ row }) => (
+        <Badge variant="secondary" className={`${getStatusColor(row.original.status)} text-white`}>
+          {capitalizeWords(row.original.status.replace('_', ' '))}
+        </Badge>
+      )
+    },
+    { 
+      accessorKey: "priority", 
+      header: "Priority", 
+      filterFn: ((row, columnId, filterValue) => {
+        return filterValue.includes(row.getValue(columnId))
+      }) as FilterFn<Task>,
+      cell: ({ row }) => (
+        <Badge variant="secondary" className={`${getPriorityColor(row.original.priority)} text-white`}>
+          {capitalizeWords(row.original.priority)}
+        </Badge>
+      )
+    },
     { accessorKey: "start_date", header: "Start Date", cell: ({ row }) => {
       const toLocalInputDate = (date: Date) => {
         const tzOffsetMs = date.getTimezoneOffset() * 60000
         return new Date(date.getTime() - tzOffsetMs).toISOString().split('T')[0]
       }
       return <span>{toLocalInputDate(row.original.start_date)}</span>
-  }},
+    }},
   ]
 
 
@@ -445,6 +501,7 @@ export default function TasksPage() {
           sortConfigs={sortConfigs}
           onSortChange={setSortConfigs}
           editModeRenderers={editModeRenderers}
+          filterConfigs={filterConfigs}
         />
       </div>
 

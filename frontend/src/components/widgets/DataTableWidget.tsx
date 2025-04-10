@@ -29,15 +29,36 @@ import {
   X,
   Plus,
   X as CrossIcon,
-  LayoutGrid
 } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useState } from "react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Separator } from "@/components/ui/separator"
 
 export type EditModeRenderer<T> = Partial<
   Record<keyof T, (value: T[keyof T], onChange: (val: T[keyof T]) => void) => React.ReactNode>
 >
+
+export type FilterOption = {
+  id: string | number
+  name: string
+}
+
+export type FilterConfig = {
+  field: string
+  label: string
+  options: FilterOption[]
+  selected: string[]
+  onSelect: (values: string[]) => void
+}
 
 type Props<T extends Record<string, any>> = {
   data: T[]
@@ -54,6 +75,44 @@ type Props<T extends Record<string, any>> = {
   sortConfigs: SortingState
   onSortChange: (sort: SortingState) => void
   editModeRenderers?: EditModeRenderer<T>
+  filterConfigs?: FilterConfig[]
+}
+
+const FilterDropdown = ({ config, editingRow }: { config: FilterConfig, editingRow: string | null }) => {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" size="sm" className="h-8 border-dashed" disabled={!!editingRow}>
+          <Plus className="mr-2 h-4 w-4" />
+          {config.label}
+          {config.selected.length > 0 && (
+            <>
+              <Separator orientation="vertical" className="mx-2 h-4" />
+              <span className="text-xs">{config.selected.length}</span>
+            </>
+          )}
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="w-[200px]">
+        <DropdownMenuLabel>Filter by {config.label}</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {config.options.map((option) => (
+          <DropdownMenuCheckboxItem
+            key={option.id}
+            checked={config.selected.includes(option.name)}
+            onCheckedChange={(checked) => {
+              const newSelected = checked
+                ? [...config.selected, option.name]
+                : config.selected.filter((value) => value !== option.name)
+              config.onSelect(newSelected)
+            }}
+          >
+            {option.name}
+          </DropdownMenuCheckboxItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
 }
 
 export function DataTableWidget<T extends Record<string, any>>({
@@ -71,6 +130,7 @@ export function DataTableWidget<T extends Record<string, any>>({
   sortConfigs,
   onSortChange,
   editModeRenderers,
+  filterConfigs,
 }: Props<T>) {
   // Add pagination state
   const [pageIndex, setPageIndex] = useState(0);
@@ -83,19 +143,38 @@ export function DataTableWidget<T extends Record<string, any>>({
   // Use column filters instead of global filter
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
-  // Update column filters when search query changes
+  // Update column filters when search query or filter configs change
   React.useEffect(() => {
+    const filters: ColumnFiltersState = []
+
+    // Add search filter
     if (searchQuery) {
-      setColumnFilters([
-        {
-          id: 'task',
-          value: searchQuery,
-        },
-      ]);
-    } else {
-      setColumnFilters([]);
+      filters.push({
+        id: 'task',
+        value: searchQuery,
+      })
     }
-  }, [searchQuery]);
+
+    // Add status filter
+    const statusConfig = filterConfigs?.find(config => config.field === 'status')
+    if (statusConfig?.selected.length) {
+      filters.push({
+        id: 'status',
+        value: statusConfig.selected,
+      })
+    }
+
+    // Add priority filter
+    const priorityConfig = filterConfigs?.find(config => config.field === 'priority')
+    if (priorityConfig?.selected.length) {
+      filters.push({
+        id: 'priority',
+        value: priorityConfig.selected,
+      })
+    }
+
+    setColumnFilters(filters)
+  }, [searchQuery, filterConfigs])
 
   const table = useReactTable({
     data,
@@ -120,6 +199,11 @@ export function DataTableWidget<T extends Record<string, any>>({
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    filterFns: {
+      multiSelect: (row, columnId, filterValue) => {
+        return filterValue.includes(row.getValue(columnId))
+      }
+    }
   });
 
   // Get pagination info from table state
@@ -191,6 +275,9 @@ export function DataTableWidget<T extends Record<string, any>>({
         {/* Filter Controls */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex flex-1 items-center space-x-2">
+            
+            
+            {/* Filter Textbox */}
             <div className="relative">
               <Input
                 placeholder="Filter by task name..."
@@ -211,78 +298,27 @@ export function DataTableWidget<T extends Record<string, any>>({
                 </Button>
               )}
             </div>
-            {/*
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="h-8 border-dashed" disabled={!!editingTask}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Status
-                  {selectedStatus.length > 0 && (
-                    <>
-                      <Separator orientation="vertical" className="mx-2 h-4" />
-                      <span className="text-xs">{selectedStatus.length}</span>
-                    </>
-                  )}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-[200px]">
-                {statuses.map((status) => (
-                  <DropdownMenuCheckboxItem
-                    key={status.id}
-                    checked={selectedStatus.includes(status.name)}
-                    onCheckedChange={(checked) => {
-                      startTransition(() => {
-                        checked
-                          ? setSelectedStatus([...selectedStatus, status.name])
-                          : setSelectedStatus(selectedStatus.filter((value) => value !== status.name))
-                      })
-                    }}
-                  >
-                    {status.name.replace('_', ' ')}
-                  </DropdownMenuCheckboxItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="h-8 border-dashed" disabled={!!editingTask}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Priority
-                  {selectedPriority.length > 0 && (
-                    <>
-                      <Separator orientation="vertical" className="mx-2 h-4" />
-                      <span className="text-xs">{selectedPriority.length}</span>
-                    </>
-                  )}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-[200px]">
-                {priorities.map((priority) => (
-                  <DropdownMenuCheckboxItem
-                    key={priority.id}
-                    checked={selectedPriority.includes(priority.name)}
-                    onCheckedChange={(checked) => {
-                      startTransition(() => {
-                        checked
-                          ? setSelectedPriority([...selectedPriority, priority.name])
-                          : setSelectedPriority(selectedPriority.filter((value) => value !== priority.name))
-                      })
-                    }}
-                  >
-                    {priority.name}
-                  </DropdownMenuCheckboxItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+
+
+            {/* Filter Dropdowns */}
+            {filterConfigs?.map((config) => (
+              <FilterDropdown key={config.field} config={config} editingRow={editingRow} />
+            ))}
+
             <Button 
               variant="outline" 
               size="sm" 
               className="h-8 border-dashed"
-              onClick={resetFilters}
-              disabled={(!searchQuery && selectedStatus.length === 0 && selectedPriority.length === 0) || !!editingTask}
+              onClick={() => {
+                setSearchQuery("")
+                filterConfigs?.forEach(config => config.onSelect([]))
+              }}
+              disabled={(!searchQuery && !filterConfigs?.some(config => config.selected.length > 0)) || !!editingRow}
             >
               Reset
             </Button>
+            
+            {/*
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="h-8 border-dashed" disabled={!!editingTask}>

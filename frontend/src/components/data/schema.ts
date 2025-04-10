@@ -15,11 +15,11 @@ export const taskSchema = z.object({
   status: z.string(),
   priority: z.string(),
   //progress: z.number(),
-  //order: z.number(),
+  order: z.number(),
   start_date: z.date(),
   end_date: z.date(),
   estimated_duration: z.number(),
-  //actual_duration: z.number(),
+  actual_duration: z.number(),
   //done: z.boolean(),
 })
 

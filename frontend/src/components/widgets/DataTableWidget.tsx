@@ -10,6 +10,7 @@ import {
   SortingState,
   useReactTable,
   VisibilityState,
+  ColumnFiltersState,
 } from "@tanstack/react-table"
 import {
   Table,
@@ -78,12 +79,29 @@ export function DataTableWidget<T extends Record<string, any>>({
     pageIndex: 0,
     pageSize: 10,
   })
+  
+  // Use column filters instead of global filter
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+
+  // Update column filters when search query changes
+  React.useEffect(() => {
+    if (searchQuery) {
+      setColumnFilters([
+        {
+          id: 'task',
+          value: searchQuery,
+        },
+      ]);
+    } else {
+      setColumnFilters([]);
+    }
+  }, [searchQuery]);
 
   const table = useReactTable({
     data,
     columns,
     state: {
-      globalFilter: searchQuery,
+      columnFilters,
       sorting: sortConfigs,
       columnVisibility: visibleColumns,
       pagination,
@@ -97,7 +115,7 @@ export function DataTableWidget<T extends Record<string, any>>({
       onSortChange(newSorting)
     },
     onPaginationChange: setPagination,
-    onGlobalFilterChange: setSearchQuery,
+    onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -117,7 +135,7 @@ export function DataTableWidget<T extends Record<string, any>>({
   // Get filtered rows
   const filteredRows = table.getFilteredRowModel().rows.length;
 
-  // Replace the delete button with a proper implementation
+  // Handle row deletion
   const handleDeleteRow = (rowId: string) => {
     // Implement row deletion logic here if needed
     console.log(`Deleting row ${rowId}`);
@@ -175,7 +193,7 @@ export function DataTableWidget<T extends Record<string, any>>({
           <div className="flex flex-1 items-center space-x-2">
             <div className="relative">
               <Input
-                placeholder="Filter tasks..."
+                placeholder="Filter by task name..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="h-8 w-[150px] lg:w-[250px]"
@@ -554,7 +572,7 @@ export function DataTableWidget<T extends Record<string, any>>({
                           <Button 
                             variant="ghost" 
                             size="icon"
-                            onClick={() => deleteRow(rowData.id)}
+                            onClick={() => handleDeleteRow(row.original.id)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>

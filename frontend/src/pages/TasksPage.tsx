@@ -11,6 +11,7 @@ import { StatusType } from "@/types/enums"
 import { PriorityType } from "@/types/enums"
 import { Button } from "@/components/ui/button"
 import { TaskSheet } from "@/components/ui/task-sheet"
+import { Input } from "@/components/ui/input"
 
 
 /*******************
@@ -155,7 +156,13 @@ export default function TasksPage() {
         {capitalizeWords(row.original.priority)}
       </Badge>
     )},
-    { accessorKey: "start_date", header: "Start Date" },
+    { accessorKey: "start_date", header: "Start Date", cell: ({ row }) => {
+      const toLocalInputDate = (date: Date) => {
+        const tzOffsetMs = date.getTimezoneOffset() * 60000
+        return new Date(date.getTime() - tzOffsetMs).toISOString().split('T')[0]
+      }
+      return <span>{toLocalInputDate(row.original.start_date)}</span>
+  }},
   ]
 
 
@@ -276,6 +283,27 @@ export default function TasksPage() {
         </SelectContent>
       </Select>
     ),
+    start_date: (value, onChange) => {
+      const toLocalInputDate = (date: Date) => {
+        const tzOffsetMs = date.getTimezoneOffset() * 60000
+        return new Date(date.getTime() - tzOffsetMs).toISOString().split('T')[0]
+      }
+    
+      const fromLocalInputDate = (dateStr: string) => {
+        const localDate = new Date(dateStr)
+        const tzOffsetMs = localDate.getTimezoneOffset() * 60000
+        return new Date(localDate.getTime() + tzOffsetMs)
+      }
+    
+      return (
+        <Input
+          type="date"
+          value={value ? toLocalInputDate(new Date(value)) : ''}
+          onChange={(e) => onChange(fromLocalInputDate(e.target.value))}
+          className="w-[130px]"
+        />
+      )
+    },
   }
 
   return (

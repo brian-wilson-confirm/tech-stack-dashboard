@@ -48,6 +48,7 @@ type Task = z.infer<typeof TaskSchema>
 /*******************
   Initial Row Data
 ********************/
+
 const initialTasks: Task[] = [
   {
     id: "1",
@@ -87,6 +88,7 @@ const initialTasks: Task[] = [
   { id: "12", task_id: "TASK-8791", task: "Pentest Changes", technology: "React", subcategory: "Runtime Environment", category: "Backend", topics: ["Python","FastAPI","REST API"], section: "Chapter 9", source: "PluralSight", level: "beginner", type: "learning", status: "not_started", priority: "medium", progress: 89, order: 10, estimated_duration: 11, due_date: new Date("2025-04-10"), start_date: new Date("2024-04-08"), end_date: new Date("2024-04-10"), actual_duration: 11, done: false },
   { id: "13", task_id: "TASK-8792", task: "Update Priority Endpoints", technology: "React", subcategory: "Runtime Environment", category: "Backend", topics: ["Python","FastAPI","REST API"], section: "Chapter 10", source: "PluralSight", level: "beginner", type: "learning", status: "in_progress", priority: "medium", progress: 50, order: 11, estimated_duration: 9, due_date: new Date("2025-04-10"), start_date: new Date("2024-04-17"), end_date: new Date("2024-04-18"), actual_duration: 10, done: false },
 ]
+
 
 
 /*******************
@@ -131,7 +133,7 @@ const getPriorityColor = (priority: string) => {
   Visible Columns
 ********************/
   const initialVisibleColumns = {
-    id: false,                   // ✓ ID  
+    id: false,                  // ✓ ID  
     task_id: true,              // ✓ Task ID
     task: true,                 // ✓ Task
     technology: true,           // ✓ Technology
@@ -147,7 +149,7 @@ const getPriorityColor = (priority: string) => {
     progress: false,            // Progress
     order: false,               // Order
     due_date: false,            // Due Date
-    start_date: true,          // Start Date
+    start_date: true,           // Start Date
     end_date: false,            // End Date
     estimated_duration: true,   // ✓ Est. Duration
     actual_duration: false,     // Actual Duration
@@ -160,19 +162,90 @@ export default function TasksPage() {
   /*******************
     State Variables
   ********************/
-  const [rows, setRows] = useState<Task[]>(initialTasks)
-  const [editingRow, setEditingRow] = useState<string | null>(null)
-  const [editForm, setEditForm] = useState<Task | null>(null)
-  const [searchQuery, setSearchQuery] = useState<string>("")
-  const [sortConfigs, setSortConfigs] = useState<SortingState>([])
-  const [selectedRow, setSelectedRow] = useState<Task | null>(null)
-  const [visibleColumns, setVisibleColumns] = useState<VisibilityState>(initialVisibleColumns)
-  const [selectedStatus, setSelectedStatus] = useState<string[]>([])
-  const [selectedPriority, setSelectedPriority] = useState<string[]>([])
-  const [sheetOpen, setSheetOpen] = useState(false)
+  const [rows, setRows] = useState<Task[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [editingRow, setEditingRow] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<Task | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortConfigs, setSortConfigs] = useState<SortingState>([]);
+  const [selectedRow, setSelectedRow] = useState<Task | null>(null);
+  const [visibleColumns, setVisibleColumns] = useState<VisibilityState>(initialVisibleColumns);
+  const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
+  const [selectedPriority, setSelectedPriority] = useState<string[]>([]);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
 
+  
+  /***********************
+   API: Get Rows
+  ***********************/
+  useEffect(() => {
+    fetchRows();
+  }, []);
 
+  const fetchRows = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch('/api/tasks');
+      if (!response.ok) {
+        throw new Error('Failed to fetch tasks');
+      }
+      const data = await response.json();
+      setRows(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRowUpdate = async (updatedRow: Task) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`/api/tasks/${updatedRow.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedRow),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to update task');
+      }
+      const data = await response.json();
+      setRows(rows.map(row => row.id === data.id ? data : row));
+      setEditingRow(null);
+      setEditForm(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRowDelete = async (rowId: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`/api/tasks/${rowId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        throw new Error('Failed to delete task');
+      }
+      setRows(rows.filter(row => row.id !== rowId));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+
+  
   /*******************
     Data to Columns: Mapping, Ordering, Read-Only Format...
   ********************/
@@ -249,23 +322,32 @@ export default function TasksPage() {
     )},
     { accessorKey: "order", header: "Order" },
     { accessorKey: "due_date", header: "Due Date", cell: ({ row }) => {
-      const toLocalInputDate = (date: Date) => {
-        const tzOffsetMs = date.getTimezoneOffset() * 60000
-        return new Date(date.getTime() - tzOffsetMs).toISOString().split('T')[0]
+      const toLocalInputDate = (date: Date | string | null) => {
+        if (!date) return '';
+        const dateObj = date instanceof Date ? date : new Date(date);
+        if (isNaN(dateObj.getTime())) return '';
+        const tzOffsetMs = dateObj.getTimezoneOffset() * 60000;
+        return new Date(dateObj.getTime() - tzOffsetMs).toISOString().split('T')[0];
       }
       return <span>{toLocalInputDate(row.original.due_date)}</span>
     }}, 
     { accessorKey: "start_date", header: "Start Date", cell: ({ row }) => {
-      const toLocalInputDate = (date: Date) => {
-        const tzOffsetMs = date.getTimezoneOffset() * 60000
-        return new Date(date.getTime() - tzOffsetMs).toISOString().split('T')[0]
+      const toLocalInputDate = (date: Date | string | null) => {
+        if (!date) return '';
+        const dateObj = date instanceof Date ? date : new Date(date);
+        if (isNaN(dateObj.getTime())) return '';
+        const tzOffsetMs = dateObj.getTimezoneOffset() * 60000;
+        return new Date(dateObj.getTime() - tzOffsetMs).toISOString().split('T')[0];
       }
       return <span>{toLocalInputDate(row.original.start_date)}</span>
     }},
     { accessorKey: "end_date", header: "End Date", cell: ({ row }) => {
-      const toLocalInputDate = (date: Date) => {
-        const tzOffsetMs = date.getTimezoneOffset() * 60000
-        return new Date(date.getTime() - tzOffsetMs).toISOString().split('T')[0]
+      const toLocalInputDate = (date: Date | string | null) => {
+        if (!date) return '';
+        const dateObj = date instanceof Date ? date : new Date(date);
+        if (isNaN(dateObj.getTime())) return '';
+        const tzOffsetMs = dateObj.getTimezoneOffset() * 60000;
+        return new Date(dateObj.getTime() - tzOffsetMs).toISOString().split('T')[0];
       }
       return <span>{toLocalInputDate(row.original.end_date)}</span>
     }},
@@ -318,11 +400,9 @@ export default function TasksPage() {
     setEditForm(prev => prev ? { ...prev, [field]: value } : prev)
   }
 
-  const onSaveEdit = () => {
+  const onSaveEdit = async () => {
     if (editForm) {
-      setRows(prev => prev.map(t => t.id === editForm.id ? editForm : t))
-      setEditingRow(null)
-      setEditForm(null)
+      await handleRowUpdate(editForm)
     }
   }
 
@@ -515,9 +595,12 @@ export default function TasksPage() {
       />  
     ),
     due_date: (value, onChange) => {
-      const toLocalInputDate = (date: Date) => {
-        const tzOffsetMs = date.getTimezoneOffset() * 60000
-        return new Date(date.getTime() - tzOffsetMs).toISOString().split('T')[0]
+      const toLocalInputDate = (date: Date | string | null) => {
+        if (!date) return '';
+        const dateObj = date instanceof Date ? date : new Date(date);
+        if (isNaN(dateObj.getTime())) return '';
+        const tzOffsetMs = dateObj.getTimezoneOffset() * 60000;
+        return new Date(dateObj.getTime() - tzOffsetMs).toISOString().split('T')[0];
       }
 
       const fromLocalInputDate = (dateStr: string) => {
@@ -536,9 +619,12 @@ export default function TasksPage() {
       )
     },  
     start_date: (value, onChange) => {
-      const toLocalInputDate = (date: Date) => {
-        const tzOffsetMs = date.getTimezoneOffset() * 60000
-        return new Date(date.getTime() - tzOffsetMs).toISOString().split('T')[0]
+      const toLocalInputDate = (date: Date | string | null) => {
+        if (!date) return '';
+        const dateObj = date instanceof Date ? date : new Date(date);
+        if (isNaN(dateObj.getTime())) return '';
+        const tzOffsetMs = dateObj.getTimezoneOffset() * 60000;
+        return new Date(dateObj.getTime() - tzOffsetMs).toISOString().split('T')[0];
       }
     
       const fromLocalInputDate = (dateStr: string) => {
@@ -557,9 +643,12 @@ export default function TasksPage() {
       )
     },
     end_date: (value, onChange) => {
-      const toLocalInputDate = (date: Date) => {
-        const tzOffsetMs = date.getTimezoneOffset() * 60000
-        return new Date(date.getTime() - tzOffsetMs).toISOString().split('T')[0]
+      const toLocalInputDate = (date: Date | string | null) => {
+        if (!date) return '';
+        const dateObj = date instanceof Date ? date : new Date(date);
+        if (isNaN(dateObj.getTime())) return '';
+        const tzOffsetMs = dateObj.getTimezoneOffset() * 60000;
+        return new Date(dateObj.getTime() - tzOffsetMs).toISOString().split('T')[0];
       }
     
       const fromLocalInputDate = (dateStr: string) => {
@@ -581,7 +670,7 @@ export default function TasksPage() {
 
 
   return (
-    <div className="p-8">
+    <div className="container mx-auto py-10">
       <div className="flex items-center gap-3 mb-8">
         <CheckSquare className="h-8 w-8" />
         <h1 className="text-3xl font-bold">Tasks</h1>
@@ -623,6 +712,9 @@ export default function TasksPage() {
           filterConfigs={filterConfigs}
           sortConfigs={sortConfigs}
           onSortChange={setSortConfigs}
+          isLoading={isLoading}
+          onDeleteRow={handleRowDelete}
+          nonEditableColumns={['task_id']}
         />
       </div>
 

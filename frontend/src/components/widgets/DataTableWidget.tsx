@@ -84,6 +84,9 @@ type Props<T extends Record<string, any>> = {
   editModeRenderers?: EditModeRenderer<T>
   filterConfigs?: FilterConfig[]
   columnOptions?: ColumnOption[]
+  isLoading?: boolean
+  onDeleteRow?: (rowId: string) => Promise<void>
+  nonEditableColumns?: string[]
 }
 
 const FilterDropdown = ({ config, editingRow }: { config: FilterConfig, editingRow: string | null }) => {
@@ -184,6 +187,9 @@ export function DataTableWidget<T extends Record<string, any>>({
   editModeRenderers,
   filterConfigs,
   columnOptions,
+  isLoading,
+  onDeleteRow,
+  nonEditableColumns,
 }: Props<T>) {
   // Add pagination state
   const [pageIndex, setPageIndex] = useState(0);
@@ -273,15 +279,21 @@ export function DataTableWidget<T extends Record<string, any>>({
   const filteredRows = table.getFilteredRowModel().rows.length;
 
   // Handle row deletion
-  const handleDeleteRow = (rowId: string) => {
-    // Implement row deletion logic here if needed
-    console.log(`Deleting row ${rowId}`);
+  const handleDeleteRow = async (rowId: string) => {
+    if (onDeleteRow) {
+      await onDeleteRow(rowId);
+    }
   };
 
   const renderEditableCell = (cell: any, rowId: string) => {
     const field = cell.column.id as keyof T
     const value = editForm?.[field]
     const renderer = editModeRenderers?.[field]
+
+    // Check if the column is non-editable
+    if (nonEditableColumns?.includes(cell.column.id)) {
+      return flexRender(cell.column.columnDef.cell, cell.getContext())
+    }
 
     const fallback: T[keyof T] =
       typeof value === "number" ? 0 as T[keyof T] :

@@ -43,6 +43,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Separator } from "@/components/ui/separator"
+import { capitalizeWords } from "@/lib/utils"
 
 export type EditModeRenderer<T> = Partial<
   Record<keyof T, (value: T[keyof T], onChange: (val: T[keyof T]) => void) => React.ReactNode>
@@ -118,7 +119,7 @@ const FilterDropdown = ({ config, editingRow }: { config: FilterConfig, editingR
               config.onSelect(newSelected)
             }}
           >
-            {option.name}
+            {capitalizeWords(option.name.replace(/_/g, ' '))}
           </DropdownMenuCheckboxItem>
         ))}
       </DropdownMenuContent>

@@ -21,6 +21,7 @@ const TaskSchema = z.object({
   id: z.string(),
   task_id: z.string(),
   task: z.string().min(1, "Task name is required"),
+  category: z.string(),
   source: z.string(),
   type: z.string(),
   status: z.string(),
@@ -42,7 +43,7 @@ const initialTasks: Task[] = [
     task: "Learn FastAPI",
     //technology: "React",
     //subcategory: "Runtime Environment",
-    //category: "Backend",
+    category: "Backend",
     //topics: [
     //  "Python",
     //  "FastAPI",
@@ -62,22 +63,23 @@ const initialTasks: Task[] = [
     //actual_duration: 43,
     //done: false
   },
-  { id: "4", task_id: "TASK-8783", task: "Regenerate all cycle participants", source: "PluralSight", type: "learning", status: "not_started", priority: "medium", estimated_duration: 10, start_date: new Date("2024-04-10") },
-  { id: "5", task_id: "TASK-8784", task: "Modify Feedback", source: "PluralSight", type: "learning", status: "in_progress", priority: "medium", estimated_duration: 20, start_date: new Date("2024-04-12") },
-  { id: "6", task_id: "TASK-8785", task: "Delete Recognition", source: "PluralSight", type: "learning", status: "completed", priority: "high", estimated_duration: 15, start_date: new Date("2024-04-15") },
-  { id: "7", task_id: "TASK-8786", task: "Disable Campaign reports", source: "PluralSight", type: "learning", status: "on_hold", priority: "medium", estimated_duration: 8, start_date: new Date("2024-04-09") },
-  { id: "8", task_id: "TASK-8787", task: "Audit Jest Tests", source: "PluralSight", type: "learning", status: "in_progress", priority: "medium", estimated_duration: 12, start_date: new Date("2024-04-13") },
-  { id: "9", task_id: "TASK-8788", task: "Fix Inconsistent Data", source: "PluralSight", type: "learning", status: "completed", priority: "medium", estimated_duration: 18, start_date: new Date("2024-04-14") },
-  { id: "10", task_id: "TASK-8789", task: "Update Support Article", source: "PluralSight", type: "learning", status: "not_started", priority: "low", estimated_duration: 14, start_date: new Date("2024-04-11") },
-  { id: "11", task_id: "TASK-8790", task: "Defect: Error Sending Email", source: "PluralSight", type: "learning", status: "on_hold", priority: "medium", estimated_duration: 16, start_date: new Date("2024-04-16") },
-  { id: "12", task_id: "TASK-8791", task: "Pentest Changes", source: "PluralSight", type: "learning", status: "not_started", priority: "medium", estimated_duration: 11, start_date: new Date("2024-04-08") },
-  { id: "13", task_id: "TASK-8792", task: "Update Priority Endpoints", source: "PluralSight", type: "learning", status: "in_progress", priority: "medium", estimated_duration: 9, start_date: new Date("2024-04-17") },
+  { id: "4", task_id: "TASK-8783", task: "Regenerate all cycle participants", category: "Backend", source: "PluralSight", type: "learning", status: "not_started", priority: "medium", estimated_duration: 10, start_date: new Date("2024-04-10") },
+  { id: "5", task_id: "TASK-8784", task: "Modify Feedback", category: "Backend", source: "PluralSight", type: "learning", status: "in_progress", priority: "medium", estimated_duration: 20, start_date: new Date("2024-04-12") },
+  { id: "6", task_id: "TASK-8785", task: "Delete Recognition", category: "Backend", source: "PluralSight", type: "learning", status: "completed", priority: "high", estimated_duration: 15, start_date: new Date("2024-04-15") },
+  { id: "7", task_id: "TASK-8786", task: "Disable Campaign reports", category: "Backend", source: "PluralSight", type: "learning", status: "on_hold", priority: "medium", estimated_duration: 8, start_date: new Date("2024-04-09") },
+  { id: "8", task_id: "TASK-8787", task: "Audit Jest Tests", category: "Backend", source: "PluralSight", type: "learning", status: "in_progress", priority: "medium", estimated_duration: 12, start_date: new Date("2024-04-13") },
+  { id: "9", task_id: "TASK-8788", task: "Fix Inconsistent Data", category: "Backend", source: "PluralSight", type: "learning", status: "completed", priority: "medium", estimated_duration: 18, start_date: new Date("2024-04-14") },
+  { id: "10", task_id: "TASK-8789", task: "Update Support Article", category: "Backend", source: "PluralSight", type: "learning", status: "not_started", priority: "low", estimated_duration: 14, start_date: new Date("2024-04-11") },
+  { id: "11", task_id: "TASK-8790", task: "Defect: Error Sending Email", category: "Backend", source: "PluralSight", type: "learning", status: "on_hold", priority: "medium", estimated_duration: 16, start_date: new Date("2024-04-16") },
+  { id: "12", task_id: "TASK-8791", task: "Pentest Changes", category: "Backend", source: "PluralSight", type: "learning", status: "not_started", priority: "medium", estimated_duration: 11, start_date: new Date("2024-04-08") },
+  { id: "13", task_id: "TASK-8792", task: "Update Priority Endpoints", category: "Backend", source: "PluralSight", type: "learning", status: "in_progress", priority: "medium", estimated_duration: 9, start_date: new Date("2024-04-17") },
 ]
 
 
 /*******************
   Options Data
 ********************/
+const categoryOptions = [{"id":10,"name":"Frontend"},{"id":11,"name":"Middleware"},{"id":12,"name":"Backend"},{"id":13,"name":"Database"},{"id":14,"name":"Messaging"},{"id":15,"name":"DevOps"},{"id":16,"name":"Security"},{"id":17,"name":"Monitoring"}]
 const sourceOptions = [{"id":16,"name":"Internal Project"},{"id":17,"name":"Architecture Review"},{"id":18,"name":"Security Audit"},{"id":19,"name":"Performance Optimization"},{"id":20,"name":"Bug Report"},{"id":21,"name":"Feature Request"},{"id":22,"name":"Technical Debt"},{"id":23,"name":"Learning Path"},{"id":24,"name":"Research Initiative"},{"id":25,"name":"Compliance Requirement"},{"id":26,"name":"Customer Feedback"},{"id":27,"name":"Team Initiative"},{"id":28,"name":"Infrastructure Upgrade"},{"id":29,"name":"Documentation Sprint"},{"id":30,"name":"PluralSight"}]
 const typeOptions = [{"id":1,"name":"learning"},{"id":2,"name":"implementation"},{"id":3,"name":"research"},{"id":4,"name":"documentation"},{"id":5,"name":"maintenance"}]
 const statusOptions = [{"name":"not_started","id":1},{"name":"in_progress","id":2},{"name":"completed","id":3},{"name":"on_hold","id":4},{"name":"canceled","id":5}]
@@ -134,6 +136,7 @@ export default function TasksPage() {
         </Button>
     )},
     { accessorKey: "task", header: "Task" },
+    { accessorKey: "category", header: "Category" },
     { accessorKey: "source", header: "Source", cell: ({ row }) => (
         <span>{capitalizeWords(row.original.source)}</span>
     )},
@@ -203,6 +206,26 @@ export default function TasksPage() {
     Edit Mode Renderers
   ********************/
   const editModeRenderers: EditModeRenderer<Task> = {
+    category: (value, onChange) => (
+      <Select
+        value={categoryOptions.find((c) => c.name === value)?.id.toString() ?? ""}
+        onValueChange={(selectedId) => {
+          const selectedCategory = categoryOptions.find((c) => c.id.toString() === selectedId);
+          if (selectedCategory) {
+            onChange(selectedCategory.name);
+          }
+        }}
+      >
+        <SelectTrigger className="w-[140px]">
+          <SelectValue placeholder="Select" />
+        </SelectTrigger>
+        <SelectContent>
+          {categoryOptions.map(category => (
+            <SelectItem key={category.id} value={category.id.toString()}>{capitalizeWords(category.name)}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    ),
     source: (value, onChange) => (  
       <Select
         value={sourceOptions.find((s) => s.name === value)?.id.toString() ?? ""}

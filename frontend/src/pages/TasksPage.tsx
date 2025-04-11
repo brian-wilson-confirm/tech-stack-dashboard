@@ -1,5 +1,5 @@
 // TasksPage.tsx
-import { useState, useEffect, useMemo, useTransition, useCallback } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { z } from "zod"
 import { ColumnDef, SortingState, VisibilityState, FilterFn } from "@tanstack/react-table"
 import { DataTableWidget, EditModeRenderer } from "@/components/widgets/DataTableWidget"
@@ -96,12 +96,12 @@ const initialTasks: Task[] = [
 ********************/
 const technologyOptions = [{"name":"FastAPI","id":42},{"name":"Django","id":43}]
 const subcategoryOptions = [{"category_id":12,"id":40,"name":"Runtime Environment"},{"category_id":12,"id":41,"name":"Language"},{"category_id":12,"id":42,"name":"Web Framework"},{"category_id":12,"id":43,"name":"API Framework"},{"category_id":12,"id":44,"name":"Testing & Debugging"}]
-const categoryOptions = [{"id":10,"name":"Frontend"},{"id":11,"name":"Middleware"},{"id":12,"name":"Backend"},{"id":13,"name":"Database"},{"id":14,"name":"Messaging"},{"id":15,"name":"DevOps"},{"id":16,"name":"Security"},{"id":17,"name":"Monitoring"}]
-const sourceOptions = [{"id":16,"name":"Internal Project"},{"id":17,"name":"Architecture Review"},{"id":18,"name":"Security Audit"},{"id":19,"name":"Performance Optimization"},{"id":20,"name":"Bug Report"},{"id":21,"name":"Feature Request"},{"id":22,"name":"Technical Debt"},{"id":23,"name":"Learning Path"},{"id":24,"name":"Research Initiative"},{"id":25,"name":"Compliance Requirement"},{"id":26,"name":"Customer Feedback"},{"id":27,"name":"Team Initiative"},{"id":28,"name":"Infrastructure Upgrade"},{"id":29,"name":"Documentation Sprint"},{"id":30,"name":"PluralSight"}]
-const levelOptions = [{"id":1,"name":"beginner"},{"id":2,"name":"intermediate"},{"id":3,"name":"advanced"},{"id":4,"name":"expert"}]
-const typeOptions = [{"id":1,"name":"learning"},{"id":2,"name":"implementation"},{"id":3,"name":"research"},{"id":4,"name":"documentation"},{"id":5,"name":"maintenance"}]
-const statusOptions = [{"name":"not_started","id":1},{"name":"in_progress","id":2},{"name":"completed","id":3},{"name":"on_hold","id":4},{"name":"canceled","id":5}]
-const priorityOptions = [{"name":"low","id":1},{"name":"medium","id":2},{"name":"high","id":3},{"name":"critical","id":4}]
+//const categoryOptions = [{"id":10,"name":"Frontend"},{"id":11,"name":"Middleware"},{"id":12,"name":"Backend"},{"id":13,"name":"Database"},{"id":14,"name":"Messaging"},{"id":15,"name":"DevOps"},{"id":16,"name":"Security"},{"id":17,"name":"Monitoring"}]
+//const sourceOptions = [{"id":16,"name":"Internal Project"},{"id":17,"name":"Architecture Review"},{"id":18,"name":"Security Audit"},{"id":19,"name":"Performance Optimization"},{"id":20,"name":"Bug Report"},{"id":21,"name":"Feature Request"},{"id":22,"name":"Technical Debt"},{"id":23,"name":"Learning Path"},{"id":24,"name":"Research Initiative"},{"id":25,"name":"Compliance Requirement"},{"id":26,"name":"Customer Feedback"},{"id":27,"name":"Team Initiative"},{"id":28,"name":"Infrastructure Upgrade"},{"id":29,"name":"Documentation Sprint"},{"id":30,"name":"PluralSight"}]
+//const levelOptions = [{"id":1,"name":"beginner"},{"id":2,"name":"intermediate"},{"id":3,"name":"advanced"},{"id":4,"name":"expert"}]
+//const typeOptions = [{"id":1,"name":"learning"},{"id":2,"name":"implementation"},{"id":3,"name":"research"},{"id":4,"name":"documentation"},{"id":5,"name":"maintenance"}]
+//const statusOptions = [{"name":"not_started","id":1},{"name":"in_progress","id":2},{"name":"completed","id":3},{"name":"on_hold","id":4},{"name":"canceled","id":5}]
+//const priorityOptions = [{"name":"low","id":1},{"name":"medium","id":2},{"name":"high","id":3},{"name":"critical","id":4}]
 
 
 /*******************
@@ -178,6 +178,9 @@ export default function TasksPage() {
   const [priorityOptionsLoaded, setPriorityOptionsLoaded] = useState(false);
   const [typeOptions, setTypeOptions] = useState<{ name: string; id: number }[]>([]);
   const [statusOptions, setStatusOptions] = useState<{ name: string; id: number }[]>([]);
+  const [sourceOptions, setSourceOptions] = useState<{ name: string; id: number }[]>([]);
+  const [levelOptions, setLevelOptions] = useState<{ name: string; id: number }[]>([]);
+  const [categoryOptions, setCategoryOptions] = useState<{ name: string; id: number }[]>([]);
 
 
   
@@ -447,11 +450,54 @@ export default function TasksPage() {
     }
   };
 
+  const fetchSourceOptions = async () => {
+    try {
+      const response = await fetch('/api/tasks/sources');
+      if (!response.ok) {
+        throw new Error('Failed to fetch source options');
+      }
+      const data = await response.json();
+      setSourceOptions(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchLevelOptions = async () => {
+    try {
+      const response = await fetch('/api/tasks/levels');
+      if (!response.ok) {
+        throw new Error('Failed to fetch level options');
+      }
+      const data = await response.json();
+      setLevelOptions(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchCategoryOptions = async () => {
+    try {
+      const response = await fetch('/api/tasks/categories');
+      if (!response.ok) {
+        throw new Error('Failed to fetch category options');
+      } 
+      const data = await response.json();
+      setCategoryOptions(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };  
+  
+
   const startEditing = (row: Task) => {
     setEditingRow(row.id);
     fetchPriorityOptions();
     fetchTypeOptions();
     fetchStatusOptions();
+    fetchSourceOptions();
+    fetchLevelOptions();
+    fetchCategoryOptions();
   };
 
   useEffect(() => {
@@ -470,20 +516,33 @@ export default function TasksPage() {
           ? statusOptions.find((s) => s.name === row.status)?.id.toString() ?? ""
           : row.status;
 
+        const sourceId = typeof row.source === "string"
+          ? sourceOptions.find((s) => s.name === row.source)?.id.toString() ?? ""
+          : row.source;
+
+        const levelId = typeof row.level === "string"
+          ? levelOptions.find((l) => l.name === row.level)?.id.toString() ?? ""
+          : row.level;
+        
+        const categoryId = typeof row.category === "string"
+          ? categoryOptions.find((c) => c.name === row.category)?.id.toString() ?? ""
+          : row.category;
+
+
         setEditForm({
           ...row,
           priority: priorityId,
           type: typeId,
           status: statusId,
-          level: typeof row.level === "string" ? levelOptions.find((l) => l.name === row.level)?.id.toString() ?? "" : row.level,
-          source: typeof row.source === "string" ? sourceOptions.find((s) => s.name === row.source)?.id.toString() ?? "" : row.source,
-          category: typeof row.category === "string" ? categoryOptions.find((c) => c.name === row.category)?.id.toString() ?? "" : row.category,
+          source: sourceId,
+          level: levelId,
+          category: categoryId,
           subcategory: typeof row.subcategory === "string" ? subcategoryOptions.find((s) => s.name === row.subcategory)?.id.toString() ?? "" : row.subcategory,
           technology: typeof row.technology === "string" ? technologyOptions.find((t) => t.name === row.technology)?.id.toString() ?? "" : row.technology,
         });
       }
     }
-  }, [priorityOptionsLoaded, editingRow, rows, priorityOptions, typeOptions, statusOptions]);
+  }, [priorityOptionsLoaded, editingRow, rows, priorityOptions, typeOptions, statusOptions, sourceOptions, levelOptions, categoryOptions]);
 
   const onEditChange = (field: keyof Task, value: Task[keyof Task]) => {
     setEditForm(prev => prev ? { ...prev, [field]: value } : prev)

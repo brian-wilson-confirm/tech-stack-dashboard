@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button"
 import { TaskSheet } from "@/components/ui/task-sheet"
 import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
+import { toast } from "@/components/ui/use-toast"
 
 
 /*******************
@@ -95,7 +96,7 @@ const initialTasks: Task[] = [
   Options Data
 ********************/
 const technologyOptions = [{"name":"FastAPI","id":42},{"name":"Django","id":43}]
-const subcategoryOptions = [{"category_id":12,"id":40,"name":"Runtime Environment"},{"category_id":12,"id":41,"name":"Language"},{"category_id":12,"id":42,"name":"Web Framework"},{"category_id":12,"id":43,"name":"API Framework"},{"category_id":12,"id":44,"name":"Testing & Debugging"}]
+//const subcategoryOptions = [{"category_id":12,"id":40,"name":"Runtime Environment"},{"category_id":12,"id":41,"name":"Language"},{"category_id":12,"id":42,"name":"Web Framework"},{"category_id":12,"id":43,"name":"API Framework"},{"category_id":12,"id":44,"name":"Testing & Debugging"}]
 //const categoryOptions = [{"id":10,"name":"Frontend"},{"id":11,"name":"Middleware"},{"id":12,"name":"Backend"},{"id":13,"name":"Database"},{"id":14,"name":"Messaging"},{"id":15,"name":"DevOps"},{"id":16,"name":"Security"},{"id":17,"name":"Monitoring"}]
 //const sourceOptions = [{"id":16,"name":"Internal Project"},{"id":17,"name":"Architecture Review"},{"id":18,"name":"Security Audit"},{"id":19,"name":"Performance Optimization"},{"id":20,"name":"Bug Report"},{"id":21,"name":"Feature Request"},{"id":22,"name":"Technical Debt"},{"id":23,"name":"Learning Path"},{"id":24,"name":"Research Initiative"},{"id":25,"name":"Compliance Requirement"},{"id":26,"name":"Customer Feedback"},{"id":27,"name":"Team Initiative"},{"id":28,"name":"Infrastructure Upgrade"},{"id":29,"name":"Documentation Sprint"},{"id":30,"name":"PluralSight"}]
 //const levelOptions = [{"id":1,"name":"beginner"},{"id":2,"name":"intermediate"},{"id":3,"name":"advanced"},{"id":4,"name":"expert"}]
@@ -175,12 +176,14 @@ export default function TasksPage() {
   const [selectedPriority, setSelectedPriority] = useState<string[]>([]);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [priorityOptions, setPriorityOptions] = useState<{ name: string; id: number }[]>([]);
-  const [priorityOptionsLoaded, setPriorityOptionsLoaded] = useState(false);
+  //const [priorityOptionsLoaded, setPriorityOptionsLoaded] = useState(false);
   const [typeOptions, setTypeOptions] = useState<{ name: string; id: number }[]>([]);
   const [statusOptions, setStatusOptions] = useState<{ name: string; id: number }[]>([]);
   const [sourceOptions, setSourceOptions] = useState<{ name: string; id: number }[]>([]);
   const [levelOptions, setLevelOptions] = useState<{ name: string; id: number }[]>([]);
   const [categoryOptions, setCategoryOptions] = useState<{ name: string; id: number }[]>([]);
+  const [subcategoryOptions, setSubcategoryOptions] = useState<{ name: string; id: number }[]>([]);
+  const [technologyOptions, setTechnologyOptions] = useState<{ name: string; id: number }[]>([]);
 
 
   
@@ -418,7 +421,7 @@ export default function TasksPage() {
       }
       const data = await response.json();
       setPriorityOptions(data);
-      setPriorityOptionsLoaded(true);
+      //setPriorityOptionsLoaded(true);
     } catch (err) {
       console.error(err);
     }
@@ -488,9 +491,49 @@ export default function TasksPage() {
       console.error(err);
     }
   };  
-  
 
-  const startEditing = (row: Task) => {
+
+  // Add a function to fetch subcategories for a specific category
+  const fetchSubcategoryOptionsForCategory = async (categoryId: string) => {
+    try {
+      const response = await fetch(`/api/tasks/subcategories/${categoryId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch subcategory options');
+      }
+      const data = await response.json();
+      setSubcategoryOptions(data);
+    } catch (error) {
+      console.error('Error fetching subcategories:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load subcategories for the selected category.",
+        variant: "destructive",
+      });
+    }
+  };
+
+
+  // Add a function to fetch technologies for a specific subcategory
+  const fetchTechnologyOptionsForSubcategory = async (subcategoryId: string) => {
+    try {
+      const response = await fetch(`/api/tasks/technologies/${subcategoryId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch technologies');
+      }
+      const data = await response.json();
+      setTechnologyOptions(data);
+    } catch (error) {
+      console.error('Error fetching technologies:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load technologies for the selected subcategory.",
+        variant: "destructive",
+      });
+    }
+  };
+
+/*
+  const startEditing = async (row: Task) => {
     setEditingRow(row.id);
     fetchPriorityOptions();
     fetchTypeOptions();
@@ -498,8 +541,135 @@ export default function TasksPage() {
     fetchSourceOptions();
     fetchLevelOptions();
     fetchCategoryOptions();
-  };
+  };*/
 
+  const startEditing = async (task: Task) => {
+    try {
+      // Fetch all dynamic data in parallel
+      const [
+        prioritiesRes,
+        statusesRes,
+        typesRes,
+        levelsRes,
+        sourcesRes,
+        categoriesRes
+      ] = await Promise.all([
+        fetch('/api/tasks/priorities'),
+        fetch('/api/tasks/statuses'),
+        fetch('/api/tasks/types'),
+        fetch('/api/tasks/levels'),
+        fetch('/api/tasks/sources'),
+        fetch('/api/tasks/categories')
+      ])
+
+      if (!prioritiesRes.ok || !statusesRes.ok || !typesRes.ok || !levelsRes.ok || !sourcesRes.ok || !categoriesRes.ok) {
+        throw new Error('Failed to fetch some options')
+      }
+      
+      // Dropdown Options
+      const [
+        priorityOptions,
+        statusOptions,
+        typeOptions,
+        levelOptions,
+        sourceOptions,
+        categoryOptions
+      ] = await Promise.all([
+        prioritiesRes.json(),
+        statusesRes.json(),
+        typesRes.json(),
+        levelsRes.json(),
+        sourcesRes.json(),
+        categoriesRes.json()
+      ])
+
+      // Set the options globally
+      setPriorityOptions(priorityOptions)
+      setStatusOptions(statusOptions)
+      setTypeOptions(typeOptions)
+      setLevelOptions(levelOptions)
+      setSourceOptions(sourceOptions)
+      setCategoryOptions(categoryOptions)
+
+      
+      // Find all IDs that match the task's current values
+      const priorityId = priorityOptions.find((p: { id: number; name: string }) => p.name === task.priority)?.id.toString()
+      const statusId = statusOptions.find((s: { id: number; name: string }) => s.name === task.status)?.id.toString()
+      const typeId = typeOptions.find((t: { id: number; name: string }) => t.name === task.type)?.id.toString()
+      const levelId = levelOptions.find((l: { id: number; name: string }) => l.name === task.level)?.id.toString()
+      const sourceId = sourceOptions.find((s: { id: number; name: string }) => s.name === task.source)?.id.toString()
+      const categoryId = categoryOptions.find((c: { id: number; name: string }) => c.name === task.category)?.id.toString()
+
+
+      setEditingRow(task.id)
+      
+      // Set initial form state without subcategory and technology
+      const initialEditForm = { 
+        ...task,
+        priority: priorityId || task.priority,
+        status: statusId || task.status,
+        type: typeId || task.type,
+        level: levelId || task.level,
+        source: sourceId || task.source,
+        category: categoryId || task.category
+      };
+
+
+      setEditForm(initialEditForm);
+
+      // Fetch subcategories based on the task's category
+      if (categoryId) {
+        await fetchSubcategoryOptionsForCategory(categoryId);
+        
+        // Once subcategories are loaded, find the matching subcategory ID
+        const subcategoriesRes = await fetch(`/api/tasks/subcategories/${categoryId}`);
+        if (subcategoriesRes.ok) {
+          const subcategoryOptions = await subcategoriesRes.json();
+          const subcategoryId = subcategoryOptions.find((s: { id: number; name: string }) => 
+            s.name === task.subcategory
+          )?.id.toString();
+          
+          if (subcategoryId) {
+            // Update form with subcategory
+            setEditForm({
+              ...initialEditForm,
+              subcategory: subcategoryId
+            });
+            
+            // Now fetch technologies based on the subcategory
+            await fetchTechnologyOptionsForSubcategory(subcategoryId);
+            
+            // Once technologies are loaded, find the matching technology ID
+            const technologiesRes = await fetch(`/api/tasks/technologies/${subcategoryId}`);
+            if (technologiesRes.ok) {
+              const technologyOptions = await technologiesRes.json();
+              const technologyId = technologyOptions.find((t: { id: number; name: string }) => 
+                t.name === task.technology
+              )?.id.toString();
+              
+              if (technologyId) {
+                // Finally update the form with technology
+                setEditForm({
+                  ...initialEditForm,
+                  subcategory: subcategoryId,
+                  technology: technologyId
+                });
+              }
+            }
+          }
+        }
+      }
+    }catch (error) {
+      console.error('Error fetching options:', error)
+      toast({
+        title: "Error",
+        description: "Failed to load some options. Some fields may be unavailable.",
+        variant: "destructive",
+      })
+    }
+  }
+
+/*
   useEffect(() => {
     if (priorityOptionsLoaded && editingRow) {
       const row = rows.find(r => r.id === editingRow);
@@ -540,9 +710,53 @@ export default function TasksPage() {
           subcategory: typeof row.subcategory === "string" ? subcategoryOptions.find((s) => s.name === row.subcategory)?.id.toString() ?? "" : row.subcategory,
           technology: typeof row.technology === "string" ? technologyOptions.find((t) => t.name === row.technology)?.id.toString() ?? "" : row.technology,
         });
+
+        // Fetch subcategories based on the task's category
+      if (categoryId) {
+        await fetchSubcategoryOptionsForCategory(categoryId);
+        
+        // Once subcategories are loaded, find the matching subcategory ID
+        const subcategoriesRes = await fetch(`http://localhost:8000/api/tasks/subcategories/${categoryId}`);
+        if (subcategoriesRes.ok) {
+          const subcategoriesData = await subcategoriesRes.json();
+          const subcategoryId = subcategoriesData.find((s: { id: number; name: string }) => 
+            s.name === task.subcategory
+          )?.id.toString();
+          
+          if (subcategoryId) {
+            // Update form with subcategory
+            setEditForm({
+              ...initialEditForm,
+              subcategory: subcategoryId
+            });
+            
+            // Now fetch technologies based on the subcategory
+            await fetchTechnologiesForSubcategory(subcategoryId);
+            
+            // Once technologies are loaded, find the matching technology ID
+            const technologiesRes = await fetch(`http://localhost:8000/api/tasks/technologies/${subcategoryId}`);
+            if (technologiesRes.ok) {
+              const technologiesData = await technologiesRes.json();
+              const technologyId = technologiesData.find((t: { id: number; name: string }) => 
+                t.name === task.technology
+              )?.id.toString();
+              
+              if (technologyId) {
+                // Finally update the form with technology
+                setEditForm({
+                  ...initialEditForm,
+                  subcategory: subcategoryId,
+                  technology: technologyId
+                });
+              }
+            }
+          }
+        }
+      }
       }
     }
   }, [priorityOptionsLoaded, editingRow, rows, priorityOptions, typeOptions, statusOptions, sourceOptions, levelOptions, categoryOptions]);
+*/
 
   const onEditChange = (field: keyof Task, value: Task[keyof Task]) => {
     setEditForm(prev => prev ? { ...prev, [field]: value } : prev)

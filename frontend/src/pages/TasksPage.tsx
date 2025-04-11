@@ -101,7 +101,7 @@ const sourceOptions = [{"id":16,"name":"Internal Project"},{"id":17,"name":"Arch
 const levelOptions = [{"id":1,"name":"beginner"},{"id":2,"name":"intermediate"},{"id":3,"name":"advanced"},{"id":4,"name":"expert"}]
 const typeOptions = [{"id":1,"name":"learning"},{"id":2,"name":"implementation"},{"id":3,"name":"research"},{"id":4,"name":"documentation"},{"id":5,"name":"maintenance"}]
 const statusOptions = [{"name":"not_started","id":1},{"name":"in_progress","id":2},{"name":"completed","id":3},{"name":"on_hold","id":4},{"name":"canceled","id":5}]
-//const priorityOptions = [{"name":"low","id":1},{"name":"medium","id":2},{"name":"high","id":3},{"name":"critical","id":4}]
+const priorityOptions = [{"name":"low","id":1},{"name":"medium","id":2},{"name":"high","id":3},{"name":"critical","id":4}]
 
 
 /*******************
@@ -176,6 +176,8 @@ export default function TasksPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [priorityOptions, setPriorityOptions] = useState<{ name: string; id: number }[]>([]);
   const [priorityOptionsLoaded, setPriorityOptionsLoaded] = useState(false);
+  const [typeOptions, setTypeOptions] = useState<{ name: string; id: number }[]>([]);
+  const [statusOptions, setStatusOptions] = useState<{ name: string; id: number }[]>([]);
 
 
   
@@ -419,9 +421,37 @@ export default function TasksPage() {
     }
   };
 
+  const fetchTypeOptions = async () => {
+    try {
+      const response = await fetch('/api/tasks/types');
+      if (!response.ok) {
+        throw new Error('Failed to fetch type options');
+      }
+      const data = await response.json();
+      setTypeOptions(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchStatusOptions = async () => {
+    try {
+      const response = await fetch('/api/tasks/statuses');
+      if (!response.ok) {
+        throw new Error('Failed to fetch status options');
+      }
+      const data = await response.json();
+      setStatusOptions(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const startEditing = (row: Task) => {
     setEditingRow(row.id);
     fetchPriorityOptions();
+    fetchTypeOptions();
+    fetchStatusOptions();
   };
 
   useEffect(() => {
@@ -432,11 +462,19 @@ export default function TasksPage() {
           ? priorityOptions.find((p) => p.name === row.priority)?.id.toString() ?? ""
           : row.priority;
 
+        const typeId = typeof row.type === "string"
+          ? typeOptions.find((t) => t.name === row.type)?.id.toString() ?? ""
+          : row.type;
+
+        const statusId = typeof row.status === "string"
+          ? statusOptions.find((s) => s.name === row.status)?.id.toString() ?? ""
+          : row.status;
+
         setEditForm({
           ...row,
           priority: priorityId,
-          status: typeof row.status === "string" ? statusOptions.find((s) => s.name === row.status)?.id.toString() ?? "" : row.status,
-          type: typeof row.type === "string" ? typeOptions.find((t) => t.name === row.type)?.id.toString() ?? "" : row.type,
+          type: typeId,
+          status: statusId,
           level: typeof row.level === "string" ? levelOptions.find((l) => l.name === row.level)?.id.toString() ?? "" : row.level,
           source: typeof row.source === "string" ? sourceOptions.find((s) => s.name === row.source)?.id.toString() ?? "" : row.source,
           category: typeof row.category === "string" ? categoryOptions.find((c) => c.name === row.category)?.id.toString() ?? "" : row.category,
@@ -445,7 +483,7 @@ export default function TasksPage() {
         });
       }
     }
-  }, [priorityOptionsLoaded, editingRow, rows, priorityOptions]);
+  }, [priorityOptionsLoaded, editingRow, rows, priorityOptions, typeOptions, statusOptions]);
 
   const onEditChange = (field: keyof Task, value: Task[keyof Task]) => {
     setEditForm(prev => prev ? { ...prev, [field]: value } : prev)

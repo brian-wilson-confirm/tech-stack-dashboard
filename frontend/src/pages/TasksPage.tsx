@@ -46,64 +46,6 @@ const TaskSchema = z.object({
 type Task = z.infer<typeof TaskSchema>
 
 
-/*******************
-  Initial Row Data
-********************/
-
-const initialTasks: Task[] = [
-  {
-    id: "1",
-    task_id: "TASK-8782",
-    task: "Learn FastAPI",
-    technology: "React",
-    subcategory: "Runtime Environment",
-    category: "Backend",
-    topics: [
-      "Python",
-      "FastAPI",
-      "REST API"
-    ],
-    section: "Chapter 1",
-    source: "PluralSight",
-    level: "beginner",
-    type: "learning",
-    status: "completed",
-    priority: "medium",
-    progress: 66,
-    order: 1,
-    due_date: new Date("2025-04-10"),
-    start_date: new Date("2025-03-15"),
-    end_date: new Date("2025-04-02"),
-    estimated_duration: 40,
-    actual_duration: 43,
-    done: false
-  },
-  { id: "4", task_id: "TASK-8783", task: "Regenerate all cycle participants", technology: "React", subcategory: "Runtime Environment", category: "Backend", topics: ["Python","FastAPI","REST API"], section: "Chapter 1", source: "PluralSight", level: "beginner", type: "learning", status: "not_started", priority: "medium", progress: 0, order: 2, estimated_duration: 10, due_date: new Date("2025-04-10"), start_date: new Date("2024-04-10"), end_date: new Date("2024-04-12"), actual_duration: 12, done: false },
-  { id: "5", task_id: "TASK-8784", task: "Modify Feedback", technology: "React", subcategory: "Runtime Environment", category: "Backend", topics: ["Python","FastAPI","REST API"], section: "Chapter 2", source: "PluralSight", level: "beginner", type: "learning", status: "in_progress", priority: "medium", progress: 50, order: 3, estimated_duration: 20, due_date: new Date("2025-04-10"), start_date: new Date("2024-04-12"), end_date: new Date("2024-04-15"), actual_duration: 23, done: false },
-  { id: "6", task_id: "TASK-8785", task: "Delete Recognition", technology: "React", subcategory: "Runtime Environment", category: "Backend", topics: ["Python","FastAPI","REST API"], section: "Chapter 3", source: "PluralSight", level: "beginner", type: "learning", status: "completed", priority: "high", progress: 100, order: 4, estimated_duration: 15, due_date: new Date("2025-04-10"), start_date: new Date("2024-04-15"), end_date: new Date("2024-04-15"), actual_duration: 15, done: false },
-  { id: "7", task_id: "TASK-8786", task: "Disable Campaign reports", technology: "React", subcategory: "Runtime Environment", category: "Backend", topics: ["Python","FastAPI","REST API"], section: "Chapter 4", source: "PluralSight", level: "beginner", type: "learning", status: "on_hold", priority: "medium", progress: 24, order: 5, estimated_duration: 8, due_date: new Date("2025-04-10"), start_date: new Date("2024-04-09"), end_date: new Date("2024-04-10"), actual_duration: 10, done: false },
-  { id: "8", task_id: "TASK-8787", task: "Audit Jest Tests", technology: "React", subcategory: "Runtime Environment", category: "Backend", topics: ["Python","FastAPI","REST API"], section: "Chapter 5", source: "PluralSight", level: "beginner", type: "learning", status: "in_progress", priority: "medium", progress: 63, order: 6, estimated_duration: 12, due_date: new Date("2025-04-10"), start_date: new Date("2024-04-13"), end_date: new Date("2024-04-15"), actual_duration: 14, done: false },
-  { id: "9", task_id: "TASK-8788", task: "Fix Inconsistent Data", technology: "React", subcategory: "Runtime Environment", category: "Backend", topics: ["Python","FastAPI","REST API"], section: "Chapter 6", source: "PluralSight", level: "beginner", type: "learning", status: "completed", priority: "medium", progress: 100, order: 7, estimated_duration: 18, due_date: new Date("2025-04-10"), start_date: new Date("2024-04-14"), end_date: new Date("2024-04-14"), actual_duration: 18, done: false },
-  { id: "10", task_id: "TASK-8789", task: "Update Support Article", technology: "React", subcategory: "Runtime Environment", category: "Backend", topics: ["Python","FastAPI","REST API"], section: "Chapter 7", source: "PluralSight", level: "beginner", type: "learning", status: "not_started", priority: "low", progress: 7, order: 8, estimated_duration: 14, due_date: new Date("2025-04-10"), start_date: new Date("2024-04-11"), end_date: new Date("2024-04-12"), actual_duration: 14, done: false },
-  { id: "11", task_id: "TASK-8790", task: "Defect: Error Sending Email", technology: "React", subcategory: "Runtime Environment", category: "Backend", topics: ["Python","FastAPI","REST API"], section: "Chapter 8", source: "PluralSight", level: "beginner", type: "learning", status: "on_hold", priority: "medium", progress: 12, order: 9, estimated_duration: 16, due_date: new Date("2025-04-10"), start_date: new Date("2024-04-16"), end_date: new Date("2024-04-17"), actual_duration: 17, done: false },
-  { id: "12", task_id: "TASK-8791", task: "Pentest Changes", technology: "React", subcategory: "Runtime Environment", category: "Backend", topics: ["Python","FastAPI","REST API"], section: "Chapter 9", source: "PluralSight", level: "beginner", type: "learning", status: "not_started", priority: "medium", progress: 89, order: 10, estimated_duration: 11, due_date: new Date("2025-04-10"), start_date: new Date("2024-04-08"), end_date: new Date("2024-04-10"), actual_duration: 11, done: false },
-  { id: "13", task_id: "TASK-8792", task: "Update Priority Endpoints", technology: "React", subcategory: "Runtime Environment", category: "Backend", topics: ["Python","FastAPI","REST API"], section: "Chapter 10", source: "PluralSight", level: "beginner", type: "learning", status: "in_progress", priority: "medium", progress: 50, order: 11, estimated_duration: 9, due_date: new Date("2025-04-10"), start_date: new Date("2024-04-17"), end_date: new Date("2024-04-18"), actual_duration: 10, done: false },
-]
-
-
-
-/*******************
-  Options Data
-********************/
-const technologyOptions = [{"name":"FastAPI","id":42},{"name":"Django","id":43}]
-//const subcategoryOptions = [{"category_id":12,"id":40,"name":"Runtime Environment"},{"category_id":12,"id":41,"name":"Language"},{"category_id":12,"id":42,"name":"Web Framework"},{"category_id":12,"id":43,"name":"API Framework"},{"category_id":12,"id":44,"name":"Testing & Debugging"}]
-//const categoryOptions = [{"id":10,"name":"Frontend"},{"id":11,"name":"Middleware"},{"id":12,"name":"Backend"},{"id":13,"name":"Database"},{"id":14,"name":"Messaging"},{"id":15,"name":"DevOps"},{"id":16,"name":"Security"},{"id":17,"name":"Monitoring"}]
-//const sourceOptions = [{"id":16,"name":"Internal Project"},{"id":17,"name":"Architecture Review"},{"id":18,"name":"Security Audit"},{"id":19,"name":"Performance Optimization"},{"id":20,"name":"Bug Report"},{"id":21,"name":"Feature Request"},{"id":22,"name":"Technical Debt"},{"id":23,"name":"Learning Path"},{"id":24,"name":"Research Initiative"},{"id":25,"name":"Compliance Requirement"},{"id":26,"name":"Customer Feedback"},{"id":27,"name":"Team Initiative"},{"id":28,"name":"Infrastructure Upgrade"},{"id":29,"name":"Documentation Sprint"},{"id":30,"name":"PluralSight"}]
-//const levelOptions = [{"id":1,"name":"beginner"},{"id":2,"name":"intermediate"},{"id":3,"name":"advanced"},{"id":4,"name":"expert"}]
-//const typeOptions = [{"id":1,"name":"learning"},{"id":2,"name":"implementation"},{"id":3,"name":"research"},{"id":4,"name":"documentation"},{"id":5,"name":"maintenance"}]
-//const statusOptions = [{"name":"not_started","id":1},{"name":"in_progress","id":2},{"name":"completed","id":3},{"name":"on_hold","id":4},{"name":"canceled","id":5}]
-//const priorityOptions = [{"name":"low","id":1},{"name":"medium","id":2},{"name":"high","id":3},{"name":"critical","id":4}]
-
 
 /*******************
   Option Formatting
@@ -176,7 +118,6 @@ export default function TasksPage() {
   const [selectedPriority, setSelectedPriority] = useState<string[]>([]);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [priorityOptions, setPriorityOptions] = useState<{ name: string; id: number }[]>([]);
-  //const [priorityOptionsLoaded, setPriorityOptionsLoaded] = useState(false);
   const [typeOptions, setTypeOptions] = useState<{ name: string; id: number }[]>([]);
   const [statusOptions, setStatusOptions] = useState<{ name: string; id: number }[]>([]);
   const [sourceOptions, setSourceOptions] = useState<{ name: string; id: number }[]>([]);
@@ -244,6 +185,12 @@ export default function TasksPage() {
       setRows(rows.map(row => row.id === data.id ? data : row));
       setEditingRow(null);
       setEditForm(null);
+
+      toast({
+        title: "Task Updated",
+        description: "The task has been successfully updated.",
+        duration: 3000,
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -413,86 +360,6 @@ export default function TasksPage() {
   /*******************
     Functions()
   ********************/
-  const fetchPriorityOptions = async () => {
-    try {
-      const response = await fetch('/api/tasks/priorities');
-      if (!response.ok) {
-        throw new Error('Failed to fetch priority options');
-      }
-      const data = await response.json();
-      setPriorityOptions(data);
-      //setPriorityOptionsLoaded(true);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const fetchTypeOptions = async () => {
-    try {
-      const response = await fetch('/api/tasks/types');
-      if (!response.ok) {
-        throw new Error('Failed to fetch type options');
-      }
-      const data = await response.json();
-      setTypeOptions(data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const fetchStatusOptions = async () => {
-    try {
-      const response = await fetch('/api/tasks/statuses');
-      if (!response.ok) {
-        throw new Error('Failed to fetch status options');
-      }
-      const data = await response.json();
-      setStatusOptions(data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const fetchSourceOptions = async () => {
-    try {
-      const response = await fetch('/api/tasks/sources');
-      if (!response.ok) {
-        throw new Error('Failed to fetch source options');
-      }
-      const data = await response.json();
-      setSourceOptions(data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const fetchLevelOptions = async () => {
-    try {
-      const response = await fetch('/api/tasks/levels');
-      if (!response.ok) {
-        throw new Error('Failed to fetch level options');
-      }
-      const data = await response.json();
-      setLevelOptions(data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const fetchCategoryOptions = async () => {
-    try {
-      const response = await fetch('/api/tasks/categories');
-      if (!response.ok) {
-        throw new Error('Failed to fetch category options');
-      } 
-      const data = await response.json();
-      setCategoryOptions(data);
-    } catch (err) {
-      console.error(err);
-    }
-  };  
-
-
   // Add a function to fetch subcategories for a specific category
   const fetchSubcategoryOptionsForCategory = async (categoryId: string) => {
     try {
@@ -532,16 +399,6 @@ export default function TasksPage() {
     }
   };
 
-/*
-  const startEditing = async (row: Task) => {
-    setEditingRow(row.id);
-    fetchPriorityOptions();
-    fetchTypeOptions();
-    fetchStatusOptions();
-    fetchSourceOptions();
-    fetchLevelOptions();
-    fetchCategoryOptions();
-  };*/
 
   const startEditing = async (task: Task) => {
     try {
@@ -669,94 +526,6 @@ export default function TasksPage() {
     }
   }
 
-/*
-  useEffect(() => {
-    if (priorityOptionsLoaded && editingRow) {
-      const row = rows.find(r => r.id === editingRow);
-      if (row) {
-        const priorityId = typeof row.priority === "string"
-          ? priorityOptions.find((p) => p.name === row.priority)?.id.toString() ?? ""
-          : row.priority;
-
-        const typeId = typeof row.type === "string"
-          ? typeOptions.find((t) => t.name === row.type)?.id.toString() ?? ""
-          : row.type;
-
-        const statusId = typeof row.status === "string"
-          ? statusOptions.find((s) => s.name === row.status)?.id.toString() ?? ""
-          : row.status;
-
-        const sourceId = typeof row.source === "string"
-          ? sourceOptions.find((s) => s.name === row.source)?.id.toString() ?? ""
-          : row.source;
-
-        const levelId = typeof row.level === "string"
-          ? levelOptions.find((l) => l.name === row.level)?.id.toString() ?? ""
-          : row.level;
-        
-        const categoryId = typeof row.category === "string"
-          ? categoryOptions.find((c) => c.name === row.category)?.id.toString() ?? ""
-          : row.category;
-
-
-        setEditForm({
-          ...row,
-          priority: priorityId,
-          type: typeId,
-          status: statusId,
-          source: sourceId,
-          level: levelId,
-          category: categoryId,
-          subcategory: typeof row.subcategory === "string" ? subcategoryOptions.find((s) => s.name === row.subcategory)?.id.toString() ?? "" : row.subcategory,
-          technology: typeof row.technology === "string" ? technologyOptions.find((t) => t.name === row.technology)?.id.toString() ?? "" : row.technology,
-        });
-
-        // Fetch subcategories based on the task's category
-      if (categoryId) {
-        await fetchSubcategoryOptionsForCategory(categoryId);
-        
-        // Once subcategories are loaded, find the matching subcategory ID
-        const subcategoriesRes = await fetch(`http://localhost:8000/api/tasks/subcategories/${categoryId}`);
-        if (subcategoriesRes.ok) {
-          const subcategoriesData = await subcategoriesRes.json();
-          const subcategoryId = subcategoriesData.find((s: { id: number; name: string }) => 
-            s.name === task.subcategory
-          )?.id.toString();
-          
-          if (subcategoryId) {
-            // Update form with subcategory
-            setEditForm({
-              ...initialEditForm,
-              subcategory: subcategoryId
-            });
-            
-            // Now fetch technologies based on the subcategory
-            await fetchTechnologiesForSubcategory(subcategoryId);
-            
-            // Once technologies are loaded, find the matching technology ID
-            const technologiesRes = await fetch(`http://localhost:8000/api/tasks/technologies/${subcategoryId}`);
-            if (technologiesRes.ok) {
-              const technologiesData = await technologiesRes.json();
-              const technologyId = technologiesData.find((t: { id: number; name: string }) => 
-                t.name === task.technology
-              )?.id.toString();
-              
-              if (technologyId) {
-                // Finally update the form with technology
-                setEditForm({
-                  ...initialEditForm,
-                  subcategory: subcategoryId,
-                  technology: technologyId
-                });
-              }
-            }
-          }
-        }
-      }
-      }
-    }
-  }, [priorityOptionsLoaded, editingRow, rows, priorityOptions, typeOptions, statusOptions, sourceOptions, levelOptions, categoryOptions]);
-*/
 
   const onEditChange = (field: keyof Task, value: Task[keyof Task]) => {
     setEditForm(prev => prev ? { ...prev, [field]: value } : prev)

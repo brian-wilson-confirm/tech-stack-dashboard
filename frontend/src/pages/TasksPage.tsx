@@ -138,7 +138,7 @@ const initialVisibleColumns = {
   task_id: true,              // ✓ Task ID
   task: true,                 // ✓ Task
   technology: true,           // ✓ Technology
-  subcategory: true,         // Subcategory
+  subcategory: false,         // Subcategory
   category: true,             // ✓ Category
   topics: false,              // Topics
   section: false,             // Section
@@ -779,6 +779,63 @@ export default function TasksPage() {
     setSheetOpen(true)
   }, [editingRow])
 
+
+  // Update handleEditChange to fetch technologies when subcategory changes
+  const handleEditChange = (field: keyof Task, value: string | number | boolean | string[] | Date | null) => {
+    if (editForm) {
+      let processedValue: any = value;
+      
+      // Handle numeric fields
+      if (['order', 'progress', 'estimated_duration'].includes(field)) {
+        processedValue = Number(value);
+      }
+      
+      // Handle array fields
+      if (field === 'topics' && typeof value === 'string') {
+        processedValue = value.split(',').map(t => t.trim());
+      }
+      
+      // Handle boolean fields
+      if (field === 'done') {
+        processedValue = Boolean(value);
+      }
+
+      // Handle date fields
+      if (['start_date', 'end_date'].includes(field)) {
+        processedValue = value instanceof Date ? value : null;
+      }
+      
+      // When category changes, fetch related subcategories
+      if (field === 'category' && typeof value === 'string') {
+        fetchSubcategoryOptionsForCategory(value);
+        
+        // Reset subcategory and technology when category changes
+        setEditForm({ 
+          ...editForm, 
+          [field]: processedValue,
+          subcategory: "",
+          technology: ""
+        });
+        return;
+      }
+      
+      // When subcategory changes, fetch related technologies
+      if (field === 'subcategory' && typeof value === 'string') {
+        fetchTechnologyOptionsForSubcategory(value);
+        
+        // Reset technology when subcategory changes
+        setEditForm({ 
+          ...editForm, 
+          [field]: processedValue,
+          technology: ""
+        });
+        return;
+      }
+      
+      setEditForm({ ...editForm, [field]: processedValue });
+    }
+  };
+
   
 
 
@@ -804,7 +861,8 @@ export default function TasksPage() {
     subcategory: (value, onChange) => (
       <Select
         value={ subcategoryOptions.find((s) => s.name === value || s.id.toString() === value?.toString())?.id.toString() ?? "" }
-        onValueChange={(selectedId) => { onChange(Number(selectedId)); }}
+        onValueChange={(value) => handleEditChange('subcategory', value)}
+        //onValueChange={(selectedId) => { onChange(Number(selectedId)); }}
       >
         <SelectTrigger className="w-[140px]">
           <SelectValue placeholder="Select" />
@@ -819,7 +877,8 @@ export default function TasksPage() {
     category: (value, onChange) => (
       <Select
         value={ categoryOptions.find((c) => c.name === value || c.id.toString() === value?.toString())?.id.toString() ?? "" }
-        onValueChange={(selectedId) => { onChange(Number(selectedId)); }}
+        onValueChange={(value) => handleEditChange('category', value)}
+        //onValueChange={(selectedId) => { onChange(Number(selectedId)); }}
       >
         <SelectTrigger className="w-[140px]">
           <SelectValue placeholder="Select" />

@@ -25,7 +25,7 @@ const initialVisibleColumns = {
   task_id: true,              // ✓ Task ID
   task: true,                 // ✓ Task
   technology: true,           // ✓ Technology
-  subcategory: false,         // Subcategory
+  subcategory: true,         // Subcategory
   category: true,             // ✓ Category
   topics: false,              // Topics
   section: false,             // Section
@@ -36,10 +36,10 @@ const initialVisibleColumns = {
   priority: true,             // ✓ Priority
   progress: false,            // Progress
   order: false,               // Order
-  due_date: false,            // Due Date
-  start_date: true,           // Start Date
+  due_date: true,            // Due Date
+  start_date: false,           // Start Date
   end_date: false,            // End Date
-  estimated_duration: true,   // ✓ Est. Duration
+  estimated_duration: false,   // ✓ Est. Duration
   actual_duration: false,     // Actual Duration
   done: false                 // Done
 }
@@ -51,6 +51,8 @@ export default function TasksPage() {
   /*******************
     STATE VARIABLES
   ********************/
+  const [hasFetchedOptions, setHasFetchedOptions] = useState(false);
+  const [hasFetchedRows, setHasFetchedRows] = useState(false);
   const [rows, setRows] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -188,7 +190,7 @@ export default function TasksPage() {
     }))
 
 
-    
+
 
   /*******************
     ROW FILTER CONFIGURATIONS
@@ -217,6 +219,35 @@ export default function TasksPage() {
   /***********************
     PAGE LOAD
   ***********************/
+  // Fetch Options
+  const fetchOptions = async () => {
+    try {
+      const [statusesRes, prioritiesRes] = await Promise.all([
+        fetch('/api/tasks/statuses'),
+        fetch('/api/tasks/priorities')
+      ]);
+
+      if (!statusesRes.ok || !prioritiesRes.ok) {
+        throw new Error('Failed to fetch status or priority options');
+      }
+
+      const [statuses, priorities] = await Promise.all([
+        statusesRes.json(),
+        prioritiesRes.json()
+      ]);
+
+      setStatusOptions(statuses);
+      setPriorityOptions(priorities);
+    } catch (error) {
+      console.error('Error fetching options:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load status or priority options.",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Fetch Row Data
   const fetchRows = async () => {
     setIsLoading(true);
@@ -237,7 +268,14 @@ export default function TasksPage() {
   
   // Fetch Row Data on Page Load
   useEffect(() => {
-    fetchRows();
+    if (!hasFetchedOptions) {
+      fetchOptions();
+      setHasFetchedOptions(true);
+    }
+    if (!hasFetchedRows) {
+      fetchRows();
+      setHasFetchedRows(true);
+    }
   }, []);
 
 
@@ -255,6 +293,7 @@ export default function TasksPage() {
       }
       const data = await response.json();
       setSubcategoryOptions(data);
+      return data;
     } catch (error) {
       console.error('Error fetching subcategories:', error);
       toast({
@@ -275,6 +314,7 @@ export default function TasksPage() {
       }
       const data = await response.json();
       setTechnologyOptions(data);
+      return data;
     } catch (error) {
       console.error('Error fetching technologies:', error);
       toast({
@@ -369,43 +409,36 @@ export default function TasksPage() {
 
       // Fetch subcategories based on the task's category
       if (categoryId) {
-        await fetchSubcategoryOptionsForCategory(categoryId);
-        
-        // Once subcategories are loaded, find the matching subcategory ID
-        const subcategoriesRes = await fetch(`/api/tasks/subcategories/${categoryId}`);
-        if (subcategoriesRes.ok) {
-          const subcategoryOptions = await subcategoriesRes.json();
-          const subcategoryId = subcategoryOptions.find((s: { id: number; name: string }) => 
-            s.name === task.subcategory
-          )?.id.toString();
+        const fetchedSubcategoryOptions = await fetchSubcategoryOptionsForCategory(categoryId);
+        setSubcategoryOptions(fetchedSubcategoryOptions);
+
+        const subcategoryId = fetchedSubcategoryOptions.find((s: { id: number; name: string }) => 
+          s.name === task.subcategory
+        )?.id.toString();
           
-          if (subcategoryId) {
-            // Update form with subcategory
+        if (subcategoryId) {
+          // Update form with subcategory
+          setEditForm({
+            ...initialEditForm,
+            subcategory: subcategoryId
+          });
+            
+          // Now fetch technologies based on the subcategory
+          const fetchedTechOptions = await fetchTechnologyOptionsForSubcategory(subcategoryId);
+          setTechnologyOptions(fetchedTechOptions);
+            
+          // Once technologies are loaded, find the matching technology ID
+          const technologyId = fetchedTechOptions.find((t: { id: number; name: string }) => 
+            t.name === task.technology
+          )?.id.toString();
+              
+          if (technologyId) {
+            // Finally update the form with technology
             setEditForm({
               ...initialEditForm,
-              subcategory: subcategoryId
+              subcategory: subcategoryId,
+              technology: technologyId
             });
-            
-            // Now fetch technologies based on the subcategory
-            await fetchTechnologyOptionsForSubcategory(subcategoryId);
-            
-            // Once technologies are loaded, find the matching technology ID
-            const technologiesRes = await fetch(`/api/tasks/technologies/${subcategoryId}`);
-            if (technologiesRes.ok) {
-              const technologyOptions = await technologiesRes.json();
-              const technologyId = technologyOptions.find((t: { id: number; name: string }) => 
-                t.name === task.technology
-              )?.id.toString();
-              
-              if (technologyId) {
-                // Finally update the form with technology
-                setEditForm({
-                  ...initialEditForm,
-                  subcategory: subcategoryId,
-                  technology: technologyId
-                });
-              }
-            }
           }
         }
       }

@@ -30,6 +30,7 @@ import {
   Plus,
   X as CrossIcon,
   LayoutGrid,
+  Filter,
 } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useState } from "react"
@@ -95,7 +96,7 @@ const FilterDropdown = ({ config, editingRow }: { config: FilterConfig, editingR
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="sm" className="h-8 border-dashed" disabled={!!editingRow}>
-          <Plus className="mr-2 h-4 w-4" />
+          <Filter className="mr-2 h-4 w-4" />
           {config.label}
           {config.selected.length > 0 && (
             <>

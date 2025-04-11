@@ -55,7 +55,6 @@ export default function TasksPage() {
   const [hasFetchedRows, setHasFetchedRows] = useState(false);
   const [rows, setRows] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [editingRow, setEditingRow] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Task | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -251,7 +250,6 @@ export default function TasksPage() {
   // Fetch Row Data
   const fetchRows = async () => {
     setIsLoading(true);
-    setError(null);
     try {
       const response = await fetch('/api/tasks');
       if (!response.ok) {
@@ -260,7 +258,11 @@ export default function TasksPage() {
       const data = await response.json();
       setRows(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      toast({
+        title: "Error",
+        description: "Failed to load tasks.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -527,7 +529,6 @@ export default function TasksPage() {
   // Update Row
   const handleRowUpdate = async (updatedRow: Task) => {
     setIsLoading(true);
-    setError(null);
 
     // Destructure all dropdown fields out and rename remaining fields
     const { priority, status, type, level, source, category, subcategory, technology, ...rest } = updatedRow;
@@ -563,9 +564,14 @@ export default function TasksPage() {
         title: "Task Updated",
         description: "The task has been successfully updated.",
         duration: 3000,
+        variant: "default",
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      toast({
+        title: "Error",
+        description: "Failed to update task.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -582,7 +588,6 @@ export default function TasksPage() {
   // Delete Row
   const handleRowDelete = async (rowId: string) => {
     setIsLoading(true);
-    setError(null);
     try {
       const response = await fetch(`/api/tasks/${rowId}`, {
         method: 'DELETE',
@@ -591,8 +596,18 @@ export default function TasksPage() {
         throw new Error('Failed to delete task');
       }
       setRows(rows.filter(row => row.id !== rowId));
+      toast({
+        title: "Task Deleted",
+        description: "The task has been successfully deleted.",
+        duration: 3000,
+        variant: "default",
+      });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      toast({
+        title: "Error",
+        description: "Failed to delete task.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -633,7 +648,7 @@ export default function TasksPage() {
         </SelectContent>
       </Select>
     ),
-    subcategory: (value, onChange) => (
+    subcategory: (value) => (
       <Select
         value={ subcategoryOptions.find((s) => s.name === value || s.id.toString() === value?.toString())?.id.toString() ?? "" }
         onValueChange={(value) => handleEditChange('subcategory', value)}
@@ -649,7 +664,7 @@ export default function TasksPage() {
           </SelectContent>
       </Select>
     ),
-    category: (value, onChange) => (
+    category: (value) => (
       <Select
         value={ categoryOptions.find((c) => c.name === value || c.id.toString() === value?.toString())?.id.toString() ?? "" }
         onValueChange={(value) => handleEditChange('category', value)}

@@ -61,7 +61,6 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Separator } from "@/components/ui/separator"
 import { VisibilityState } from "@tanstack/react-table"
-import { priorities, statuses } from "../data/data"
 import { TaskSheet } from "../ui/task-sheet"
 import { Task } from "@/components/data/schema"
 import { useToast } from "@/components/ui/use-toast"

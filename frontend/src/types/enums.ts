@@ -1,12 +1,14 @@
-export type StatusType =
-  | "not_started"
-  | "in_progress"
-  | "completed"
-  | "on_hold"
-  | "canceled"
+export enum StatusEnum {
+  not_started = "Not Started",
+  in_progress = "In Progress",
+  completed = "Completed",
+  on_hold = "On Hold",
+  canceled = "Canceled",
+}
 
-export type PriorityType =
-  | "low"
-  | "medium"
-  | "high"
-  | "critical"
+export enum PriorityEnum {
+  low = "Low",
+  medium = "Medium",
+  high = "High",
+  critical = "Critical",
+}

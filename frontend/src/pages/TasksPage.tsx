@@ -1,79 +1,24 @@
 // TasksPage.tsx
 import { useState, useEffect, useCallback } from "react"
-import { z } from "zod"
 import { ColumnDef, SortingState, VisibilityState, FilterFn } from "@tanstack/react-table"
 import { DataTableWidget, EditModeRenderer } from "@/components/widgets/DataTableWidget"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { CheckSquare, Clock } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { capitalizeWords } from "@/lib/utils"
-import { StatusType } from "@/types/enums"
-import { PriorityType } from "@/types/enums"
+import { StatusEnum } from "@/types/enums"
+import { PriorityEnum } from "@/types/enums"
 import { Button } from "@/components/ui/button"
 import { TaskSheet } from "@/components/ui/task-sheet"
 import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
 import { toast } from "@/components/ui/use-toast"
+import { Task } from "@/components/data/schema"
+import { getStatusColor, getPriorityColor } from "@/styles/style"
 
 
 /*******************
-  Schema Model
-********************/
-const TaskSchema = z.object({
-  id: z.string(),
-  task_id: z.string(),
-  task: z.string().min(1, "Task name is required"),
-  technology: z.string(),
-  subcategory: z.string(),
-  category: z.string(),
-  topics: z.array(z.string()),
-  section: z.string(),
-  source: z.string(),
-  level: z.string(),
-  type: z.string(),
-  status: z.string(),
-  priority: z.string(),
-  progress: z.number().min(0).max(100),
-  order: z.number(),
-  estimated_duration: z.number().min(0),
-  due_date: z.date(),
-  start_date: z.date(),
-  end_date: z.date(),
-  actual_duration: z.number().min(0),
-  done: z.boolean(),
-})
-
-type Task = z.infer<typeof TaskSchema>
-
-
-
-/*******************
-  Option Formatting
-********************/
-const getStatusColor = (status: string) => {
-  const colors: Record<StatusType, string> = {
-    'not_started': "bg-gray-500",
-    'in_progress': "bg-blue-500",
-    'completed': "bg-green-500",
-    'on_hold': "bg-yellow-500",
-    'canceled': "bg-red-500"
-  }
-  return colors[status as StatusType] || "bg-gray-500"
-}
-
-const getPriorityColor = (priority: string) => {
-  const colors: Record<PriorityType, string> = {
-    'low': "bg-gray-500",
-    'medium': "bg-blue-500",
-    'high': "bg-yellow-500",
-    'critical': "bg-red-500"
-  }
-  return colors[priority as PriorityType] || "bg-gray-500"
-}
-
-
-/*******************
-  Visible Columns
+  INITIAL VISIBLE COLUMNS
 ********************/
 const initialVisibleColumns = {
   id: false,                  // ✓ ID  
@@ -98,12 +43,13 @@ const initialVisibleColumns = {
   actual_duration: false,     // Actual Duration
   done: false                 // Done
 }
-  
+
+
 
 
 export default function TasksPage() {
   /*******************
-    State Variables
+    STATE VARIABLES
   ********************/
   const [rows, setRows] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -127,99 +73,8 @@ export default function TasksPage() {
   const [technologyOptions, setTechnologyOptions] = useState<{ name: string; id: number }[]>([]);
 
 
-  
-  /***********************
-   API: Get Rows
-  ***********************/
-  useEffect(() => {
-    fetchRows();
-  }, []);
-
-  const fetchRows = async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await fetch('/api/tasks');
-      if (!response.ok) {
-        throw new Error('Failed to fetch tasks');
-      }
-      const data = await response.json();
-      setRows(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleRowUpdate = async (updatedRow: Task) => {
-    setIsLoading(true);
-    setError(null);
-
-    // Destructure all dropdown fields out and rename remaining fields
-    const { priority, status, type, level, source, category, subcategory, technology, ...rest } = updatedRow;
-    const payload = {
-      ...rest,
-      priority_id: priority,
-      status_id: status,
-      type_id: type,
-      level_id: level,
-      source_id: source,
-      category_id: category,
-      subcategory_id: subcategory,
-      technology_id: technology,
-    };
-
-    try {
-      const response = await fetch(`/api/tasks/${updatedRow.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-      if (!response.ok) {
-        throw new Error('Failed to update task');
-      }
-      const data = await response.json();
-      setRows(rows.map(row => row.id === data.id ? data : row));
-      setEditingRow(null);
-      setEditForm(null);
-
-      toast({
-        title: "Task Updated",
-        description: "The task has been successfully updated.",
-        duration: 3000,
-      });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleRowDelete = async (rowId: string) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await fetch(`/api/tasks/${rowId}`, {
-        method: 'DELETE',
-      });
-      if (!response.ok) {
-        throw new Error('Failed to delete task');
-      }
-      setRows(rows.filter(row => row.id !== rowId));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-
-  
   /*******************
-    Data to Columns: Mapping, Ordering, Read-Only Format...
+    COLUMN DEFINITIONS
   ********************/
   const columns: ColumnDef<Task>[] = [
     { accessorKey: "task_id", header: "Task ID", cell: ({ row }) => (
@@ -271,7 +126,7 @@ export default function TasksPage() {
         return filterValue.includes(row.getValue(columnId))
       }) as FilterFn<Task>,
       cell: ({ row }) => (
-        <Badge variant="secondary" className={`${getStatusColor(row.original.status)} text-white`}>
+        <Badge variant="secondary" className={`${getStatusColor(row.original.status as StatusEnum)} text-white`}>
           {capitalizeWords(row.original.status.replace('_', ' '))}
         </Badge>
       )
@@ -281,7 +136,7 @@ export default function TasksPage() {
         return filterValue.includes(row.getValue(columnId))
       }) as FilterFn<Task>,
       cell: ({ row }) => (
-        <Badge variant="secondary" className={`${getPriorityColor(row.original.priority)} text-white`}>
+        <Badge variant="secondary" className={`${getPriorityColor(row.original.priority as PriorityEnum)} text-white`}>
           {capitalizeWords(row.original.priority)}
         </Badge>
       )
@@ -325,7 +180,18 @@ export default function TasksPage() {
 
 
   /*******************
-    Custom Filter Configs
+    COLUMN VISIBILITY 
+  ********************/
+    const columnOptions = columns.map(column => ({
+      accessorKey: (column as any).accessorKey,
+      header: typeof column.header === 'string' ? column.header : 'Column'
+    }))
+
+
+    
+
+  /*******************
+    ROW FILTER CONFIGURATIONS
   ********************/
   const filterConfigs = [
     {
@@ -346,19 +212,39 @@ export default function TasksPage() {
 
 
 
-  /*******************
-    Column Toggle
-  ********************/
-  const columnOptions = columns.map(column => ({
-    accessorKey: (column as any).accessorKey,
-    header: typeof column.header === 'string' ? column.header : 'Column'
-  }))
+
+  
+  /***********************
+    PAGE LOAD
+  ***********************/
+  // Fetch Row Data
+  const fetchRows = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch('/api/tasks');
+      if (!response.ok) {
+        throw new Error('Failed to fetch tasks');
+      }
+      const data = await response.json();
+      setRows(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Fetch Row Data on Page Load
+  useEffect(() => {
+    fetchRows();
+  }, []);
 
 
 
 
   /*******************
-    Functions()
+    ADDITIONAL FUNCTIONS
   ********************/
   // Add a function to fetch subcategories for a specific category
   const fetchSubcategoryOptionsForCategory = async (categoryId: string) => {
@@ -400,6 +286,13 @@ export default function TasksPage() {
   };
 
 
+
+
+
+  /***********************
+    ROW EDITING
+  ***********************/
+  // Start Editing
   const startEditing = async (task: Task) => {
     try {
       // Fetch all dynamic data in parallel
@@ -527,26 +420,10 @@ export default function TasksPage() {
   }
 
 
+  // Edit Change
   const onEditChange = (field: keyof Task, value: Task[keyof Task]) => {
     setEditForm(prev => prev ? { ...prev, [field]: value } : prev)
   }
-
-  const onSaveEdit = async () => {
-    if (editForm) {
-      await handleRowUpdate(editForm)
-    }
-  }
-
-  const onCancelEdit = () => {
-    setEditingRow(null)
-    setEditForm(null)
-  }
-
-  const handleRowClick = useCallback((row: Task) => {
-    if (editingRow) return // Don't open sheet while editing
-    setSelectedRow(row)
-    setSheetOpen(true)
-  }, [editingRow])
 
 
   // Update handleEditChange to fetch technologies when subcategory changes
@@ -605,11 +482,107 @@ export default function TasksPage() {
     }
   };
 
+
+  // Save Edit
+  const onSaveEdit = async () => {
+    if (editForm) {
+      await handleRowUpdate(editForm)
+    }
+  }
+
+
+  // Update Row
+  const handleRowUpdate = async (updatedRow: Task) => {
+    setIsLoading(true);
+    setError(null);
+
+    // Destructure all dropdown fields out and rename remaining fields
+    const { priority, status, type, level, source, category, subcategory, technology, ...rest } = updatedRow;
+    const payload = {
+      ...rest,
+      priority_id: priority,
+      status_id: status,
+      type_id: type,
+      level_id: level,
+      source_id: source,
+      category_id: category,
+      subcategory_id: subcategory,
+      technology_id: technology,
+    };
+
+    try {
+      const response = await fetch(`/api/tasks/${updatedRow.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to update task');
+      }
+      const data = await response.json();
+      setRows(rows.map(row => row.id === data.id ? data : row));
+      setEditingRow(null);
+      setEditForm(null);
+
+      toast({
+        title: "Task Updated",
+        description: "The task has been successfully updated.",
+        duration: 3000,
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+
+  // Cancel Edit
+  const onCancelEdit = () => {
+    setEditingRow(null)
+    setEditForm(null)
+  }
+
+
+  // Delete Row
+  const handleRowDelete = async (rowId: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`/api/tasks/${rowId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        throw new Error('Failed to delete task');
+      }
+      setRows(rows.filter(row => row.id !== rowId));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+
+
+
+  /***********************
+    ROW INTERACTION
+  ***********************/
+  const handleRowClick = useCallback((row: Task) => {
+    if (editingRow) return // Don't open sheet while editing
+    setSelectedRow(row)
+    setSheetOpen(true)
+  }, [editingRow])
+
+
   
 
 
   /*******************
-    Edit Mode Renderers
+    RENDER CELLS IN EDIT-MODE
   ********************/
   const editModeRenderers: EditModeRenderer<Task> = {
     technology: (value, onChange) => (
@@ -805,6 +778,8 @@ export default function TasksPage() {
       );
     }
   }
+
+
 
 
   return (

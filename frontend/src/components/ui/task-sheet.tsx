@@ -1,4 +1,3 @@
-import React from 'react'
 import { Task } from '@/components/data/schema'
 import {
   Sheet,
@@ -8,9 +7,9 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet'
 import { Badge } from '@/components/ui/badge'
-import { priorities, statuses } from '../data/data'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
+import { PriorityEnum, StatusEnum } from '@/types/enums'
 
 interface TaskSheetProps {
   task: Task | null
@@ -21,8 +20,10 @@ interface TaskSheetProps {
 export function TaskSheet({ task, open, onOpenChange }: TaskSheetProps) {
   if (!task) return null
 
-  const status = statuses.find((s) => s.value === task.status)
-  const priority = priorities.find((p) => p.value === task.priority)
+  //const status = statuses.find((s) => s.value === task.status)
+  //const priority = priorities.find((p) => p.value === task.priority)
+  const statusLabel = StatusEnum[task.status as keyof typeof StatusEnum];
+  const priorityLabel = PriorityEnum[task.priority as keyof typeof PriorityEnum];
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -30,8 +31,8 @@ export function TaskSheet({ task, open, onOpenChange }: TaskSheetProps) {
         <SheetHeader className="space-y-4">
           <SheetTitle className="flex items-center gap-2">
             <span>{task.task_id}</span>
-            <Badge variant="outline">{status?.label}</Badge>
-            <Badge variant="outline">{priority?.label}</Badge>
+            <Badge variant="outline">{statusLabel}</Badge>
+            <Badge variant="outline">{priorityLabel}</Badge>
           </SheetTitle>
           <SheetDescription className="text-base">
             {task.task}

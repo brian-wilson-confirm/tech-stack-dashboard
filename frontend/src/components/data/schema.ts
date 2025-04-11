@@ -3,7 +3,7 @@ import { z } from "zod"
 export const taskSchema = z.object({
   id: z.string(),
   task_id: z.string(),
-  task: z.string(),
+  task: z.string().min(1, "Task name is required"),
   technology: z.string(),
   subcategory: z.string(),
   category: z.string(),
@@ -14,13 +14,13 @@ export const taskSchema = z.object({
   type: z.string(),
   status: z.string(),
   priority: z.string(),
-  progress: z.number(),
+  progress: z.number().min(0).max(100),
   order: z.number(),
+  estimated_duration: z.number(),
+  actual_duration: z.number(),
   due_date: z.date(),
   start_date: z.date(),
   end_date: z.date(),
-  estimated_duration: z.number(),
-  actual_duration: z.number(),
   done: z.boolean(),
 })
 

@@ -1,6 +1,6 @@
 // TasksPage.tsx
 import { useState, useEffect, useCallback } from "react"
-import { ColumnDef, SortingState, VisibilityState, FilterFn, ColumnFiltersState, OnChangeFn } from "@tanstack/react-table"
+import { ColumnDef, SortingState, VisibilityState, FilterFn, ColumnFiltersState, OnChangeFn, PaginationState } from "@tanstack/react-table"
 import { DataTableWidget, EditModeRenderer } from "@/components/widgets/DataTableWidget"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { CheckSquare, Clock } from "lucide-react"
@@ -75,6 +75,10 @@ export default function TasksPage() {
   const [categoryOptions, setCategoryOptions] = useState<{ name: string; id: number }[]>([]);
   const [subcategoryOptions, setSubcategoryOptions] = useState<{ name: string; id: number }[]>([]);
   const [technologyOptions, setTechnologyOptions] = useState<{ name: string; id: number }[]>([]);
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: 10,
+  });
 
 
   /*******************
@@ -216,6 +220,13 @@ export default function TasksPage() {
 
   const handleColumnFiltersChange: OnChangeFn<ColumnFiltersState> = (updater) => {
     setColumnFilters((prev) => {
+      const next = typeof updater === "function" ? updater(prev) : updater;
+      return JSON.stringify(prev) === JSON.stringify(next) ? prev : next;
+    });
+  };
+
+  const handlePaginationChange: OnChangeFn<PaginationState> = (updater) => {
+    setPagination((prev) => {
       const next = typeof updater === "function" ? updater(prev) : updater;
       return JSON.stringify(prev) === JSON.stringify(next) ? prev : next;
     });
@@ -924,6 +935,8 @@ export default function TasksPage() {
           isLoading={isLoading}
           onDeleteRow={handleRowDelete}
           nonEditableColumns={['task_id']}
+          pagination={pagination}
+          onPaginationChange={handlePaginationChange}
         />
       </div>
 

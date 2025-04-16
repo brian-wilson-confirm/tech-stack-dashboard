@@ -47,26 +47,43 @@ const initialVisibleColumns = {
 
 
 
-
 export default function TasksPage() {
   /*******************
     STATE VARIABLES
   ********************/
-  const [hasFetchedOptions, setHasFetchedOptions] = useState(false);
-  const [hasFetchedRows, setHasFetchedRows] = useState(false);
+  // Fetching Data
   const [rows, setRows] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [editingRow, setEditingRow] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState<Task | null>(null);
+  const [hasFetchedRows, setHasFetchedRows] = useState(false);
+
+  // Column Visibility
+  const [visibleColumns, setVisibleColumns] = useState<VisibilityState>(initialVisibleColumns);
+
+  // Table Pagination
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
+
+  // Row Filter
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortConfigs, setSortConfigs] = useState<SortingState>([]);
-  const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
-  const [selectedRow, setSelectedRow] = useState<Task | null>(null);
-  const [visibleColumns, setVisibleColumns] = useState<VisibilityState>(initialVisibleColumns);
   const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
   const [selectedPriority, setSelectedPriority] = useState<string[]>([]);
+
+  // Row Sorting
+  const [sortConfigs, setSortConfigs] = useState<SortingState>([]);
+
+  // Row Selection
+  const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
+  const [selectedRow, setSelectedRow] = useState<Task | null>(null);  
+
+  // Row Sheet
   const [sheetOpen, setSheetOpen] = useState(false);
+
+  // Row Editing
+  const [editingRow, setEditingRow] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<Task | null>(null);
+
+  // Fetching Options
+  const [hasFetchedOptions, setHasFetchedOptions] = useState(false);
   const [priorityOptions, setPriorityOptions] = useState<{ name: string; id: number }[]>([]);
   const [typeOptions, setTypeOptions] = useState<{ name: string; id: number }[]>([]);
   const [statusOptions, setStatusOptions] = useState<{ name: string; id: number }[]>([]);
@@ -75,10 +92,7 @@ export default function TasksPage() {
   const [categoryOptions, setCategoryOptions] = useState<{ name: string; id: number }[]>([]);
   const [subcategoryOptions, setSubcategoryOptions] = useState<{ name: string; id: number }[]>([]);
   const [technologyOptions, setTechnologyOptions] = useState<{ name: string; id: number }[]>([]);
-  const [pagination, setPagination] = useState({
-    pageIndex: 0,
-    pageSize: 10,
-  });
+
 
 
   /*******************
@@ -194,7 +208,6 @@ export default function TasksPage() {
       accessorKey: (column as any).accessorKey,
       header: typeof column.header === 'string' ? column.header : 'Column'
     }))
-
 
 
 
@@ -381,7 +394,6 @@ export default function TasksPage() {
       });
     }
   };
-
 
 
 
@@ -683,7 +695,6 @@ export default function TasksPage() {
 
   
 
-
   /*******************
     RENDER CELLS IN EDIT-MODE
   ********************/
@@ -912,31 +923,33 @@ export default function TasksPage() {
         <h2 className="text-2xl font-bold">DataTable Widget</h2>
         <DataTableWidget
           data={rows}
+          isLoading={isLoading}
           columns={columns}
           columnOptions={columnOptions}
           visibleColumns={visibleColumns}
-          onColumnVisibilityChange={setVisibleColumns}
-          editingRow={editingRow}
-          editForm={editForm}
-          editModeRenderers={editModeRenderers}
-          onEditChange={onEditChange}
-          onStartEdit={startEditing}
-          onSaveEdit={onSaveEdit}
-          onCancelEdit={onCancelEdit}
-          rowSelection={rowSelection}
-          onRowSelectionChange={setRowSelection}
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          filterConfigs={filterConfigs}
           columnFilters={columnFilters}
+          onColumnVisibilityChange={setVisibleColumns}
           onColumnFiltersChange={handleColumnFiltersChange}
-          sortConfigs={sortConfigs}
-          onSortChange={setSortConfigs}
-          isLoading={isLoading}
-          onDeleteRow={handleRowDelete}
-          nonEditableColumns={['task_id']}
           pagination={pagination}
           onPaginationChange={handlePaginationChange}
+          filterConfigs={filterConfigs}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          sortConfigs={sortConfigs}
+          onSortChange={setSortConfigs}
+          rowSelection={rowSelection}
+          onRowSelectionChange={setRowSelection}
+          editForm={editForm}
+          editModeRenderers={editModeRenderers}
+          nonEditableColumns={['task_id']}
+          onStartEdit={startEditing}
+          onEditChange={onEditChange}
+          editingRow={editingRow}
+          onSaveEdit={onSaveEdit}
+          onCancelEdit={onCancelEdit}
+          onDeleteRow={handleRowDelete}
+          showCheckboxes={true}
+          showActions={true}
         />
       </div>
 

@@ -19,25 +19,31 @@ const initialVisibleColumns = {
 
 
 export default function SQLDatabasesPage() {
-  const [visibleColumns, setVisibleColumns] = useState<VisibilityState>(initialVisibleColumns);
+  /*******************
+    STATE VARIABLES
+  ********************/
+  // Fetching Data
   const [rows, setRows] = useState<TechSubCat[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasFetchedRows, setHasFetchedRows] = useState(false);
+
+  // Column Visibility
+  const [visibleColumns, setVisibleColumns] = useState<VisibilityState>(initialVisibleColumns);
+  
+  // Table Pagination
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
+
+  // Row Filter
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  //const rowSelectionRef = useRef<Record<string, boolean>>({});
-  //const [rowSelection, setRowSelection] = useState<Record<string, boolean>>(rowSelectionRef.current);
-  const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
-  const [pagination, setPagination] = useState({
-    pageIndex: 0,
-    pageSize: 10,
-  });
+
+  // Row Sorting
+  // Row Selection
+  // Row Sheet
+  // Row Editing
+  // Fetching Options
 
 
   
-
-
-
-
   /*******************
     COLUMN DEFINITIONS
   ********************/
@@ -47,6 +53,7 @@ export default function SQLDatabasesPage() {
     { accessorKey: "category", header: "Category" },
   ]
 
+
   
   /*******************
     COLUMN VISIBILITY 
@@ -55,6 +62,12 @@ export default function SQLDatabasesPage() {
     accessorKey: (column as any).accessorKey,
     header: typeof column.header === 'string' ? column.header : 'Column'
   }))
+
+
+
+  /*******************
+    ROW FILTER CONFIGURATIONS
+  ********************/
 
 
 
@@ -100,19 +113,6 @@ export default function SQLDatabasesPage() {
     });
   };
 
-  
-  const handleRowSelectionChange: OnChangeFn<Record<string, boolean>> = (updater) => {
-    setRowSelection((prev) => {
-      const next = typeof updater === "function" ? updater(prev) : updater;
-  
-      // 🚨 Shallow equality check instead of deep equality
-      const sameKeys =
-        Object.keys(prev).length === Object.keys(next).length &&
-        Object.keys(prev).every(key => prev[key] === next[key]);
-  
-      return sameKeys ? prev : next;
-    });
-  };
 
   const handlePaginationChange: OnChangeFn<PaginationState> = (updaterOrValue) => {
     setPagination((prev) => {
@@ -129,6 +129,8 @@ export default function SQLDatabasesPage() {
     });
   };
 
+
+
   return (
     <div className="p-8">
       <div className="flex items-center gap-3 mb-8">
@@ -139,33 +141,33 @@ export default function SQLDatabasesPage() {
       <div className="grid gap-6">
         <DataTableWidget
           data={rows}
+          isLoading={isLoading}
           columns={columns}
           columnOptions={columnOptions}
           visibleColumns={visibleColumns}
-          onColumnVisibilityChange={setVisibleColumns}
-          editingRow={null}
-          editForm={null}
-          editModeRenderers={undefined}
-          rowSelection={undefined}
-          onRowSelectionChange={undefined}
-          onEditChange={undefined}
-          onStartEdit={undefined}
-          onSaveEdit={undefined}
-          onCancelEdit={undefined}
-          searchQuery={undefined}
-          setSearchQuery={undefined}
-          filterConfigs={undefined}
           columnFilters={columnFilters}
+          onColumnVisibilityChange={setVisibleColumns}
           onColumnFiltersChange={handleColumnFilterChange}
-          sortConfigs={undefined}
-          onSortChange={undefined}
-          isLoading={isLoading}
-          onDeleteRow={undefined}
-          nonEditableColumns={undefined}
-          showCheckboxes={false}
-          showActions={false}
           pagination={pagination}
           onPaginationChange={handlePaginationChange}
+          filterConfigs={undefined}
+          searchQuery={undefined}
+          setSearchQuery={undefined}
+          sortConfigs={undefined}
+          onSortChange={undefined}
+          rowSelection={undefined}
+          onRowSelectionChange={undefined}
+          editForm={null}
+          editModeRenderers={undefined}
+          nonEditableColumns={undefined}
+          onStartEdit={undefined}
+          onEditChange={undefined}
+          editingRow={null}
+          onSaveEdit={undefined}
+          onCancelEdit={undefined}
+          onDeleteRow={undefined}         
+          showCheckboxes={false}
+          showActions={false}
         />
       </div>
     </div>

@@ -35,7 +35,6 @@ import {
   Filter,
 } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
-import { useMemo, useState } from "react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
   DropdownMenu,
@@ -72,36 +71,33 @@ export type ColumnOption = {
 
 type Props<T extends Record<string, any>> = {
   data: T[]
+  isLoading?: boolean
   columns: ColumnDef<T>[]
+  columnOptions?: ColumnOption[]
   visibleColumns: VisibilityState
+  columnFilters?: ColumnFiltersState;
   onColumnVisibilityChange: (value: VisibilityState) => void
-  editingRow: string | null
-  editForm: T | null
-  onEditChange?: (field: keyof T, value: T[keyof T]) => void
-  onStartEdit?: (row: T) => void
-  onSaveEdit?: () => void
-  onCancelEdit?: () => void
+  onColumnFiltersChange?: OnChangeFn<ColumnFiltersState>;
+  pagination: { pageIndex: number; pageSize: number };
+  onPaginationChange?: OnChangeFn<PaginationState>;
+  filterConfigs?: FilterConfig[]
   searchQuery?: string
   setSearchQuery?: (value: string) => void
   sortConfigs?: SortingState
   onSortChange?: (sort: SortingState) => void
-  editModeRenderers?: EditModeRenderer<T>
   rowSelection?: Record<string, boolean>
   onRowSelectionChange?: OnChangeFn<Record<string, boolean>>
-  filterConfigs?: FilterConfig[]
-  columnOptions?: ColumnOption[]
-  columnFilters?: ColumnFiltersState;
-  onColumnFiltersChange?: OnChangeFn<ColumnFiltersState>;
-  isLoading?: boolean
-  onDeleteRow?: (rowId: string) => Promise<void>
+  editForm: T | null
+  editModeRenderers?: EditModeRenderer<T>
   nonEditableColumns?: string[]
+  onStartEdit?: (row: T) => void
+  onEditChange?: (field: keyof T, value: T[keyof T]) => void
+  editingRow: string | null
+  onSaveEdit?: () => void
+  onCancelEdit?: () => void
+  onDeleteRow?: (rowId: string) => Promise<void>
   showCheckboxes?: boolean;
   showActions?: boolean;
-  pagination: {
-    pageIndex: number;
-    pageSize: number;
-  };
-  onPaginationChange?: OnChangeFn<PaginationState>;
 }
 
 const FilterDropdown = ({ config, editingRow }: { config: FilterConfig, editingRow: string | null }) => {
@@ -185,81 +181,38 @@ const ColumnVisibilityDropdown = ({
   )
 }
 
+
+
 export function DataTableWidget<T extends Record<string, any>>({
   data,
+  isLoading,
   columns,
+  columnOptions,
   visibleColumns,
+  columnFilters,
   onColumnVisibilityChange,
-  editingRow,
-  editForm,
-  onEditChange,
-  onStartEdit,
-  onSaveEdit,
-  onCancelEdit,
+  onColumnFiltersChange,
+  pagination,
+  onPaginationChange,
+  filterConfigs,
   searchQuery,
   setSearchQuery,
   sortConfigs,
   onSortChange,
-  editModeRenderers,
   rowSelection,
   onRowSelectionChange,
-  filterConfigs,
-  columnFilters,
-  onColumnFiltersChange,
-  columnOptions,
-  isLoading,
-  onDeleteRow,
+  editForm,
+  editModeRenderers,
   nonEditableColumns,
-  showCheckboxes = true,
-  showActions = true,
-  pagination,
-  onPaginationChange,
+  onStartEdit,
+  onEditChange,
+  editingRow,
+  onSaveEdit,
+  onCancelEdit,
+  onDeleteRow,
+  showCheckboxes,
+  showActions,
 }: Props<T>) {
-  // Add pagination state
-  //const [pageIndex, setPageIndex] = useState(0);
-  //const [rowsPerPage, setRowsPerPage] = useState(10); // Default rows per page
-  //const memoizedRowSelection = useMemo(() => rowSelection, [rowSelection]);
-  //const [pagination, setPagination] = useState({
-  //  pageIndex: 0,
-  //  pageSize: 10,
-  //})
-  
-  // Use column filters instead of global filter
-  //const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-
-  // Update column filters when search query or filter configs change
-  /*
-  React.useEffect(() => {
-    const filters: ColumnFiltersState = []
-
-    // Add search filter
-    if (searchQuery) {
-      filters.push({
-        id: 'task',
-        value: searchQuery,
-      })
-    }
-
-    // Add status filter
-    const statusConfig = filterConfigs?.find(config => config.field === 'status')
-    if (statusConfig?.selected.length) {
-      filters.push({
-        id: 'status',
-        value: statusConfig.selected,
-      })
-    }
-
-    // Add priority filter
-    const priorityConfig = filterConfigs?.find(config => config.field === 'priority')
-    if (priorityConfig?.selected.length) {
-      filters.push({
-        id: 'priority',
-        value: priorityConfig.selected,
-      })
-    }
-
-    setColumnFilters(filters)
-  }, [searchQuery, filterConfigs]) */
 
   const table = useReactTable({
     data,
@@ -299,13 +252,8 @@ export function DataTableWidget<T extends Record<string, any>>({
 
   // Get pagination info from table state
   const currentPageIndex = table.getState().pagination.pageIndex;
-  const currentPageSize = table.getState().pagination.pageSize;
   const page = currentPageIndex + 1; // Convert 0-based to 1-based indexing for display
   const totalPages = table.getPageCount();
-  
-  // Get selected rows
-  const selectedRowsArray = showCheckboxes ? table.getSelectedRowModel().rows : [];
-  const selectedRows = selectedRowsArray.length;
   
   // Get filtered rows
   const filteredRows = table.getFilteredRowModel().rows.length;
@@ -317,7 +265,7 @@ export function DataTableWidget<T extends Record<string, any>>({
     }
   };
 
-  const renderEditableCell = (cell: any, rowId: string) => {
+  const renderEditableCell = (cell: any) => {
     const field = cell.column.id as keyof T
     const value = editForm?.[field]
     const renderer = editModeRenderers?.[field]
@@ -488,7 +436,7 @@ export function DataTableWidget<T extends Record<string, any>>({
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
                       {editingRow === row.original.id ? (
-                        renderEditableCell(cell, row.original.id)
+                        renderEditableCell(cell)
                       ) : (
                         flexRender(cell.column.columnDef.cell, cell.getContext())
                       )}

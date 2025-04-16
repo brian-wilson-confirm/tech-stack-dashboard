@@ -94,6 +94,8 @@ type Props<T extends Record<string, any>> = {
   isLoading?: boolean
   onDeleteRow?: (rowId: string) => Promise<void>
   nonEditableColumns?: string[]
+  showCheckboxes?: boolean;
+  showActions?: boolean;
 }
 
 const FilterDropdown = ({ config, editingRow }: { config: FilterConfig, editingRow: string | null }) => {
@@ -202,6 +204,8 @@ export function DataTableWidget<T extends Record<string, any>>({
   isLoading,
   onDeleteRow,
   nonEditableColumns,
+  showCheckboxes = true,
+  showActions = true,
 }: Props<T>) {
   // Add pagination state
   const [pageIndex, setPageIndex] = useState(0);
@@ -289,7 +293,7 @@ export function DataTableWidget<T extends Record<string, any>>({
   const totalPages = table.getPageCount();
   
   // Get selected rows
-  const selectedRowsArray = table.getSelectedRowModel().rows;
+  const selectedRowsArray = showCheckboxes ? table.getSelectedRowModel().rows : [];
   const selectedRows = selectedRowsArray.length;
   
   // Get filtered rows
@@ -430,13 +434,15 @@ export function DataTableWidget<T extends Record<string, any>>({
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                   {/* Select All checkbox */}
-                  <TableHead className="w-12">
-                    <Checkbox
-                      checked={table.getIsAllPageRowsSelected()}
-                      onCheckedChange={(checked) => table.toggleAllPageRowsSelected(!!checked)}
-                      aria-label="Select all rows"
-                    />
-                  </TableHead>
+                  {showCheckboxes && (
+                    <TableHead className="w-12">
+                      <Checkbox
+                        checked={table.getIsAllPageRowsSelected()}
+                        onCheckedChange={(checked) => table.toggleAllPageRowsSelected(!!checked)}
+                        aria-label="Select all rows"
+                      />
+                    </TableHead>
+                  )}
 
                   {headerGroup.headers.map((header) =>
                     header.column.id in visibleColumns && visibleColumns[header.column.id] ? (
@@ -446,7 +452,7 @@ export function DataTableWidget<T extends Record<string, any>>({
                     ) : null
                   )}
 
-                  <TableHead className="w-[100px]">Actions</TableHead>
+                  {showActions && <TableHead className="w-[100px]">Actions</TableHead>}
                 </TableRow>
               ))}
             </TableHeader>
@@ -455,16 +461,18 @@ export function DataTableWidget<T extends Record<string, any>>({
             {/* Table Body */}
             <TableBody>
               {table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
+                <TableRow key={row.id} data-state={showCheckboxes ? (row.getIsSelected() && "selected") : undefined}>
 
                   {/* Row checkbox */}
-                  <TableCell className="w-12">
-                    <Checkbox
-                      checked={row.getIsSelected()}
-                      onCheckedChange={(checked) => row.toggleSelected(!!checked)}
-                      aria-label={`Select row ${row.id}`}
-                    />
-                  </TableCell>
+                  {showCheckboxes && (
+                    <TableCell className="w-12">
+                      <Checkbox
+                        checked={row.getIsSelected()}
+                        onCheckedChange={(checked) => row.toggleSelected(!!checked)}
+                        aria-label={`Select row ${row.id}`}
+                      />
+                    </TableCell>
+                  )}
 
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
@@ -475,18 +483,20 @@ export function DataTableWidget<T extends Record<string, any>>({
                       )}
                     </TableCell>
                   ))}
-                  <TableCell>
-                    {editingRow === row.original.id ? (
-                      <>
-                        <Button variant="ghost" size="icon" onClick={onSaveEdit}>
-                          <Check className="h-4 w-4 text-green-500" />
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={onCancelEdit}>
-                          <X className="h-4 w-4 text-red-500" />
-                        </Button>
-                      </>
-                    ) : (
-                      <>
+
+                  {showActions && (
+                    <TableCell>
+                      {editingRow === row.original.id ? (
+                        <>
+                          <Button variant="ghost" size="icon" onClick={onSaveEdit}>
+                            <Check className="h-4 w-4 text-green-500" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={onCancelEdit}>
+                            <X className="h-4 w-4 text-red-500" />
+                          </Button>
+                        </>
+                      ) : (
+                        <>
                           <Button variant="ghost" size="icon" onClick={() => onStartEdit?.(row.original)}>
                             <Pencil className="h-4 w-4" />
                           </Button>
@@ -498,8 +508,9 @@ export function DataTableWidget<T extends Record<string, any>>({
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </>
-                    )}
-                  </TableCell>
+                      )}
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
@@ -508,7 +519,7 @@ export function DataTableWidget<T extends Record<string, any>>({
 
 
         {/* Selected Rows */}
-        {table.getFilteredSelectedRowModel().rows.length > 0 && (
+        {showCheckboxes && table.getFilteredSelectedRowModel().rows.length > 0 && (
         <div className="flex items-center justify-between px-4 py-3 border rounded-md bg-muted">
           <div className="text-sm text-muted-foreground">
             {table.getFilteredSelectedRowModel().rows.length} {table.getFilteredSelectedRowModel().rows.length === 1 ? "row" : "rows"} selected

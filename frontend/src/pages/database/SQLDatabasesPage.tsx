@@ -1,6 +1,6 @@
 import { Database } from "lucide-react"
 import { DataTableWidget } from "@/components/widgets/DataTableWidget"
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { ColumnDef, ColumnFiltersState, OnChangeFn, VisibilityState } from "@tanstack/react-table";
 import { toast } from "@/components/ui/use-toast";
 import { TechSubCat } from "@/components/data/schema";
@@ -10,10 +10,10 @@ import { TechSubCat } from "@/components/data/schema";
   INITIAL VISIBLE COLUMNS
 ********************/
 const initialVisibleColumns = {
-  id: false,                  // ID
-  technology: true,           // Technology
-  subcategory: true,          // Subcategory
-  category: true,             // Category
+  id: false,
+  technology: true,
+  subcategory: true,
+  category: true,
 }
 
 
@@ -128,8 +128,8 @@ export default function SQLDatabasesPage() {
           editingRow={null}
           editForm={null}
           editModeRenderers={undefined}
-          rowSelection={rowSelection}
-          onRowSelectionChange={handleRowSelectionChange}
+          rowSelection={undefined}
+          onRowSelectionChange={undefined}
           onEditChange={undefined}
           onStartEdit={undefined}
           onSaveEdit={undefined}
@@ -141,10 +141,12 @@ export default function SQLDatabasesPage() {
           onColumnFiltersChange={handleColumnFilterChange}
           sortConfigs={undefined}
           onSortChange={undefined}
-          isLoading={undefined}
+          isLoading={isLoading}
           onDeleteRow={undefined}
-          nonEditableColumns={['task_id']}
-          />
+          nonEditableColumns={undefined}
+          showCheckboxes={false}
+          showActions={false}
+        />
       </div>
     </div>
   )

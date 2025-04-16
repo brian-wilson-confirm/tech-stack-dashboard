@@ -304,6 +304,8 @@ export function DataTableWidget<T extends Record<string, any>>({
       )
     }
 
+    
+
     return (
       <Input
         value={value as string || ""}
@@ -311,6 +313,8 @@ export function DataTableWidget<T extends Record<string, any>>({
       />
     )
   }
+
+
 
   return (
     <div className="border rounded-lg p-6 col-span-full">
@@ -351,6 +355,8 @@ export function DataTableWidget<T extends Record<string, any>>({
             {searchQuery !== undefined && setSearchQuery && filterConfigs?.map((config) => (
               <FilterDropdown key={config.field} config={config} editingRow={editingRow} />
             ))}
+
+
 
             {(searchQuery !== undefined || (filterConfigs?.length ?? 0) > 0) && (
             <Button 
@@ -477,6 +483,7 @@ export function DataTableWidget<T extends Record<string, any>>({
         </div>
 
 
+
         {/* Selected Rows */}
         {showCheckboxes && table.getFilteredSelectedRowModel().rows.length > 0 && (
         <div className="flex items-center justify-between px-4 py-3 border rounded-md bg-muted">
@@ -513,8 +520,6 @@ export function DataTableWidget<T extends Record<string, any>>({
           </div>
         </div>
       )}
-
-
 
 
 

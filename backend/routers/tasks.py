@@ -5,7 +5,7 @@ from sqlmodel import Session, select
 from sqlalchemy.orm import selectinload
 from backend.database.connection import get_session
 
-from backend.database.models.task_models import TaskTopicLink, Task, Category, Section, Source, Subcategory, Technology, TaskLevel, TaskPriority, TaskStatus, TaskType, TechnologySubcategory, Topic
+from backend.database.models.task_models import TaskTopicLink, Task, Category, Section, Source, Subcategory, Technology, TaskLevel, TaskPriority, TaskStatus, TaskType, TechnologySubcategory, TechnologyWithSubcatAndCat, Topic
 from backend.database.views.task_schemas import TaskCreate, TaskRead, TaskUpdate
 from backend.database.views.technology_schemas import TechnologyCreate, TechnologyRead
 from sqlalchemy import text
@@ -255,9 +255,35 @@ async def get_task_technologies_by_subcategory(subcategory_id: int, session: Ses
     results = session.exec(statement).all()
     return results
 
+"""
+@router.get("/technologies/{subcategory}", response_model=List[TechnologyWithSubcatAndCat])
+async def get_technologies_with_subcategory_and_category(subcategory: str, session: Session = Depends(get_session)):
+    statement = (
+        select(Technology)
+        .join(TechnologySubcategory, Technology.id == TechnologySubcategory.technology_id)
+        .join(Subcategory, TechnologySubcategory.subcategory_id == Subcategory.id)
+        .join(Category, Subcategory.category_id == Category.id)
+        .where(Subcategory.name == subcategory)
+    )
+    results = session.exec(statement).all()
+    return results
+"""
 
-
-
+@router.get("/technologiesInDetail", response_model=List[TechnologyWithSubcatAndCat])
+async def get_technologies_with_subcategory_and_category(session: Session = Depends(get_session)):
+    query = text("""
+        SELECT t.name AS technology,
+               sc.name AS subcategory,
+               c.name AS category
+        FROM technology t
+        JOIN technology_subcategory ts ON t.id = ts.technology_id
+        JOIN subcategory sc ON ts.subcategory_id = sc.id
+        JOIN category c ON sc.category_id = c.id
+        ORDER BY t.name, c.name, sc.name;
+    """)
+    rows = session.exec(query).mappings().all()
+    #rows = results.all()
+    return [TechnologyWithSubcatAndCat(**row) for row in rows]
 
 
 

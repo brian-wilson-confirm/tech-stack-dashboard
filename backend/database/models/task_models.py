@@ -103,3 +103,8 @@ class TechnologySubcategory(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     technology_id: int = Field(foreign_key="technology.id")
     subcategory_id: int = Field(foreign_key="subcategory.id")
+
+class TechnologyWithSubcatAndCat(SQLModel, table=False):  # table=False since it's a view or raw query result
+    technology: str
+    subcategory: str
+    category: str

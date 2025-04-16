@@ -11,6 +11,7 @@ import {
   useReactTable,
   VisibilityState,
   ColumnFiltersState,
+  OnChangeFn,
 } from "@tanstack/react-table"
 import {
   Table,
@@ -33,7 +34,7 @@ import {
   Filter,
 } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
   DropdownMenu,
@@ -75,17 +76,21 @@ type Props<T extends Record<string, any>> = {
   onColumnVisibilityChange: (value: VisibilityState) => void
   editingRow: string | null
   editForm: T | null
-  onEditChange: (field: keyof T, value: T[keyof T]) => void
-  onStartEdit: (row: T) => void
-  onSaveEdit: () => void
-  onCancelEdit: () => void
-  searchQuery: string
-  setSearchQuery: (value: string) => void
-  sortConfigs: SortingState
-  onSortChange: (sort: SortingState) => void
+  onEditChange?: (field: keyof T, value: T[keyof T]) => void
+  onStartEdit?: (row: T) => void
+  onSaveEdit?: () => void
+  onCancelEdit?: () => void
+  searchQuery?: string
+  setSearchQuery?: (value: string) => void
+  sortConfigs?: SortingState
+  onSortChange?: (sort: SortingState) => void
   editModeRenderers?: EditModeRenderer<T>
+  rowSelection?: Record<string, boolean>
+  onRowSelectionChange?: OnChangeFn<Record<string, boolean>>
   filterConfigs?: FilterConfig[]
   columnOptions?: ColumnOption[]
+  columnFilters?: ColumnFiltersState;
+  onColumnFiltersChange?: OnChangeFn<ColumnFiltersState>;
   isLoading?: boolean
   onDeleteRow?: (rowId: string) => Promise<void>
   nonEditableColumns?: string[]
@@ -157,10 +162,11 @@ const ColumnVisibilityDropdown = ({
             key={column.accessorKey}
             checked={visibleColumns[column.accessorKey]}
             onCheckedChange={(value) => {
+              if (visibleColumns[column.accessorKey] === value) return; // 🚫 prevent loop
               onColumnVisibilityChange({
                 ...visibleColumns,
                 [column.accessorKey]: value
-              })
+              });
             }}
           >
             {column.header}
@@ -187,7 +193,11 @@ export function DataTableWidget<T extends Record<string, any>>({
   sortConfigs,
   onSortChange,
   editModeRenderers,
+  rowSelection,
+  onRowSelectionChange,
   filterConfigs,
+  columnFilters,
+  onColumnFiltersChange,
   columnOptions,
   isLoading,
   onDeleteRow,
@@ -196,15 +206,17 @@ export function DataTableWidget<T extends Record<string, any>>({
   // Add pagination state
   const [pageIndex, setPageIndex] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10); // Default rows per page
+  //const memoizedRowSelection = useMemo(() => rowSelection, [rowSelection]);
   const [pagination, setPagination] = useState({
     pageIndex: 0,
     pageSize: 10,
   })
   
   // Use column filters instead of global filter
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  //const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
   // Update column filters when search query or filter configs change
+  /*
   React.useEffect(() => {
     const filters: ColumnFiltersState = []
 
@@ -235,27 +247,30 @@ export function DataTableWidget<T extends Record<string, any>>({
     }
 
     setColumnFilters(filters)
-  }, [searchQuery, filterConfigs])
+  }, [searchQuery, filterConfigs]) */
 
   const table = useReactTable({
     data,
     columns,
     state: {
-      columnFilters,
-      sorting: sortConfigs,
+      rowSelection: rowSelection,
+      columnFilters: columnFilters ?? [],
+      sorting: sortConfigs ?? [],
       columnVisibility: visibleColumns,
       pagination,
     },
+    onRowSelectionChange: onRowSelectionChange ?? (() => {}),
     enableRowSelection: true,
     onSortingChange: (updaterOrValue) => {
       const newSorting =
         typeof updaterOrValue === "function"
-          ? updaterOrValue(sortConfigs)
+          ? updaterOrValue(sortConfigs ?? [])
           : updaterOrValue
-      onSortChange(newSorting)
+      onSortChange?.(newSorting)
     },
     onPaginationChange: setPagination,
-    onColumnFiltersChange: setColumnFilters,
+    //onColumnFiltersChange: setColumnFilters,
+    onColumnFiltersChange,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -303,7 +318,7 @@ export function DataTableWidget<T extends Record<string, any>>({
       "" as T[keyof T]
 
     if (renderer) {
-      return renderer(value ?? fallback, (newValue) => onEditChange(field, newValue))
+      return renderer(value ?? fallback, (newValue) => onEditChange?.(field, newValue))
     }
 
     if (typeof value === "number") {
@@ -311,7 +326,7 @@ export function DataTableWidget<T extends Record<string, any>>({
         <Input
           type="number"
           value={value ?? fallback}
-          onChange={(e) => onEditChange(field, Number(e.target.value) as T[keyof T])}
+          onChange={(e) => onEditChange?.(field, Number(e.target.value) as T[keyof T])}
         />
       )
     }
@@ -321,7 +336,7 @@ export function DataTableWidget<T extends Record<string, any>>({
         <Input
           type="date"
           value={value ?? fallback}
-          onChange={(e) => onEditChange(field, e.target.value as T[keyof T])}
+          onChange={(e) => onEditChange?.(field, e.target.value as T[keyof T])}
         />
       )
     }
@@ -329,7 +344,7 @@ export function DataTableWidget<T extends Record<string, any>>({
     return (
       <Input
         value={value as string || ""}
-        onChange={(e) => onEditChange(field, e.target.value as T[keyof T])}
+        onChange={(e) => onEditChange?.(field, e.target.value as T[keyof T])}
       />
     )
   }
@@ -345,11 +360,12 @@ export function DataTableWidget<T extends Record<string, any>>({
             
             
             {/* Filter Textbox */}
+            {searchQuery !== undefined && setSearchQuery && (
             <div className="relative">
               <Input
                 placeholder="Filter by task name..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                value={searchQuery ?? ""}
+                onChange={(e) => setSearchQuery?.(e.target.value)}
                 className="h-8 w-[150px] lg:w-[250px]"
                 disabled={!!editingRow}
               />
@@ -357,7 +373,7 @@ export function DataTableWidget<T extends Record<string, any>>({
                 <Button
                   variant="ghost"
                   className="absolute right-0 top-0 h-8 px-2 hover:bg-transparent"
-                  onClick={() => setSearchQuery("")}
+                  onClick={() => setSearchQuery?.("")}
                   disabled={!!editingRow}
                 >
                   <CrossIcon className="h-4 w-4" />
@@ -365,35 +381,39 @@ export function DataTableWidget<T extends Record<string, any>>({
                 </Button>
               )}
             </div>
+            )}
 
 
             {/* Filter Dropdowns */}
-            {filterConfigs?.map((config) => (
+            {searchQuery !== undefined && setSearchQuery && filterConfigs?.map((config) => (
               <FilterDropdown key={config.field} config={config} editingRow={editingRow} />
             ))}
 
+            {(searchQuery !== undefined || (filterConfigs?.length ?? 0) > 0) && (
             <Button 
               variant="outline" 
               size="sm" 
               className="h-8 border-dashed"
               onClick={() => {
-                setSearchQuery("")
+                setSearchQuery?.("")
                 filterConfigs?.forEach(config => config.onSelect([]))
               }}
               disabled={(!searchQuery && !filterConfigs?.some(config => config.selected.length > 0)) || !!editingRow}
             >
               Reset
             </Button>
-            
+            )}
 
             
             {/* Column Visibility Dropdown */}
+            {searchQuery !== undefined && setSearchQuery && (
             <ColumnVisibilityDropdown
               columnOptions={columnOptions}
               visibleColumns={visibleColumns}
               onColumnVisibilityChange={onColumnVisibilityChange}
               editingRow={editingRow}
             />
+            )}
           </div>
           {/* <AddTaskDialog onAddTask={addRow} disabled={!!editingRow} /> */}
         </div>
@@ -467,7 +487,7 @@ export function DataTableWidget<T extends Record<string, any>>({
                       </>
                     ) : (
                       <>
-                          <Button variant="ghost" size="icon" onClick={() => onStartEdit(row.original)}>
+                          <Button variant="ghost" size="icon" onClick={() => onStartEdit?.(row.original)}>
                             <Pencil className="h-4 w-4" />
                           </Button>
                           <Button 

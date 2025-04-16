@@ -25,3 +25,12 @@ export const taskSchema = z.object({
 })
 
 export type Task = z.infer<typeof taskSchema> 
+
+export const techSubCategorySchema = z.object({
+  id: z.string(),
+  technology: z.string(),
+  subcategory: z.string(),
+  category: z.string(),
+})
+
+export type TechSubCat = z.infer<typeof techSubCategorySchema> 

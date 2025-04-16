@@ -1,6 +1,6 @@
 // TasksPage.tsx
 import { useState, useEffect, useCallback } from "react"
-import { ColumnDef, SortingState, VisibilityState, FilterFn } from "@tanstack/react-table"
+import { ColumnDef, SortingState, VisibilityState, FilterFn, ColumnFiltersState, OnChangeFn } from "@tanstack/react-table"
 import { DataTableWidget, EditModeRenderer } from "@/components/widgets/DataTableWidget"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { CheckSquare, Clock } from "lucide-react"
@@ -15,6 +15,7 @@ import { Progress } from "@/components/ui/progress"
 import { toast } from "@/components/ui/use-toast"
 import { Task } from "@/components/data/schema"
 import { getStatusColor, getPriorityColor } from "@/styles/style"
+import React from "react"
 
 
 /*******************
@@ -57,8 +58,10 @@ export default function TasksPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [editingRow, setEditingRow] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Task | null>(null);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortConfigs, setSortConfigs] = useState<SortingState>([]);
+  const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
   const [selectedRow, setSelectedRow] = useState<Task | null>(null);
   const [visibleColumns, setVisibleColumns] = useState<VisibilityState>(initialVisibleColumns);
   const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
@@ -211,7 +214,48 @@ export default function TasksPage() {
     }
   ]
 
+  const handleColumnFiltersChange: OnChangeFn<ColumnFiltersState> = (updater) => {
+    setColumnFilters((prev) => {
+      const next = typeof updater === "function" ? updater(prev) : updater;
+      return JSON.stringify(prev) === JSON.stringify(next) ? prev : next;
+    });
+  };
 
+  // Update column filters when search query or filter configs change
+  React.useEffect(() => {
+    const filters: ColumnFiltersState = []
+
+    // Add search filter
+    if (searchQuery) {
+      filters.push({
+        id: 'task',
+        value: searchQuery,
+      })
+    }
+
+    // Add status filter
+    const statusConfig = filterConfigs?.find(config => config.field === 'status')
+    if (statusConfig?.selected.length) {
+      filters.push({
+        id: 'status',
+        value: statusConfig.selected,
+      })
+    }
+
+    // Add priority filter
+    const priorityConfig = filterConfigs?.find(config => config.field === 'priority')
+    if (priorityConfig?.selected.length) {
+      filters.push({
+        id: 'priority',
+        value: priorityConfig.selected,
+      })
+    }
+
+    setColumnFilters((prev) => {
+      const next = filters;
+      return JSON.stringify(prev) === JSON.stringify(next) ? prev : next;
+    });
+  }, [searchQuery, selectedStatus, selectedPriority]);
 
 
   
@@ -868,9 +912,13 @@ export default function TasksPage() {
           onStartEdit={startEditing}
           onSaveEdit={onSaveEdit}
           onCancelEdit={onCancelEdit}
+          rowSelection={rowSelection}
+          onRowSelectionChange={setRowSelection}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           filterConfigs={filterConfigs}
+          columnFilters={columnFilters}
+          onColumnFiltersChange={handleColumnFiltersChange}
           sortConfigs={sortConfigs}
           onSortChange={setSortConfigs}
           isLoading={isLoading}

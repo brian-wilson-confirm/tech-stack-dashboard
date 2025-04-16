@@ -12,6 +12,7 @@ import {
   VisibilityState,
   ColumnFiltersState,
   OnChangeFn,
+  PaginationState,
 } from "@tanstack/react-table"
 import {
   Table,
@@ -96,6 +97,11 @@ type Props<T extends Record<string, any>> = {
   nonEditableColumns?: string[]
   showCheckboxes?: boolean;
   showActions?: boolean;
+  pagination: {
+    pageIndex: number;
+    pageSize: number;
+  };
+  onPaginationChange?: OnChangeFn<PaginationState>;
 }
 
 const FilterDropdown = ({ config, editingRow }: { config: FilterConfig, editingRow: string | null }) => {
@@ -206,15 +212,17 @@ export function DataTableWidget<T extends Record<string, any>>({
   nonEditableColumns,
   showCheckboxes = true,
   showActions = true,
+  pagination,
+  onPaginationChange,
 }: Props<T>) {
   // Add pagination state
-  const [pageIndex, setPageIndex] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10); // Default rows per page
+  //const [pageIndex, setPageIndex] = useState(0);
+  //const [rowsPerPage, setRowsPerPage] = useState(10); // Default rows per page
   //const memoizedRowSelection = useMemo(() => rowSelection, [rowSelection]);
-  const [pagination, setPagination] = useState({
-    pageIndex: 0,
-    pageSize: 10,
-  })
+  //const [pagination, setPagination] = useState({
+  //  pageIndex: 0,
+  //  pageSize: 10,
+  //})
   
   // Use column filters instead of global filter
   //const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -272,13 +280,16 @@ export function DataTableWidget<T extends Record<string, any>>({
           : updaterOrValue
       onSortChange?.(newSorting)
     },
-    onPaginationChange: setPagination,
+    onPaginationChange: onPaginationChange,
     //onColumnFiltersChange: setColumnFilters,
     onColumnFiltersChange,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    manualPagination: false,
+    autoResetPageIndex: false,
+    pageCount: Math.ceil(data.length / pagination.pageSize),
     filterFns: {
       multiSelect: (row, columnId, filterValue) => {
         return filterValue.includes(row.getValue(columnId))
@@ -572,10 +583,10 @@ export function DataTableWidget<T extends Record<string, any>>({
               <Select
                 value={pagination.pageSize.toString()}
                 onValueChange={(value: string) =>
-                  setPagination((prev) => ({
+                  onPaginationChange?.((prev) => ({
                     ...prev,
                     pageSize: Number(value),
-                    pageIndex: 0, // reset to first page
+                    pageIndex: 0,
                   }))
                 }
               >
@@ -600,7 +611,10 @@ export function DataTableWidget<T extends Record<string, any>>({
                 variant="outline"
                 size="icon"
                 className="h-8 w-8"
-                onClick={() => table.previousPage()}
+                onClick={() => onPaginationChange?.(prev => ({
+                  ...prev,
+                  pageIndex: prev.pageIndex - 1
+                }))}
                 disabled={!table.getCanPreviousPage()}
               >
                 <span>←</span>
@@ -609,7 +623,10 @@ export function DataTableWidget<T extends Record<string, any>>({
                 variant="outline"
                 size="icon"
                 className="h-8 w-8"
-                onClick={() => table.nextPage()}
+                onClick={() => onPaginationChange?.(prev => ({
+                  ...prev,
+                  pageIndex: prev.pageIndex + 1
+                }))}
                 disabled={!table.getCanNextPage()}
               >
                 <span>→</span>

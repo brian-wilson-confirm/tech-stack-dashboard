@@ -1,7 +1,7 @@
 import { Database } from "lucide-react"
 import { DataTableWidget } from "@/components/widgets/DataTableWidget"
 import { useEffect, useState } from "react";
-import { ColumnDef, ColumnFiltersState, OnChangeFn, VisibilityState } from "@tanstack/react-table";
+import { ColumnDef, ColumnFiltersState, OnChangeFn, PaginationState, VisibilityState } from "@tanstack/react-table";
 import { toast } from "@/components/ui/use-toast";
 import { TechSubCat } from "@/components/data/schema";
 
@@ -27,6 +27,10 @@ export default function SQLDatabasesPage() {
   //const rowSelectionRef = useRef<Record<string, boolean>>({});
   //const [rowSelection, setRowSelection] = useState<Record<string, boolean>>(rowSelectionRef.current);
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: 10,
+  });
 
 
   
@@ -110,6 +114,20 @@ export default function SQLDatabasesPage() {
     });
   };
 
+  const handlePaginationChange: OnChangeFn<PaginationState> = (updaterOrValue) => {
+    setPagination((prev) => {
+      const next = typeof updaterOrValue === "function" ? updaterOrValue(prev) : updaterOrValue;
+  
+      if (
+        prev.pageIndex === next.pageIndex &&
+        prev.pageSize === next.pageSize
+      ) {
+        return prev; // ✅ prevent unnecessary state update → avoids infinite loop
+      }
+  
+      return next;
+    });
+  };
 
   return (
     <div className="p-8">
@@ -146,6 +164,8 @@ export default function SQLDatabasesPage() {
           nonEditableColumns={undefined}
           showCheckboxes={false}
           showActions={false}
+          pagination={pagination}
+          onPaginationChange={handlePaginationChange}
         />
       </div>
     </div>

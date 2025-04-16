@@ -255,19 +255,32 @@ async def get_task_technologies_by_subcategory(subcategory_id: int, session: Ses
     results = session.exec(statement).all()
     return results
 
-"""
-@router.get("/technologies/{subcategory}", response_model=List[TechnologyWithSubcatAndCat])
-async def get_technologies_with_subcategory_and_category(subcategory: str, session: Session = Depends(get_session)):
+
+# Used for Category pages
+@router.get("/technologies/by-subcategory-name/{subcategory_name}", response_model=List[Technology])
+async def get_task_technologies_by_subcategory_name(subcategory_name: str, session: Session = Depends(get_session)):
+    # First, find the subcategory ID using LIKE for partial matches
+    subcategory = session.exec(
+        select(Subcategory)
+        .where(Subcategory.name.ilike(f"%{subcategory_name}%"))
+    ).first()
+    
+    if not subcategory:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No subcategory found matching: {subcategory_name}"
+        )
+    
+    # Then use the subcategory_id to get technologies
     statement = (
         select(Technology)
         .join(TechnologySubcategory, Technology.id == TechnologySubcategory.technology_id)
-        .join(Subcategory, TechnologySubcategory.subcategory_id == Subcategory.id)
-        .join(Category, Subcategory.category_id == Category.id)
-        .where(Subcategory.name == subcategory)
+        .where(TechnologySubcategory.subcategory_id == subcategory.id)
     )
+    
     results = session.exec(statement).all()
     return results
-"""
+
 
 @router.get("/technologiesInDetail", response_model=List[TechnologyWithSubcatAndCat])
 async def get_technologies_with_subcategory_and_category(session: Session = Depends(get_session)):

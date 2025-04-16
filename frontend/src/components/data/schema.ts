@@ -1,5 +1,8 @@
 import { z } from "zod"
 
+/*******************
+  TASK
+*******************/
 export const taskSchema = z.object({
   id: z.string(),
   task_id: z.string(),
@@ -26,6 +29,22 @@ export const taskSchema = z.object({
 
 export type Task = z.infer<typeof taskSchema> 
 
+
+/*******************
+  TECHNOLOGY
+*******************/
+export const technologySchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string(),
+})
+
+export type Technology = z.infer<typeof technologySchema> 
+
+
+/*******************
+  TECHNOLOGY SUBCATEGORY CATEGORY
+*******************/
 export const techSubCategorySchema = z.object({
   id: z.string(),
   technology: z.string(),

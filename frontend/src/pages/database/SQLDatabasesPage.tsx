@@ -1,9 +1,10 @@
 import { Database } from "lucide-react"
 import { DataTableWidget } from "@/components/widgets/DataTableWidget"
 import { useEffect, useState } from "react";
-import { ColumnDef, ColumnFiltersState, OnChangeFn, PaginationState, VisibilityState } from "@tanstack/react-table";
+import { ColumnDef, OnChangeFn, PaginationState, VisibilityState } from "@tanstack/react-table";
 import { toast } from "@/components/ui/use-toast";
-import { TechSubCat } from "@/components/data/schema";
+import { Technology } from "@/components/data/schema";
+
 
 
 /*******************
@@ -11,9 +12,7 @@ import { TechSubCat } from "@/components/data/schema";
 ********************/
 const initialVisibleColumns = {
   id: false,
-  technology: true,
-  subcategory: true,
-  category: true,
+  name: true,
   description: true,
 }
 
@@ -24,7 +23,7 @@ export default function SQLDatabasesPage() {
     STATE VARIABLES
   ********************/
   // Fetching Data
-  const [rows, setRows] = useState<TechSubCat[]>([]);
+  const [rows, setRows] = useState<Technology[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasFetchedRows, setHasFetchedRows] = useState(false);
 
@@ -35,8 +34,6 @@ export default function SQLDatabasesPage() {
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
 
   // Row Filter
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-
   // Row Sorting
   // Row Selection
   // Row Sheet
@@ -48,10 +45,9 @@ export default function SQLDatabasesPage() {
   /*******************
     COLUMN DEFINITIONS
   ********************/
-  const columns: ColumnDef<TechSubCat>[] = [
-    { accessorKey: "technology", header: "Technology", minSize: 150, size: 200, maxSize: 250 },
-    { accessorKey: "subcategory", header: "Subcategory", minSize: 150, size: 200, maxSize: 250 },
-    { accessorKey: "category", header: "Category", minSize: 150, size: 200, maxSize: 250 },
+  const columns: ColumnDef<Technology>[] = [
+    { accessorKey: "id", header: "ID" },
+    { accessorKey: "name", header: "Technology", minSize: 150, size: 200, maxSize: 250 },
     { accessorKey: "description", header: "Description", minSize: 600, size: 700, maxSize: 800 },
   ]
 
@@ -80,16 +76,17 @@ export default function SQLDatabasesPage() {
   const fetchRows = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/tasks/technologiesInDetail');
+      const subcategoryName = "SQL";
+      const response = await fetch('/api/tasks/technologies/by-subcategory-name/' + subcategoryName);
       if (!response.ok) {
-        throw new Error('Failed to fetch tasks');
+        throw new Error('Failed to fetch databases');
       }
       const data = await response.json();
       setRows(data);
     } catch (err) {
       toast({
         title: "Error",
-        description: "Failed to load tasks.",
+        description: "Failed to load databases.",
         variant: "destructive",
       });
     } finally {
@@ -105,15 +102,6 @@ export default function SQLDatabasesPage() {
       setHasFetchedRows(true);
     }
   }, []);
-
-
-  const handleColumnFilterChange: OnChangeFn<ColumnFiltersState> = (updater) => {
-    setColumnFilters((prev) => {
-      const next = typeof updater === "function" ? updater(prev) : updater;
-      if (JSON.stringify(next) === JSON.stringify(prev)) return prev; // prevent infinite loop
-      return next;
-    });
-  };
 
 
   const handlePaginationChange: OnChangeFn<PaginationState> = (updaterOrValue) => {
@@ -147,9 +135,9 @@ export default function SQLDatabasesPage() {
           columns={columns}
           columnOptions={columnOptions}
           visibleColumns={visibleColumns}
-          columnFilters={columnFilters}
+          columnFilters={undefined}
           onColumnVisibilityChange={setVisibleColumns}
-          onColumnFiltersChange={handleColumnFilterChange}
+          onColumnFiltersChange={undefined}
           pagination={pagination}
           onPaginationChange={handlePaginationChange}
           filterConfigs={undefined}

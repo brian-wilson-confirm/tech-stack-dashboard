@@ -45,6 +45,7 @@ class Task(SQLModel, table=True):
 class Technology(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
+    description: Optional[str] = None
     
 class Subcategory(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)

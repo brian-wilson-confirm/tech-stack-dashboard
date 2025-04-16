@@ -29,7 +29,6 @@ import {
   Trash2,
   Check,
   X,
-  Plus,
   X as CrossIcon,
   LayoutGrid,
   Filter,
@@ -45,7 +44,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Separator } from "@/components/ui/separator"
-import { capitalizeWords } from "@/lib/utils"
+import { capitalizeWords, cn } from "@/lib/utils"
 
 export type EditModeRenderer<T> = Partial<
   Record<keyof T, (value: T[keyof T], onChange: (val: T[keyof T]) => void) => React.ReactNode>
@@ -98,6 +97,7 @@ type Props<T extends Record<string, any>> = {
   onDeleteRow?: (rowId: string) => Promise<void>
   showCheckboxes?: boolean;
   showActions?: boolean;
+  tableClassName?: string;
 }
 
 const FilterDropdown = ({ config, editingRow }: { config: FilterConfig, editingRow: string | null }) => {
@@ -212,6 +212,7 @@ export function DataTableWidget<T extends Record<string, any>>({
   onDeleteRow,
   showCheckboxes,
   showActions,
+  tableClassName,
 }: Props<T>) {
 
   const table = useReactTable({
@@ -225,6 +226,7 @@ export function DataTableWidget<T extends Record<string, any>>({
       pagination,
     },
     onRowSelectionChange: onRowSelectionChange ?? (() => {}),
+    enableColumnResizing: true,
     enableRowSelection: true,
     onSortingChange: (updaterOrValue) => {
       const newSorting =
@@ -236,6 +238,7 @@ export function DataTableWidget<T extends Record<string, any>>({
     onPaginationChange: onPaginationChange,
     //onColumnFiltersChange: setColumnFilters,
     onColumnFiltersChange,
+    columnResizeMode: 'onChange',
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -304,7 +307,6 @@ export function DataTableWidget<T extends Record<string, any>>({
       )
     }
 
-    
 
     return (
       <Input
@@ -391,7 +393,7 @@ export function DataTableWidget<T extends Record<string, any>>({
 
         {/* Table */}
         <div className="rounded-md border">
-          <Table>
+          <Table className={cn("w-full table-fixed", tableClassName)}>
 
 
             {/* Table Header */}
@@ -411,7 +413,14 @@ export function DataTableWidget<T extends Record<string, any>>({
 
                   {headerGroup.headers.map((header) =>
                     header.column.id in visibleColumns && visibleColumns[header.column.id] ? (
-                      <TableHead key={header.id}>
+                      <TableHead key={header.id} 
+                        //className="w-[200px]"
+                        style={{
+                          width: `${header.getSize()}px`,
+                          maxWidth: `${header.column.columnDef.maxSize ?? header.getSize()}px`,
+                          minWidth: `${header.column.columnDef.size ?? header.getSize()}px`,
+                        }}
+                      >
                         {flexRender(header.column.columnDef.header, header.getContext())}
                       </TableHead>
                     ) : null
@@ -425,59 +434,85 @@ export function DataTableWidget<T extends Record<string, any>>({
 
             {/* Table Body */}
             <TableBody>
-              {table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} data-state={showCheckboxes ? (row.getIsSelected() && "selected") : undefined}>
-
-                  {/* Row checkbox */}
-                  {showCheckboxes && (
-                    <TableCell className="w-12">
-                      <Checkbox
-                        checked={row.getIsSelected()}
-                        onCheckedChange={(checked) => row.toggleSelected(!!checked)}
-                        aria-label={`Select row ${row.id}`}
-                      />
-                    </TableCell>
-                  )}
-
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {editingRow === row.original.id ? (
-                        renderEditableCell(cell)
-                      ) : (
-                        flexRender(cell.column.columnDef.cell, cell.getContext())
-                      )}
-                    </TableCell>
-                  ))}
-
-                  {showActions && (
-                    <TableCell>
-                      {editingRow === row.original.id ? (
-                        <>
-                          <Button variant="ghost" size="icon" onClick={onSaveEdit}>
-                            <Check className="h-4 w-4 text-green-500" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={onCancelEdit}>
-                            <X className="h-4 w-4 text-red-500" />
-                          </Button>
-                        </>
-                      ) : (
-                        <>
-                          <Button variant="ghost" size="icon" onClick={() => onStartEdit?.(row.original)}>
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            onClick={() => handleDeleteRow(row.original.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </>
-                      )}
-                    </TableCell>
-                  )}
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={columns.length + (showCheckboxes ? 1 : 0) + (showActions ? 1 : 0)} className="h-24 text-center">
+                    Loading...
+                  </TableCell>
                 </TableRow>
-              ))}
+              ) : table.getRowModel().rows.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={columns.length + (showCheckboxes ? 1 : 0) + (showActions ? 1 : 0)} className="h-24 text-center">
+                    No results found.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow 
+                    key={row.id} 
+                    data-state={showCheckboxes ? (row.getIsSelected() && "selected") : undefined}
+                    className={tableClassName}
+                  >
+
+                    {/* Row checkbox */}
+                    {showCheckboxes && (
+                      <TableCell className="w-12">
+                        <Checkbox
+                          checked={row.getIsSelected()}
+                          onCheckedChange={(checked) => row.toggleSelected(!!checked)}
+                          aria-label={`Select row ${row.id}`}
+                        />
+                      </TableCell>
+                    )}
+
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell 
+                        key={cell.id} 
+                        //className="w-[200px]"
+                        style={{
+                          width: `${cell.column.getSize()}px`,
+                          maxWidth: `${cell.column.columnDef.maxSize ?? cell.column.getSize()}px`,
+                          minWidth: `${cell.column.columnDef.size ?? cell.column.getSize()}px`,
+                        }}
+                      >
+                        {editingRow === row.original.id ? (
+                          renderEditableCell(cell)
+                        ) : (
+                          flexRender(cell.column.columnDef.cell, cell.getContext())
+                        )}
+                      </TableCell>
+                    ))}
+
+                    {showActions && (
+                      <TableCell>
+                        {editingRow === row.original.id ? (
+                          <>
+                            <Button variant="ghost" size="icon" onClick={onSaveEdit}>
+                              <Check className="h-4 w-4 text-green-500" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={onCancelEdit}>
+                              <X className="h-4 w-4 text-red-500" />
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button variant="ghost" size="icon" onClick={() => onStartEdit?.(row.original)}>
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => handleDeleteRow(row.original.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </>
+                        )}
+                      </TableCell>
+                    )}
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </div>

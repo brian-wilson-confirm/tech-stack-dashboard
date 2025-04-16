@@ -274,7 +274,8 @@ async def get_technologies_with_subcategory_and_category(session: Session = Depe
     query = text("""
         SELECT t.name AS technology,
                sc.name AS subcategory,
-               c.name AS category
+               c.name AS category,
+               t.description
         FROM technology t
         JOIN technology_subcategory ts ON t.id = ts.technology_id
         JOIN subcategory sc ON ts.subcategory_id = sc.id

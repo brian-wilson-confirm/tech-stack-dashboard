@@ -108,3 +108,4 @@ class TechnologyWithSubcatAndCat(SQLModel, table=False):  # table=False since it
     technology: str
     subcategory: str
     category: str
+    description: Optional[str] = None

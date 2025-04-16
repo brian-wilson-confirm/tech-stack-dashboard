@@ -31,6 +31,7 @@ export const techSubCategorySchema = z.object({
   technology: z.string(),
   subcategory: z.string(),
   category: z.string(),
+  description: z.string(),
 })
 
 export type TechSubCat = z.infer<typeof techSubCategorySchema> 

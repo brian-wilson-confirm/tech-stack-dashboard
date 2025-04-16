@@ -14,6 +14,7 @@ const initialVisibleColumns = {
   technology: true,
   subcategory: true,
   category: true,
+  description: true,
 }
 
 
@@ -48,9 +49,10 @@ export default function SQLDatabasesPage() {
     COLUMN DEFINITIONS
   ********************/
   const columns: ColumnDef<TechSubCat>[] = [
-    { accessorKey: "technology", header: "Technology" },
-    { accessorKey: "subcategory", header: "Subcategory" },
-    { accessorKey: "category", header: "Category" },
+    { accessorKey: "technology", header: "Technology", minSize: 150, size: 200, maxSize: 250 },
+    { accessorKey: "subcategory", header: "Subcategory", minSize: 150, size: 200, maxSize: 250 },
+    { accessorKey: "category", header: "Category", minSize: 150, size: 200, maxSize: 250 },
+    { accessorKey: "description", header: "Description", minSize: 600, size: 700, maxSize: 800 },
   ]
 
 
@@ -168,6 +170,7 @@ export default function SQLDatabasesPage() {
           onDeleteRow={undefined}         
           showCheckboxes={false}
           showActions={false}
+          tableClassName="divide-x divide-y divide-border"
         />
       </div>
     </div>

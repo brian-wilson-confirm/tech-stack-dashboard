@@ -1,71 +1,111 @@
-import { ScrollText, CheckCircle } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
+import { FileText } from "lucide-react"
+import { DataTableWidget } from "@/components/widgets/DataTableWidget";
+import { ColumnDef, OnChangeFn, PaginationState, VisibilityState } from "@tanstack/react-table";
+import { useEffect, useState } from "react";
+import { toast } from "@/components/ui/use-toast";
+import { Technology } from "@/components/data/schema";
 
-interface TechItem {
-  name: string
-  category: string
-  status: "production" | "testing" | "planned"
-  version?: string
+const initialVisibleColumns = {
+  id: false,
+  name: true,
+  description: true,
 }
 
 export default function LoggingPage() {
-  const loggingTools: TechItem[] = [
-    { name: "ELK Stack", category: "Log Management", status: "production", version: "8.12" },
-    { name: "Graylog", category: "Log Management", status: "testing", version: "5.2" },
-    { name: "Loki", category: "Log Aggregation", status: "production", version: "2.9" },
-    { name: "Fluentd", category: "Log Forwarder", status: "production", version: "1.16" },
-    { name: "Filebeat", category: "Log Shipper", status: "production", version: "8.12" },
-    { name: "Logstash", category: "Log Processor", status: "production", version: "8.12" },
-    { name: "Splunk", category: "Log Analytics", status: "production" },
-    { name: "Datadog Logs", category: "Log Analytics", status: "testing" },
-    { name: "New Relic Logs", category: "Log Analytics", status: "planned" },
-    { name: "OpenTelemetry", category: "Observability", status: "production", version: "1.24" }
+  const [rows, setRows] = useState<Technology[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasFetchedRows, setHasFetchedRows] = useState(false);
+  const [visibleColumns, setVisibleColumns] = useState<VisibilityState>(initialVisibleColumns);
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
+
+  const columns: ColumnDef<Technology>[] = [
+    { accessorKey: "id", header: "ID" },
+    { accessorKey: "name", header: "Technology", minSize: 150, size: 200, maxSize: 250 },
+    { accessorKey: "description", header: "Description", minSize: 600, size: 700, maxSize: 800 },
   ]
+
+  const columnOptions = columns.map(column => ({
+    accessorKey: (column as any).accessorKey,
+    header: typeof column.header === 'string' ? column.header : 'Column'
+  }))
+
+  const fetchRows = async () => {
+    setIsLoading(true);
+    try {
+      const subcategoryName = "Logging";
+      const response = await fetch('/api/tasks/technologies/by-subcategory-name/' + subcategoryName);
+      if (!response.ok) {
+        throw new Error('Failed to fetch logging technologies');
+      }
+      const data = await response.json();
+      setRows(data);
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to load logging technologies.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!hasFetchedRows) {
+      fetchRows();
+      setHasFetchedRows(true);
+    }
+  }, []);
+
+  const handlePaginationChange: OnChangeFn<PaginationState> = (updaterOrValue) => {
+    setPagination((prev) => {
+      const next = typeof updaterOrValue === "function" ? updaterOrValue(prev) : updaterOrValue;
+      if (prev.pageIndex === next.pageIndex && prev.pageSize === next.pageSize) {
+        return prev;
+      }
+      return next;
+    });
+  };
 
   return (
     <div className="p-8">
       <div className="flex items-center gap-3 mb-8">
-        <ScrollText className="h-8 w-8" />
+        <FileText className="h-8 w-8" />
         <h1 className="text-3xl font-bold">Logging</h1>
       </div>
 
       <div className="grid gap-6">
-        <div className="border rounded-lg p-6">
-          <h2 className="text-xl font-semibold mb-4">Current Stack</h2>
-          <div className="grid gap-4">
-            {loggingTools.map((tech) => (
-              <div
-                key={tech.name}
-                className="flex items-center justify-between p-4 bg-secondary/50 rounded-lg"
-              >
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">{tech.name}</span>
-                    {tech.version && (
-                      <span className="text-sm text-muted-foreground">v{tech.version}</span>
-                    )}
-                  </div>
-                  <p className="text-sm text-muted-foreground">{tech.category}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span 
-                    className={cn(
-                      "text-sm flex items-center gap-1",
-                      tech.status === "production" && "text-green-500",
-                      tech.status === "testing" && "text-yellow-500",
-                      tech.status === "planned" && "text-blue-500"
-                    )}
-                  >
-                    <CheckCircle className="h-4 w-4" />
-                    {tech.status}
-                  </span>
-                  <Button variant="ghost" size="sm">Details</Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <DataTableWidget
+          data={rows}
+          isLoading={isLoading}
+          columns={columns}
+          columnOptions={columnOptions}
+          visibleColumns={visibleColumns}
+          columnFilters={undefined}
+          onColumnVisibilityChange={setVisibleColumns}
+          onColumnFiltersChange={undefined}
+          pagination={pagination}
+          onPaginationChange={handlePaginationChange}
+          filterConfigs={undefined}
+          searchQuery={undefined}
+          setSearchQuery={undefined}
+          sortConfigs={undefined}
+          onSortChange={undefined}
+          rowSelection={undefined}
+          onRowSelectionChange={undefined}
+          editForm={null}
+          editModeRenderers={undefined}
+          nonEditableColumns={undefined}
+          onStartEdit={undefined}
+          onEditChange={undefined}
+          editingRow={null}
+          onSaveEdit={undefined}
+          onCancelEdit={undefined}
+          onDeleteRow={undefined}         
+          showCheckboxes={false}
+          showActions={false}
+          tableClassName="divide-x divide-y divide-border"
+        />
       </div>
     </div>
   )

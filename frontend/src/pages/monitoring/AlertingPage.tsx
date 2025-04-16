@@ -1,27 +1,71 @@
-import { Bell, CheckCircle } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
+import { Bell } from "lucide-react"
+import { DataTableWidget } from "@/components/widgets/DataTableWidget";
+import { ColumnDef, OnChangeFn, PaginationState, VisibilityState } from "@tanstack/react-table";
+import { useEffect, useState } from "react";
+import { toast } from "@/components/ui/use-toast";
+import { Technology } from "@/components/data/schema";
 
-interface TechItem {
-  name: string
-  category: string
-  status: "production" | "testing" | "planned"
-  version?: string
+const initialVisibleColumns = {
+  id: false,
+  name: true,
+  description: true,
 }
 
 export default function AlertingPage() {
-  const alertingTools: TechItem[] = [
-    { name: "Prometheus Alertmanager", category: "Alert Management", status: "production", version: "0.27" },
-    { name: "Grafana Alerting", category: "Alert Management", status: "production", version: "10.2" },
-    { name: "PagerDuty", category: "Incident Management", status: "production" },
-    { name: "OpsGenie", category: "Incident Management", status: "production" },
-    { name: "VictorOps", category: "Incident Management", status: "testing" },
-    { name: "Datadog Alerts", category: "Alert Management", status: "production" },
-    { name: "New Relic Alerts", category: "Alert Management", status: "testing" },
-    { name: "Splunk ITSI", category: "IT Service Intelligence", status: "production" },
-    { name: "Elastic Alerting", category: "Alert Management", status: "testing", version: "8.12" },
-    { name: "OpsRamp", category: "IT Operations", status: "planned" }
+  const [rows, setRows] = useState<Technology[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasFetchedRows, setHasFetchedRows] = useState(false);
+  const [visibleColumns, setVisibleColumns] = useState<VisibilityState>(initialVisibleColumns);
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
+
+  const columns: ColumnDef<Technology>[] = [
+    { accessorKey: "id", header: "ID" },
+    { accessorKey: "name", header: "Technology", minSize: 150, size: 200, maxSize: 250 },
+    { accessorKey: "description", header: "Description", minSize: 600, size: 700, maxSize: 800 },
   ]
+
+  const columnOptions = columns.map(column => ({
+    accessorKey: (column as any).accessorKey,
+    header: typeof column.header === 'string' ? column.header : 'Column'
+  }))
+
+  const fetchRows = async () => {
+    setIsLoading(true);
+    try {
+      const subcategoryName = "Alerting";
+      const response = await fetch('/api/tasks/technologies/by-subcategory-name/' + subcategoryName);
+      if (!response.ok) {
+        throw new Error('Failed to fetch alerting technologies');
+      }
+      const data = await response.json();
+      setRows(data);
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to load alerting technologies.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!hasFetchedRows) {
+      fetchRows();
+      setHasFetchedRows(true);
+    }
+  }, []);
+
+  const handlePaginationChange: OnChangeFn<PaginationState> = (updaterOrValue) => {
+    setPagination((prev) => {
+      const next = typeof updaterOrValue === "function" ? updaterOrValue(prev) : updaterOrValue;
+      if (prev.pageIndex === next.pageIndex && prev.pageSize === next.pageSize) {
+        return prev;
+      }
+      return next;
+    });
+  };
 
   return (
     <div className="p-8">
@@ -31,41 +75,37 @@ export default function AlertingPage() {
       </div>
 
       <div className="grid gap-6">
-        <div className="rounded-lg p-6 border-[1px] border-neutral-200 dark:border-neutral-800">
-          <h2 className="text-xl font-semibold mb-4">Current Stack</h2>
-          <div className="grid gap-4">
-            {alertingTools.map((tech) => (
-              <div
-                key={tech.name}
-                className="flex items-center justify-between p-4 bg-secondary/50 rounded-lg"
-              >
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">{tech.name}</span>
-                    {tech.version && (
-                      <span className="text-sm text-muted-foreground">v{tech.version}</span>
-                    )}
-                  </div>
-                  <p className="text-sm text-muted-foreground">{tech.category}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span 
-                    className={cn(
-                      "text-sm flex items-center gap-1",
-                      tech.status === "production" && "text-green-500",
-                      tech.status === "testing" && "text-yellow-500",
-                      tech.status === "planned" && "text-blue-500"
-                    )}
-                  >
-                    <CheckCircle className="h-4 w-4" />
-                    {tech.status}
-                  </span>
-                  <Button variant="ghost" size="sm">Details</Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <DataTableWidget
+          data={rows}
+          isLoading={isLoading}
+          columns={columns}
+          columnOptions={columnOptions}
+          visibleColumns={visibleColumns}
+          columnFilters={undefined}
+          onColumnVisibilityChange={setVisibleColumns}
+          onColumnFiltersChange={undefined}
+          pagination={pagination}
+          onPaginationChange={handlePaginationChange}
+          filterConfigs={undefined}
+          searchQuery={undefined}
+          setSearchQuery={undefined}
+          sortConfigs={undefined}
+          onSortChange={undefined}
+          rowSelection={undefined}
+          onRowSelectionChange={undefined}
+          editForm={null}
+          editModeRenderers={undefined}
+          nonEditableColumns={undefined}
+          onStartEdit={undefined}
+          onEditChange={undefined}
+          editingRow={null}
+          onSaveEdit={undefined}
+          onCancelEdit={undefined}
+          onDeleteRow={undefined}         
+          showCheckboxes={false}
+          showActions={false}
+          tableClassName="divide-x divide-y divide-border"
+        />
       </div>
     </div>
   )

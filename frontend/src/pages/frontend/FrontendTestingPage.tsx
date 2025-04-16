@@ -1,24 +1,71 @@
-import { TestTube, CheckCircle } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
+import { TestTube } from "lucide-react"
+import { DataTableWidget } from "@/components/widgets/DataTableWidget";
+import { ColumnDef, OnChangeFn, PaginationState, VisibilityState } from "@tanstack/react-table";
+import { useEffect, useState } from "react";
+import { toast } from "@/components/ui/use-toast";
+import { Technology } from "@/components/data/schema";
 
-interface TechItem {
-  name: string
-  category: string
-  status: "production" | "testing" | "planned"
-  version?: string
+const initialVisibleColumns = {
+  id: false,
+  name: true,
+  description: true,
 }
 
 export default function FrontendTestingPage() {
-  const testingTools: TechItem[] = [
-    { name: "Vitest", category: "Unit Testing", status: "production", version: "1.2" },
-    { name: "Jest", category: "Unit Testing", status: "production", version: "29.7" },
-    { name: "Testing Library", category: "Component Testing", status: "production", version: "14.2" },
-    { name: "Cypress", category: "E2E Testing", status: "production", version: "13.6" },
-    { name: "Playwright", category: "E2E Testing", status: "testing", version: "1.41" },
-    { name: "Storybook", category: "Component Development", status: "production", version: "7.6" },
-    { name: "MSW", category: "API Mocking", status: "testing", version: "2.1" }
+  const [rows, setRows] = useState<Technology[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasFetchedRows, setHasFetchedRows] = useState(false);
+  const [visibleColumns, setVisibleColumns] = useState<VisibilityState>(initialVisibleColumns);
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
+
+  const columns: ColumnDef<Technology>[] = [
+    { accessorKey: "id", header: "ID" },
+    { accessorKey: "name", header: "Technology", minSize: 150, size: 200, maxSize: 250 },
+    { accessorKey: "description", header: "Description", minSize: 600, size: 700, maxSize: 800 },
   ]
+
+  const columnOptions = columns.map(column => ({
+    accessorKey: (column as any).accessorKey,
+    header: typeof column.header === 'string' ? column.header : 'Column'
+  }))
+
+  const fetchRows = async () => {
+    setIsLoading(true);
+    try {
+      const subcategoryName = "Testing";
+      const response = await fetch('/api/tasks/technologies/by-subcategory-name/' + subcategoryName);
+      if (!response.ok) {
+        throw new Error('Failed to fetch testing technologies');
+      }
+      const data = await response.json();
+      setRows(data);
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to load testing technologies.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!hasFetchedRows) {
+      fetchRows();
+      setHasFetchedRows(true);
+    }
+  }, []);
+
+  const handlePaginationChange: OnChangeFn<PaginationState> = (updaterOrValue) => {
+    setPagination((prev) => {
+      const next = typeof updaterOrValue === "function" ? updaterOrValue(prev) : updaterOrValue;
+      if (prev.pageIndex === next.pageIndex && prev.pageSize === next.pageSize) {
+        return prev;
+      }
+      return next;
+    });
+  };
 
   return (
     <div className="p-8">
@@ -28,41 +75,37 @@ export default function FrontendTestingPage() {
       </div>
 
       <div className="grid gap-6">
-        <div className="border rounded-lg p-6">
-          <h2 className="text-xl font-semibold mb-4">Current Stack</h2>
-          <div className="grid gap-4">
-            {testingTools.map((tech) => (
-              <div
-                key={tech.name}
-                className="flex items-center justify-between p-4 bg-secondary/50 rounded-lg"
-              >
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">{tech.name}</span>
-                    {tech.version && (
-                      <span className="text-sm text-muted-foreground">v{tech.version}</span>
-                    )}
-                  </div>
-                  <p className="text-sm text-muted-foreground">{tech.category}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span 
-                    className={cn(
-                      "text-sm flex items-center gap-1",
-                      tech.status === "production" && "text-green-500",
-                      tech.status === "testing" && "text-yellow-500",
-                      tech.status === "planned" && "text-blue-500"
-                    )}
-                  >
-                    <CheckCircle className="h-4 w-4" />
-                    {tech.status}
-                  </span>
-                  <Button variant="ghost" size="sm">Details</Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <DataTableWidget
+          data={rows}
+          isLoading={isLoading}
+          columns={columns}
+          columnOptions={columnOptions}
+          visibleColumns={visibleColumns}
+          columnFilters={undefined}
+          onColumnVisibilityChange={setVisibleColumns}
+          onColumnFiltersChange={undefined}
+          pagination={pagination}
+          onPaginationChange={handlePaginationChange}
+          filterConfigs={undefined}
+          searchQuery={undefined}
+          setSearchQuery={undefined}
+          sortConfigs={undefined}
+          onSortChange={undefined}
+          rowSelection={undefined}
+          onRowSelectionChange={undefined}
+          editForm={null}
+          editModeRenderers={undefined}
+          nonEditableColumns={undefined}
+          onStartEdit={undefined}
+          onEditChange={undefined}
+          editingRow={null}
+          onSaveEdit={undefined}
+          onCancelEdit={undefined}
+          onDeleteRow={undefined}         
+          showCheckboxes={false}
+          showActions={false}
+          tableClassName="divide-x divide-y divide-border"
+        />
       </div>
     </div>
   )

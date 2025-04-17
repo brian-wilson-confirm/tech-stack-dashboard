@@ -34,6 +34,7 @@ export type Task = z.infer<typeof taskSchema>
 *******************/
 export const taskFormSchema = z.object({
   task: z.string().min(1, "Task name is required"),
+  description: z.string(),
   technology: z.string().min(1, "Technology is required"),
   subcategory: z.string().min(1, "Subcategory is required"),
   category: z.string().min(1, "Category is required"),
@@ -43,7 +44,7 @@ export const taskFormSchema = z.object({
   priority: z.enum(['low', 'medium', 'high', 'critical']),
   type: z.string().min(1, "Type is required"),
   level: z.enum(['beginner', 'intermediate', 'advanced', 'expert']),
-  section: z.string().min(1, "Section is required"),
+  section: z.string(),
   topics: z.array(z.string()),
   source: z.string().min(1, "Source is required"),
   estimated_duration: z.number().min(0),

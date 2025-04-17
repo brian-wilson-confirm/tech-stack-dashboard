@@ -37,6 +37,7 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { TaskForm, taskFormSchema } from "@/components/data/schema"
+import { Textarea } from "@/components/ui/textarea"
 
 
 /*******************
@@ -46,11 +47,15 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
   const [open, setOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [categoryOptions, setCategoryOptions] = useState<{ name: string; id: number }[]>([])
+  const [subcategoryOptions, setSubcategoryOptions] = useState<{ name: string; id: number }[]>([])
+  const [technologyOptions, setTechnologyOptions] = useState<{ name: string; id: number }[]>([])
   
   const form = useForm<TaskForm>({
     resolver: zodResolver(taskFormSchema),
     defaultValues: {
       task: "",
+      description: "",
       technology: "",
       subcategory: "",
       category: "",
@@ -63,12 +68,95 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
       section: "",
       topics: [],
       source: "",
-      estimated_duration: 0,
+      estimated_duration: 8,
       actual_duration: null,
       start_date: null,
       end_date: null,
     },
   })
+
+  // Fetch categories when dialog opens
+  useEffect(() => {
+    if (open) {
+      const fetchCategories = async () => {
+        try {
+          const response = await fetch('/api/tasks/categories')
+          if (!response.ok) {
+            throw new Error('Failed to fetch categories')
+          }
+          const data = await response.json()
+          setCategoryOptions(data)
+        } catch (error) {
+          console.error('Error fetching categories:', error)
+          toast({
+            title: "Error",
+            description: "Failed to load categories.",
+            variant: "destructive",
+          })
+        }
+      }
+      fetchCategories()
+    }
+  }, [open])
+
+  // Fetch subcategories when category changes
+  useEffect(() => {
+    const categoryId = form.watch('category')
+    if (categoryId) {
+      const fetchSubcategories = async () => {
+        try {
+          const response = await fetch(`/api/tasks/subcategories/${categoryId}`)
+          if (!response.ok) {
+            throw new Error('Failed to fetch subcategories')
+          }
+          const data = await response.json()
+          setSubcategoryOptions(data)
+          // Reset subcategory and technology when category changes
+          form.setValue('subcategory', '')
+          form.setValue('technology', '')
+        } catch (error) {
+          console.error('Error fetching subcategories:', error)
+          toast({
+            title: "Error",
+            description: "Failed to load subcategories.",
+            variant: "destructive",
+          })
+        }
+      }
+      fetchSubcategories()
+    } else {
+      setSubcategoryOptions([])
+    }
+  }, [form.watch('category')])
+
+  // Fetch technologies when subcategory changes
+  useEffect(() => {
+    const subcategoryId = form.watch('subcategory')
+    if (subcategoryId) {
+      const fetchTechnologies = async () => {
+        try {
+          const response = await fetch(`/api/tasks/technologies/${subcategoryId}`)
+          if (!response.ok) {
+            throw new Error('Failed to fetch technologies')
+          }
+          const data = await response.json()
+          setTechnologyOptions(data)
+          // Reset technology when subcategory changes
+          form.setValue('technology', '')
+        } catch (error) {
+          console.error('Error fetching technologies:', error)
+          toast({
+            title: "Error",
+            description: "Failed to load technologies.",
+            variant: "destructive",
+          })
+        }
+      }
+      fetchTechnologies()
+    } else {
+      setTechnologyOptions([])
+    }
+  }, [form.watch('subcategory')])
 
   const onSubmit = async (data: TaskForm) => {
     console.log('ShowAddTaskDialog onSubmit', data)
@@ -109,7 +197,7 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
           Add Task
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add New Task</DialogTitle>
           <DialogDescription>
@@ -122,89 +210,48 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
           </div>
         )}
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <FormField control={form.control}
-                name="task"
-                render={({ field }) => (
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+
+            {/* 1. Basic Details */}
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold">Basic Details</h3>
+              <div className="grid grid-cols-1 gap-4">
+                <FormField control={form.control} name="task" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Task Name *</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
+                    <FormControl><Input {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
-                )}
-              />
-              <FormField control={form.control}
-                name="order"
-                render={({ field }) => (
+                )} />
+
+                <FormField control={form.control} name="description" render={({ field }) => (
+                  <FormItem className="col-span-2">
+                    <FormLabel>Description</FormLabel>
+                    <FormControl><Textarea {...field} rows={3} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+
+                {/*
+                <FormField control={form.control} name="order" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Order</FormLabel>
-                    <FormControl>
-                      <Input type="number" {...field} onChange={e => field.onChange(Number(e.target.value))} />
-                    </FormControl>
+                    <FormControl><Input type="number" {...field} onChange={e => field.onChange(Number(e.target.value))} /></FormControl>
                     <FormMessage />
                   </FormItem>
-                )}
-              />
-              <FormField control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status *</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="not_started">Not Started</SelectItem>
-                        <SelectItem value="in_progress">In Progress</SelectItem>
-                        <SelectItem value="completed">Completed</SelectItem>
-                        <SelectItem value="on_hold">On Hold</SelectItem>
-                        <SelectItem value="cancelled">Cancelled</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField control={form.control}
-                name="priority"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Priority *</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select priority" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="low">Low</SelectItem>
-                        <SelectItem value="medium">Medium</SelectItem>
-                        <SelectItem value="high">High</SelectItem>
-                        <SelectItem value="critical">Critical</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              {/* Add more form fields for other task properties */}
-              <FormField control={form.control}
-                name="type"
-                render={({ field }) => (
+                )} />*/}
+              </div>
+            </div>
+
+            {/* 2. Status & Metadata */}
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold">Metadata</h3>
+              <div className="grid grid-cols-4 gap-4">
+                <FormField control={form.control} name="type" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Type *</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
-                      </FormControl>
+                      <FormControl><SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger></FormControl>
                       <SelectContent>
                         <SelectItem value="learning">Learning</SelectItem>
                         <SelectItem value="implementation">Implementation</SelectItem>
@@ -215,19 +262,13 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
                     </Select>
                     <FormMessage />
                   </FormItem>
-                )}
-              />
-              <FormField control={form.control}
-                name="level"
-                render={({ field }) => (
+                )} />
+
+                <FormField control={form.control} name="level" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Level *</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select level" />
-                        </SelectTrigger>
-                      </FormControl>
+                      <FormControl><SelectTrigger><SelectValue placeholder="Select level" /></SelectTrigger></FormControl>
                       <SelectContent>
                         <SelectItem value="beginner">Beginner</SelectItem>
                         <SelectItem value="intermediate">Intermediate</SelectItem>
@@ -237,70 +278,141 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
                     </Select>
                     <FormMessage />
                   </FormItem>
-                )}
-              />
-              {/* Add remaining form fields */}
-              <FormField
-                control={form.control}
-                name="section"
-                render={({ field }) => (
+                )} />
+
+                <FormField control={form.control} name="status" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Section *</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
+                    <FormLabel>Status *</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl><SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger></FormControl>
+                      <SelectContent>
+                        <SelectItem value="not_started">Not Started</SelectItem>
+                        <SelectItem value="in_progress">In Progress</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="on_hold">On Hold</SelectItem>
+                        <SelectItem value="cancelled">Cancelled</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="category"
-                render={({ field }) => (
+                )} />
+
+                <FormField control={form.control} name="priority" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Category *</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
+                    <FormLabel>Priority *</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl><SelectTrigger><SelectValue placeholder="Select priority" /></SelectTrigger></FormControl>
+                      <SelectContent>
+                        <SelectItem value="low">Low</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="high">High</SelectItem>
+                        <SelectItem value="critical">Critical</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="subcategory"
-                render={({ field }) => (
+                )} />
+              </div>
+            </div>
+
+            {/* 3. Categorization */}
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold">Categorization</h3>
+              <div className="grid grid-cols-3 gap-4">
+                <FormField control={form.control} name="category" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Subcategory *</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
+                    <FormLabel className="capitalize">Category *</FormLabel>
+                    <Select
+                      value={categoryOptions.find((c: { name: string; id: number }) => c.name === field.value || c.id.toString() === field.value?.toString())?.id.toString() ?? ""}
+                      onValueChange={(value) => field.onChange(value)}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categoryOptions.map((category: { name: string; id: number }) => (
+                          <SelectItem key={category.id} value={category.id.toString()}>{capitalizeWords(category.name)}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="technology"
-                render={({ field }) => (
+                )} />
+
+                <FormField control={form.control} name="subcategory" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Technology *</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
+                    <FormLabel className="capitalize">Subcategory *</FormLabel>
+                    <Select
+                      value={subcategoryOptions.find((s: { name: string; id: number }) => s.name === field.value || s.id.toString() === field.value?.toString())?.id.toString() ?? ""}
+                      onValueChange={(value) => {
+                        field.onChange(value)
+                        // Reset technology when subcategory changes
+                        form.setValue('technology', '')
+                      }}
+                      disabled={!form.watch('category')}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {subcategoryOptions.map((subcategory: { name: string; id: number }) => (
+                          <SelectItem key={subcategory.id} value={subcategory.id.toString()}>{capitalizeWords(subcategory.name)}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="topics"
-                render={({ field }) => (
+                )} />
+
+                <FormField control={form.control} name="technology" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="capitalize">Technology *</FormLabel>
+                    <Select
+                      value={technologyOptions.find((t: { name: string; id: number }) => t.name === field.value || t.id.toString() === field.value?.toString())?.id.toString() ?? ""}
+                      onValueChange={(value) => field.onChange(value)}
+                      disabled={!form.watch('subcategory')}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {technologyOptions.map((technology: { name: string; id: number }) => (
+                          <SelectItem key={technology.id} value={technology.id.toString()}>{capitalizeWords(technology.name)}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              </div>
+            </div>
+
+            {/* 4. Sources, Section, & Topics */}
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold">Sources & Topics</h3>
+              <div className="grid grid-cols-3 gap-4">
+                <FormField control={form.control} name="source" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Source *</FormLabel>
+                    <FormControl><Input {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+
+                <FormField control={form.control} name="section" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Section</FormLabel>
+                    <FormControl><Input {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+
+                <FormField control={form.control} name="topics" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Topics</FormLabel>
                     <FormControl>
                       <Input 
-                        {...field} 
+                        {...field}
                         value={field.value.join(', ')}
                         onChange={(e) => field.onChange(e.target.value.split(',').map(t => t.trim()))}
                         placeholder="Comma-separated topics"
@@ -308,120 +420,65 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
                     </FormControl>
                     <FormMessage />
                   </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="source"
-                render={({ field }) => (
+                )} />
+              </div>
+            </div>
+
+            {/* 5. Time & Progress */}
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold">Time & Progress</h3>
+              <div className="grid grid-cols-4 gap-4">
+
+                <FormField control={form.control} name="estimated_duration" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Source *</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
+                    <FormLabel>Estimated Duration (hours)</FormLabel>
+                    <FormControl><Input type="number" {...field} onChange={e => field.onChange(Number(e.target.value))} /></FormControl>
                     <FormMessage />
                   </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="estimated_duration"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Estimated Duration (hours) *</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        {...field} 
-                        onChange={e => field.onChange(Number(e.target.value))}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="actual_duration"
-                render={({ field }) => (
+                )} />
+
+                <FormField control={form.control} name="actual_duration" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Actual Duration (hours)</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        {...field} 
-                        value={field.value || ''} 
-                        onChange={e => field.onChange(e.target.value ? Number(e.target.value) : null)}
-                      />
-                    </FormControl>
+                    <FormControl><Input type="number" {...field} value={field.value || ''} onChange={e => field.onChange(e.target.value ? Number(e.target.value) : null)} /></FormControl>
                     <FormMessage />
                   </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="start_date"
-                render={({ field }) => (
+                )} />
+
+                <FormField control={form.control} name="start_date" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Start Date</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="date" 
-                        {...field} 
-                        value={field.value || ''} 
-                      />
-                    </FormControl>
+                    <FormControl><Input type="date" {...field} value={field.value || ''} /></FormControl>
                     <FormMessage />
                   </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="end_date"
-                render={({ field }) => (
+                )} />
+
+                <FormField control={form.control} name="end_date" render={({ field }) => (
                   <FormItem>
                     <FormLabel>End Date</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="date" 
-                        {...field} 
-                        value={field.value || ''} 
-                      />
-                    </FormControl>
+                    <FormControl><Input type="date" {...field} value={field.value || ''} /></FormControl>
                     <FormMessage />
                   </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="progress"
-                render={({ field }) => (
+                )} />
+
+                {/*
+                <FormField control={form.control} name="progress" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Progress (%)</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        min="0" 
-                        max="100" 
-                        {...field} 
-                        onChange={e => field.onChange(Number(e.target.value))}
-                      />
-                    </FormControl>
+                    <FormControl><Input type="number" min="0" max="100" {...field} onChange={e => field.onChange(Number(e.target.value))} /></FormControl>
                     <FormMessage />
                   </FormItem>
-                )}
-              />
+                )} />*/}
+              </div>
             </div>
+
             <DialogFooter>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
-                    <span className="animate-spin mr-2">⏳</span>
-                    Adding Task...
+                    <span className="animate-spin mr-2">⏳</span> Adding Task...
                   </>
-                ) : (
-                  'Add Task'
-                )}
+                ) : 'Add Task'}
               </Button>
             </DialogFooter>
           </form>
@@ -706,27 +763,30 @@ export default function TasksPage() {
   // Fetch Options
   const fetchOptions = async () => {
     try {
-      const [statusesRes, prioritiesRes] = await Promise.all([
+      const [statusesRes, prioritiesRes, categoriesRes] = await Promise.all([
         fetch('/api/tasks/statuses'),
-        fetch('/api/tasks/priorities')
+        fetch('/api/tasks/priorities'),
+        fetch('/api/tasks/categories')
       ]);
 
-      if (!statusesRes.ok || !prioritiesRes.ok) {
-        throw new Error('Failed to fetch status or priority options');
+      if (!statusesRes.ok || !prioritiesRes.ok || !categoriesRes.ok) {
+        throw new Error('Failed to fetch options');
       }
 
-      const [statuses, priorities] = await Promise.all([
+      const [statuses, priorities, categories] = await Promise.all([
         statusesRes.json(),
-        prioritiesRes.json()
+        prioritiesRes.json(),
+        categoriesRes.json()
       ]);
 
       setStatusOptions(statuses);
       setPriorityOptions(priorities);
+      setCategoryOptions(categories);
     } catch (error) {
       console.error('Error fetching options:', error);
       toast({
         title: "Error",
-        description: "Failed to load status or priority options.",
+        description: "Failed to load options.",
         variant: "destructive",
       });
     }

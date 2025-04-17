@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ColumnDef, OnChangeFn, PaginationState, VisibilityState } from "@tanstack/react-table";
 import { toast } from "@/components/ui/use-toast";
 import { Technology } from "@/components/data/schema";
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 
 
@@ -19,6 +20,8 @@ const initialVisibleColumns = {
 
 
 export default function SQLDatabasesPage() {
+  usePageTitle("SQL Databases")
+  
   /*******************
     STATE VARIABLES
   ********************/

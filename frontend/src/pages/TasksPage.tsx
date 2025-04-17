@@ -16,6 +16,7 @@ import { toast } from "@/components/ui/use-toast"
 import { Task } from "@/components/data/schema"
 import { getStatusColor, getPriorityColor } from "@/styles/style"
 import React from "react"
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 
 /*******************
@@ -48,6 +49,9 @@ const initialVisibleColumns = {
 
 
 export default function TasksPage() {
+  // Set page title
+  usePageTitle('Tasks')
+
   /*******************
     STATE VARIABLES
   ********************/
@@ -722,12 +726,12 @@ export default function TasksPage() {
       >
         <SelectTrigger className="w-[140px]">
           <SelectValue placeholder="Select" />
-        </SelectTrigger>  
+        </SelectTrigger>
         <SelectContent>
           {subcategoryOptions.map(subcategory => (
             <SelectItem key={subcategory.id} value={subcategory.id.toString()}>{subcategory.name}</SelectItem>
           ))}
-          </SelectContent>
+        </SelectContent>
       </Select>
     ),
     category: (value) => (
@@ -783,7 +787,7 @@ export default function TasksPage() {
       >
         <SelectTrigger className="w-[140px]">
           <SelectValue placeholder="Select" />
-        </SelectTrigger>  
+        </SelectTrigger>
         <SelectContent>
           {typeOptions.map(type => (
             <SelectItem key={type.id} value={type.id.toString()}>{capitalizeWords(type.name)}</SelectItem>
@@ -863,7 +867,7 @@ export default function TasksPage() {
       const typedValue = value as string | Date | null;
     
       return (
-        <Input
+      <Input
           type="date"
           value={toLocalInputDate(typedValue)}
           onChange={(e) => onChange(fromLocalInputDate(e.target.value))}
@@ -883,7 +887,7 @@ export default function TasksPage() {
       const typedValue = value as string | Date | null;
     
       return (
-        <Input
+      <Input
           type="date"
           value={toLocalInputDate(typedValue)}
           onChange={(e) => onChange(fromLocalInputDate(e.target.value))}

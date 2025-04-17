@@ -114,8 +114,8 @@ const FilterDropdown = ({ config, editingRow }: { config: FilterConfig, editingR
               <Separator orientation="vertical" className="mx-2 h-4" />
               <span className="text-xs">{config.selected.length}</span>
             </>
-          )}
-        </Button>
+                )}
+              </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-[200px]">
         <DropdownMenuLabel>Filter by {config.label}</DropdownMenuLabel>
@@ -152,7 +152,7 @@ const ColumnVisibilityDropdown = ({
 }) => {
   if (!columnOptions) return null
 
-  return (
+    return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="sm" className="h-8 border-dashed" disabled={!!editingRow}>
@@ -328,32 +328,32 @@ export function DataTableWidget<T extends Record<string, any>>({
 
 
         {/* Filter Controls */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex flex-1 items-center space-x-2">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-1 items-center space-x-2">
             
             
             {/* Filter Textbox */}
             {searchQuery !== undefined && setSearchQuery && (
-            <div className="relative">
-              <Input
+          <div className="relative">
+            <Input
                 placeholder="Filter by task name..."
                 value={searchQuery ?? ""}
                 onChange={(e) => setSearchQuery?.(e.target.value)}
-                className="h-8 w-[150px] lg:w-[250px]"
-                disabled={!!editingRow}
-              />
-              {searchQuery && (
-                <Button
-                  variant="ghost"
-                  className="absolute right-0 top-0 h-8 px-2 hover:bg-transparent"
+              className="h-8 w-[150px] lg:w-[250px]"
+              disabled={!!editingRow}
+            />
+            {searchQuery && (
+              <Button
+                variant="ghost"
+                className="absolute right-0 top-0 h-8 px-2 hover:bg-transparent"
                   onClick={() => setSearchQuery?.("")}
-                  disabled={!!editingRow}
-                >
-                  <CrossIcon className="h-4 w-4" />
-                  <span className="sr-only">Clear search</span>
-                </Button>
-              )}
-            </div>
+                disabled={!!editingRow}
+              >
+                <CrossIcon className="h-4 w-4" />
+                <span className="sr-only">Clear search</span>
+              </Button>
+            )}
+          </div>
             )}
 
 
@@ -365,18 +365,18 @@ export function DataTableWidget<T extends Record<string, any>>({
 
 
             {(searchQuery !== undefined || (filterConfigs?.length ?? 0) > 0) && (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="h-8 border-dashed"
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="h-8 border-dashed"
               onClick={() => {
                 setSearchQuery?.("")
                 filterConfigs?.forEach(config => config.onSelect([]))
               }}
               disabled={(!searchQuery && !filterConfigs?.some(config => config.selected.length > 0)) || !!editingRow}
-            >
-              Reset
-            </Button>
+          >
+            Reset
+          </Button>
             )}
 
             
@@ -389,9 +389,9 @@ export function DataTableWidget<T extends Record<string, any>>({
               editingRow={editingRow}
             />
             )}
-          </div>
-          {/* <AddTaskDialog onAddTask={addRow} disabled={!!editingRow} /> */}
         </div>
+          {/* <AddTaskDialog onAddTask={addRow} disabled={!!editingRow} /> */}
+      </div>
 
 
 
@@ -400,10 +400,10 @@ export function DataTableWidget<T extends Record<string, any>>({
           <Table className={cn("w-full table-fixed", tableClassName)}>
 
 
-            {/* Table Header */}
+          {/* Table Header */}
             <TableHeader className="sticky top-0 z-10 bg-muted">
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
                   {/* Select All checkbox */}
                   {showCheckboxes && (
                     <TableHead className="w-12">
@@ -412,7 +412,7 @@ export function DataTableWidget<T extends Record<string, any>>({
                         onCheckedChange={(checked) => table.toggleAllPageRowsSelected(!!checked)}
                         aria-label="Select all rows"
                       />
-                    </TableHead>
+                  </TableHead>
                   )}
 
                   {headerGroup.headers.map((header) =>
@@ -431,13 +431,13 @@ export function DataTableWidget<T extends Record<string, any>>({
                   )}
 
                   {showActions && <TableHead className="w-[100px]">Actions</TableHead>}
-                </TableRow>
-              ))}
-            </TableHeader>
+              </TableRow> 
+            ))}
+          </TableHeader>
 
 
-            {/* Table Body */}
-            <TableBody>
+          {/* Table Body */}
+          <TableBody>
               {isLoading ? (
                 <TableRow>
                   <TableCell colSpan={columns.length + (showCheckboxes ? 1 : 0) + (showActions ? 1 : 0)} className="h-24 text-center">
@@ -483,39 +483,39 @@ export function DataTableWidget<T extends Record<string, any>>({
                           renderEditableCell(cell)
                         ) : (
                           flexRender(cell.column.columnDef.cell, cell.getContext())
-                        )}
-                      </TableCell>
-                    ))}
+                      )}
+                    </TableCell>
+                  ))}
 
                     {showActions && (
-                      <TableCell>
+                    <TableCell>
                         {editingRow === row.original.id ? (
-                          <>
+                        <>
                             <Button variant="ghost" size="icon" onClick={onSaveEdit}>
-                              <Check className="h-4 w-4 text-green-500" />
-                            </Button>
+                            <Check className="h-4 w-4 text-green-500" />
+                          </Button>
                             <Button variant="ghost" size="icon" onClick={onCancelEdit}>
-                              <X className="h-4 w-4 text-red-500" />
-                            </Button>
-                          </>
-                        ) : (
-                          <>
+                            <X className="h-4 w-4 text-red-500" />
+                          </Button>
+                        </>
+                      ) : (
+                        <>
                             <Button variant="ghost" size="icon" onClick={() => onStartEdit?.(row.original)}>
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="icon"
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
                               onClick={() => handleDeleteRow(row.original.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </>
-                        )}
-                      </TableCell>
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </>
+                      )}
+                  </TableCell>
                     )}
-                  </TableRow>
-                ))
+                </TableRow>
+              ))
               )}
             </TableBody>
           </Table>
@@ -528,7 +528,7 @@ export function DataTableWidget<T extends Record<string, any>>({
         <div className="flex items-center justify-between px-4 py-3 border rounded-md bg-muted">
           <div className="text-sm text-muted-foreground">
             {table.getFilteredSelectedRowModel().rows.length} {table.getFilteredSelectedRowModel().rows.length === 1 ? "row" : "rows"} selected
-          </div>
+      </div>
           <div className="flex gap-2">
             <Button
               size="sm"
@@ -562,18 +562,18 @@ export function DataTableWidget<T extends Record<string, any>>({
 
 
 
-        {/* Pagination */}
+      {/* Pagination */}
         {showPagination && (
-          <div className="flex items-center justify-between mt-4">
-            <div className="text-sm text-muted-foreground">
+      <div className="flex items-center justify-between mt-4">
+        <div className="text-sm text-muted-foreground">
               Displaying {filteredRows} of {" "}
               {data.length} {data.length === 1 ? "row" : "rows"} available
-            </div>
+        </div>
 
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">Rows per page</span>
-                <Select
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Rows per page</span>
+            <Select
                   value={pagination?.pageSize?.toString() ?? "10"}
                   onValueChange={(value: string) =>
                     onPaginationChange?.((prev) => ({
@@ -582,29 +582,29 @@ export function DataTableWidget<T extends Record<string, any>>({
                       pageIndex: 0,
                     }))
                   }
-                >
-                  <SelectTrigger className="h-8 w-[70px]">
+            >
+              <SelectTrigger className="h-8 w-[70px]">
                     <SelectValue>{pagination?.pageSize?.toString() ?? "10"}</SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="5">5</SelectItem>
-                    <SelectItem value="10">10</SelectItem>
-                    <SelectItem value="15">15</SelectItem>
-                    <SelectItem value="20">20</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="5">5</SelectItem>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="15">15</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-              <div className="text-sm text-muted-foreground">
+          <div className="text-sm text-muted-foreground">
                 Page {page} of {totalPages}
-              </div>
+          </div>
 
               {pagination && (
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-8 w-8"
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
                     onClick={() => {
                       if (pagination && onPaginationChange) {
                         onPaginationChange({
@@ -613,14 +613,14 @@ export function DataTableWidget<T extends Record<string, any>>({
                         });
                       }
                     }}
-                    disabled={!table.getCanPreviousPage()}
-                  >
-                    <span>←</span>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-8 w-8"
+              disabled={!table.getCanPreviousPage()}
+            >
+              <span>←</span>
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
                     onClick={() => {
                       if (pagination && onPaginationChange) {
                         onPaginationChange({
@@ -629,14 +629,14 @@ export function DataTableWidget<T extends Record<string, any>>({
                         });
                       }
                     }}
-                    disabled={!table.getCanNextPage()}
-                  >
-                    <span>→</span>
-                  </Button>
-                </div>
-              )}
-            </div>
+              disabled={!table.getCanNextPage()}
+            >
+              <span>→</span>
+            </Button>
           </div>
+              )}
+        </div>
+      </div>
         )}
 
 

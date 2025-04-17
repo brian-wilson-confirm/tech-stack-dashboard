@@ -23,6 +23,7 @@ import { SelectValue } from '@/components/ui/select'
 import { SelectTrigger } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
 import { TaskSheet } from '@/components/ui/task-sheet'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 
 
@@ -56,6 +57,9 @@ const initialVisibleColumns = {
 
 
 export default function Dashboard() {
+  // Set page title
+  usePageTitle('Dashboard')
+
   /*******************
     STATE VARIABLES
   ********************/

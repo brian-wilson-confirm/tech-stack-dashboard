@@ -45,7 +45,6 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Separator } from "@/components/ui/separator"
 import { capitalizeWords, cn } from "@/lib/utils"
-import { ShowAddTaskDialog, saveTask } from "@/pages/TasksPage"
 
 export type EditModeRenderer<T> = Partial<
   Record<keyof T, (value: T[keyof T], onChange: (val: T[keyof T]) => void) => React.ReactNode>
@@ -101,6 +100,8 @@ type Props<T extends Record<string, any>> = {
   showActions?: boolean;
   showPagination?: boolean;
   tableClassName?: string;
+  AddTaskDialog?: React.ComponentType<{ onAddTask: (task: any) => void, disabled?: boolean }>;
+  onAddTask?: (task: any) => void;
 }
 
 const FilterDropdown = ({ config, editingRow }: { config: FilterConfig, editingRow: string | null }) => {
@@ -216,6 +217,8 @@ export function DataTableWidget<T extends Record<string, any>>({
   showActions,
   showPagination = true,
   tableClassName,
+  AddTaskDialog,
+  onAddTask,
 }: Props<T>) {
 
   const table = useReactTable({
@@ -391,13 +394,11 @@ export function DataTableWidget<T extends Record<string, any>>({
             />
             )}
         </div>
-        {/* <div className="flex items-center space-x-2">
-          <Button disabled={!!editingRow}>
-            <PlusCircledIcon className="mr-2 h-4 w-4" />
-              Add Task
-          </Button>
-        </div>*/}
-        <ShowAddTaskDialog onAddTask={saveTask} disabled={!!editingRow} />
+        <div className="flex items-center space-x-2">
+          {AddTaskDialog && onAddTask && (
+            <AddTaskDialog onAddTask={onAddTask} disabled={!!editingRow} />
+          )}
+        </div>
       </div>
 
 

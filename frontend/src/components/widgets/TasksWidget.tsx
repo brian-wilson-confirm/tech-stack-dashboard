@@ -51,6 +51,7 @@ import {
 } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
+import { Task } from "@/components/data/schema"
 
 interface SortConfig {
   field: keyof Task
@@ -90,28 +91,6 @@ function SortableColumn({ field, children, sortConfigs, onSort }: SortableColumn
       </div>
     </div>
   )
-}
-
-interface Task {
-  id: string
-  done: boolean
-  task: string
-  technology: string
-  subcategory: string
-  category: string
-  order: number
-  status: 'not_started' | 'in_progress' | 'completed' | 'on_hold' | 'cancelled'
-  progress: number
-  priority: 'low' | 'medium' | 'high' | 'critical'
-  type: string
-  level: string
-  section: string
-  topics: string[]
-  source: string
-  estimated_duration: number
-  actual_duration?: number
-  start_date?: string
-  end_date?: string
 }
 
 interface TasksWidgetProps {

@@ -17,8 +17,6 @@ import { Task } from "@/components/data/schema"
 import { getStatusColor, getPriorityColor } from "@/styles/style"
 import React from "react"
 import { usePageTitle } from '@/hooks/usePageTitle'
-import { TasksWidget } from "@/components/widgets/TasksWidget"
-import NewWidget from "@/components/widgets/NewWidget"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import {
@@ -44,7 +42,7 @@ import { TaskForm, taskFormSchema } from "@/components/data/schema"
 /*******************
   ADD NEW TASK DIALOG
 ********************/
-export function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm) => void, disabled?: boolean }) {
+function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm) => void, disabled?: boolean }) {
   const [open, setOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -436,30 +434,6 @@ export function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: T
       </DialogContent>
     </Dialog>
   )
-}
-
-
-export const saveTask = async (newTask: TaskForm) => {
-  try {
-    const response = await fetch('/api/tasks', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(newTask),
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(errorData.detail || 'Failed to add task')
-    }
-
-    const addedTask = await response.json()
-    setTasks(prevTasks => [...prevTasks, addedTask])
-  } catch (error) {
-    console.error('Error adding task:', error)
-    // TODO: Show error message to user
-  }
 }
 
 
@@ -1142,7 +1116,6 @@ export default function TasksPage() {
 
 
   
-
   /*******************
     RENDER CELLS IN EDIT-MODE
   ********************/
@@ -1341,7 +1314,42 @@ export default function TasksPage() {
     }
   }
 
+  
+  
+  /*******************
+    ADD NEW TASK
+  ********************/
+  const handleAddTask = async (newTask: TaskForm) => {
+    try {
+      const response = await fetch('/api/tasks', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newTask),
+      })
 
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.detail || 'Failed to add task')
+      }
+
+      const addedTask = await response.json() as Task
+      setRows(prevRows => [...prevRows, addedTask])
+      toast({
+        title: "Success",
+        description: "Task added successfully",
+        duration: 3000,
+      })
+    } catch (error) {
+      console.error('Error adding task:', error)
+      toast({
+        title: "Error",
+        description: "Failed to add task",
+        variant: "destructive",
+      })
+    }
+  }
 
 
   return (
@@ -1350,23 +1358,23 @@ export default function TasksPage() {
         <CheckSquare className="h-8 w-8" />
         <h1 className="text-3xl font-bold">Tasks</h1>
       </div>
-      
+      {/*
       <div className="grid gap-6">
         <TasksWidget tasks={rows} />
       </div>
       <br />
       <div className="grid gap-6">
-        {/*<TempWidget 
+        <TempWidget 
           tasks={rows} 
           onTaskUpdate={handleRowUpdate}
-        />*/}
+        />
       </div>
       <br />
       <div className="grid gap-6">
         <h2 className="text-2xl font-bold">New Widget</h2>
         <NewWidget tasks={rows} />
       </div>
-      <br />
+      <br />*/}
       <div className="grid gap-6">
         <DataTableWidget
           title=""
@@ -1398,6 +1406,8 @@ export default function TasksPage() {
           onDeleteRow={handleRowDelete}
           showCheckboxes={true}
           showActions={true}
+          AddTaskDialog={ShowAddTaskDialog}
+          onAddTask={handleAddTask}
         />
       </div>
 

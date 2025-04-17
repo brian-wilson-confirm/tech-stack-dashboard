@@ -204,10 +204,10 @@ export default function TasksPage() {
   /*******************
     COLUMN VISIBILITY 
   ********************/
-    const columnOptions = columns.map(column => ({
-      accessorKey: (column as any).accessorKey,
-      header: typeof column.header === 'string' ? column.header : 'Column'
-    }))
+  const columnOptions = columns.map(column => ({
+    accessorKey: (column as any).accessorKey,
+    header: typeof column.header === 'string' ? column.header : 'Column'
+  }))
 
 
 
@@ -920,8 +920,8 @@ export default function TasksPage() {
       </div>
       <br />*/}
       <div className="grid gap-6">
-        <h2 className="text-2xl font-bold">DataTable Widget</h2>
         <DataTableWidget
+          title=""
           data={rows}
           isLoading={isLoading}
           columns={columns}

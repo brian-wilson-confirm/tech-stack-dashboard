@@ -69,6 +69,7 @@ export type ColumnOption = {
 }
 
 type Props<T extends Record<string, any>> = {
+  title?: string
   data: T[]
   isLoading?: boolean
   columns: ColumnDef<T>[]
@@ -77,7 +78,7 @@ type Props<T extends Record<string, any>> = {
   columnFilters?: ColumnFiltersState;
   onColumnVisibilityChange: (value: VisibilityState) => void
   onColumnFiltersChange?: OnChangeFn<ColumnFiltersState>;
-  pagination: { pageIndex: number; pageSize: number };
+  pagination?: { pageIndex: number; pageSize: number };
   onPaginationChange?: OnChangeFn<PaginationState>;
   filterConfigs?: FilterConfig[]
   searchQuery?: string
@@ -97,6 +98,7 @@ type Props<T extends Record<string, any>> = {
   onDeleteRow?: (rowId: string) => Promise<void>
   showCheckboxes?: boolean;
   showActions?: boolean;
+  showPagination?: boolean;
   tableClassName?: string;
 }
 
@@ -181,9 +183,8 @@ const ColumnVisibilityDropdown = ({
   )
 }
 
-
-
 export function DataTableWidget<T extends Record<string, any>>({
+  title,
   data,
   isLoading,
   columns,
@@ -212,6 +213,7 @@ export function DataTableWidget<T extends Record<string, any>>({
   onDeleteRow,
   showCheckboxes,
   showActions,
+  showPagination = true,
   tableClassName,
 }: Props<T>) {
 
@@ -223,7 +225,7 @@ export function DataTableWidget<T extends Record<string, any>>({
       columnFilters: columnFilters ?? [],
       sorting: sortConfigs ?? [],
       columnVisibility: visibleColumns,
-      pagination,
+      pagination: showPagination ? pagination : undefined,
     },
     onRowSelectionChange: onRowSelectionChange ?? (() => {}),
     enableColumnResizing: true,
@@ -235,17 +237,16 @@ export function DataTableWidget<T extends Record<string, any>>({
           : updaterOrValue
       onSortChange?.(newSorting)
     },
-    onPaginationChange: onPaginationChange,
-    //onColumnFiltersChange: setColumnFilters,
+    onPaginationChange: showPagination ? onPaginationChange : undefined,
     onColumnFiltersChange,
     columnResizeMode: 'onChange',
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
+    getPaginationRowModel: showPagination ? getPaginationRowModel() : undefined,
     getSortedRowModel: getSortedRowModel(),
     manualPagination: false,
     autoResetPageIndex: false,
-    pageCount: Math.ceil(data.length / pagination.pageSize),
+    pageCount: showPagination && pagination ? Math.ceil(data.length / pagination.pageSize) : undefined,
     filterFns: {
       multiSelect: (row, columnId, filterValue) => {
         return filterValue.includes(row.getValue(columnId))
@@ -254,9 +255,11 @@ export function DataTableWidget<T extends Record<string, any>>({
   });
 
   // Get pagination info from table state
-  const currentPageIndex = table.getState().pagination.pageIndex;
-  const page = currentPageIndex + 1; // Convert 0-based to 1-based indexing for display
-  const totalPages = table.getPageCount();
+  const paginationState = pagination ?? table.getState().pagination ?? { pageIndex: 0, pageSize: data.length };
+  const currentPageIndex = paginationState.pageIndex;
+  const pageSize = paginationState.pageSize;
+  const page = currentPageIndex + 1;
+  const totalPages = pageSize > 0 ? Math.ceil(data.length / pageSize) : 1;
   
   // Get filtered rows
   const filteredRows = table.getFilteredRowModel().rows.length;
@@ -321,6 +324,7 @@ export function DataTableWidget<T extends Record<string, any>>({
   return (
     <div className="border rounded-lg p-6 col-span-full">
       <div className="space-y-4">
+      <h2 className="text-2xl font-bold">{title}</h2>
 
 
         {/* Filter Controls */}
@@ -397,7 +401,7 @@ export function DataTableWidget<T extends Record<string, any>>({
 
 
             {/* Table Header */}
-            <TableHeader>
+            <TableHeader className="sticky top-0 z-10 bg-muted">
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                   {/* Select All checkbox */}
@@ -559,69 +563,81 @@ export function DataTableWidget<T extends Record<string, any>>({
 
 
         {/* Pagination */}
-        <div className="flex items-center justify-between mt-4">
-          <div className="text-sm text-muted-foreground">
-          Displaying {filteredRows} of {" "}
-            {data.length} {data.length === 1 ? "row" : "rows"} available
-          </div>
-
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Rows per page</span>
-              <Select
-                value={pagination.pageSize.toString()}
-                onValueChange={(value: string) =>
-                  onPaginationChange?.((prev) => ({
-                    ...prev,
-                    pageSize: Number(value),
-                    pageIndex: 0,
-                  }))
-                }
-              >
-                <SelectTrigger className="h-8 w-[70px]">
-                  <SelectValue>{pagination.pageSize}</SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="5">5</SelectItem>
-                  <SelectItem value="10">10</SelectItem>
-                  <SelectItem value="15">15</SelectItem>
-                  <SelectItem value="20">20</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
+        {showPagination && (
+          <div className="flex items-center justify-between mt-4">
             <div className="text-sm text-muted-foreground">
-              Page {page} of {totalPages}
+              Displaying {filteredRows} of {" "}
+              {data.length} {data.length === 1 ? "row" : "rows"} available
             </div>
 
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => onPaginationChange?.(prev => ({
-                  ...prev,
-                  pageIndex: prev.pageIndex - 1
-                }))}
-                disabled={!table.getCanPreviousPage()}
-              >
-                <span>←</span>
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => onPaginationChange?.(prev => ({
-                  ...prev,
-                  pageIndex: prev.pageIndex + 1
-                }))}
-                disabled={!table.getCanNextPage()}
-              >
-                <span>→</span>
-              </Button>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Rows per page</span>
+                <Select
+                  value={pagination?.pageSize?.toString() ?? "10"}
+                  onValueChange={(value: string) =>
+                    onPaginationChange?.((prev) => ({
+                      ...prev,
+                      pageSize: Number(value),
+                      pageIndex: 0,
+                    }))
+                  }
+                >
+                  <SelectTrigger className="h-8 w-[70px]">
+                    <SelectValue>{pagination?.pageSize?.toString() ?? "10"}</SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="5">5</SelectItem>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="15">15</SelectItem>
+                    <SelectItem value="20">20</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="text-sm text-muted-foreground">
+                Page {page} of {totalPages}
+              </div>
+
+              {pagination && (
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => {
+                      if (pagination && onPaginationChange) {
+                        onPaginationChange({
+                          ...pagination,
+                          pageIndex: pagination.pageIndex - 1
+                        });
+                      }
+                    }}
+                    disabled={!table.getCanPreviousPage()}
+                  >
+                    <span>←</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => {
+                      if (pagination && onPaginationChange) {
+                        onPaginationChange({
+                          ...pagination,
+                          pageIndex: pagination.pageIndex + 1
+                        });
+                      }
+                    }}
+                    disabled={!table.getCanNextPage()}
+                  >
+                    <span>→</span>
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
-        </div>
+        )}
 
 
 

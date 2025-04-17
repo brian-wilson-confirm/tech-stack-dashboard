@@ -130,6 +130,7 @@ export default function SQLDatabasesPage() {
 
       <div className="grid gap-6">
         <DataTableWidget
+          title=""
           data={rows}
           isLoading={isLoading}
           columns={columns}

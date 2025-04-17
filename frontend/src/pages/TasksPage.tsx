@@ -71,11 +71,12 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
   })
 
   const onSubmit = async (data: TaskForm) => {
+    console.log('ShowAddTaskDialog onSubmit', data)
     setIsSubmitting(true)
     setError(null)
     
     try {
-      const response = await fetch('http://localhost:8000/api/tasks', {
+      const response = await fetch('/api/tasks', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -123,8 +124,7 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
+              <FormField control={form.control}
                 name="task"
                 render={({ field }) => (
                   <FormItem>
@@ -136,8 +136,7 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
+              <FormField control={form.control}
                 name="order"
                 render={({ field }) => (
                   <FormItem>
@@ -149,8 +148,7 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
+              <FormField control={form.control}
                 name="status"
                 render={({ field }) => (
                   <FormItem>
@@ -173,8 +171,7 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
+              <FormField control={form.control}
                 name="priority"
                 render={({ field }) => (
                   <FormItem>
@@ -197,8 +194,7 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
                 )}
               />
               {/* Add more form fields for other task properties */}
-              <FormField
-                control={form.control}
+              <FormField control={form.control}
                 name="type"
                 render={({ field }) => (
                   <FormItem>
@@ -221,8 +217,7 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
+              <FormField control={form.control}
                 name="level"
                 render={({ field }) => (
                   <FormItem>
@@ -1320,6 +1315,7 @@ export default function TasksPage() {
     ADD NEW TASK
   ********************/
   const handleAddTask = async (newTask: TaskForm) => {
+    console.log('Brian handleAddTask', newTask)
     try {
       const response = await fetch('/api/tasks', {
         method: 'POST',

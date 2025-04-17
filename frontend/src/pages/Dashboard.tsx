@@ -899,6 +899,8 @@ export default function Dashboard() {
           showCheckboxes={false}
           showActions={true}
           showPagination={false}
+          AddTaskDialog={undefined}
+          onAddTask={undefined}
         />
 
       <TaskSheet

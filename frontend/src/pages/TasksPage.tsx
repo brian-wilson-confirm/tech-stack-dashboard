@@ -47,6 +47,7 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
   const [open, setOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [typeOptions, setTypeOptions] = useState<{ name: string; id: number }[]>([])
   const [categoryOptions, setCategoryOptions] = useState<{ name: string; id: number }[]>([])
   const [subcategoryOptions, setSubcategoryOptions] = useState<{ name: string; id: number }[]>([])
   const [technologyOptions, setTechnologyOptions] = useState<{ name: string; id: number }[]>([])
@@ -63,7 +64,7 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
       status: "not_started",
       progress: 0,
       priority: "medium",
-      type: "implementation",
+      type: "",
       level: "intermediate",
       section: "",
       topics: [],
@@ -75,27 +76,37 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
     },
   })
 
-  // Fetch categories when dialog opens
+  // Fetch categories and types when dialog opens
   useEffect(() => {
     if (open) {
-      const fetchCategories = async () => {
+      const fetchOptions = async () => {
         try {
-          const response = await fetch('/api/tasks/categories')
-          if (!response.ok) {
-            throw new Error('Failed to fetch categories')
+          const [categoriesRes, typesRes] = await Promise.all([
+            fetch('/api/tasks/categories'),
+            fetch('/api/tasks/types')
+          ])
+          
+          if (!categoriesRes.ok || !typesRes.ok) {
+            throw new Error('Failed to fetch options')
           }
-          const data = await response.json()
-          setCategoryOptions(data)
+          
+          const [categories, types] = await Promise.all([
+            categoriesRes.json(),
+            typesRes.json()
+          ])
+          
+          setCategoryOptions(categories)
+          setTypeOptions(types)
         } catch (error) {
-          console.error('Error fetching categories:', error)
+          console.error('Error fetching options:', error)
           toast({
             title: "Error",
-            description: "Failed to load categories.",
+            description: "Failed to load options.",
             variant: "destructive",
           })
         }
       }
-      fetchCategories()
+      fetchOptions()
     }
   }, [open])
 
@@ -249,15 +260,18 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
               <div className="grid grid-cols-4 gap-4">
                 <FormField control={form.control} name="type" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Type *</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl><SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger></FormControl>
+                    <FormLabel className="capitalize">Type *</FormLabel>
+                    <Select
+                      value={typeOptions.find((t: { name: string; id: number }) => t.name === field.value || t.id.toString() === field.value?.toString())?.id.toString() ?? ""}
+                      onValueChange={(value) => field.onChange(value)}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="learning">Learning</SelectItem>
-                        <SelectItem value="implementation">Implementation</SelectItem>
-                        <SelectItem value="research">Research</SelectItem>
-                        <SelectItem value="documentation">Documentation</SelectItem>
-                        <SelectItem value="maintenance">Maintenance</SelectItem>
+                        {typeOptions.map((type: { name: string; id: number }) => (
+                          <SelectItem key={type.id} value={type.id.toString()}>{capitalizeWords(type.name)}</SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />

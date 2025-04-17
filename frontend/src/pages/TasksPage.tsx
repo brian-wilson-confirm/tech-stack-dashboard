@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from "react"
 import { ColumnDef, SortingState, VisibilityState, FilterFn, ColumnFiltersState, OnChangeFn, PaginationState } from "@tanstack/react-table"
 import { DataTableWidget, EditModeRenderer } from "@/components/widgets/DataTableWidget"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { CheckSquare, Clock } from "lucide-react"
+import { CheckSquare, Clock, Plus } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { capitalizeWords } from "@/lib/utils"
 import { StatusEnum } from "@/types/enums"
@@ -17,6 +17,450 @@ import { Task } from "@/components/data/schema"
 import { getStatusColor, getPriorityColor } from "@/styles/style"
 import React from "react"
 import { usePageTitle } from '@/hooks/usePageTitle'
+import { TasksWidget } from "@/components/widgets/TasksWidget"
+import NewWidget from "@/components/widgets/NewWidget"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { TaskForm, taskFormSchema } from "@/components/data/schema"
+
+
+/*******************
+  ADD NEW TASK DIALOG
+********************/
+export function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm) => void, disabled?: boolean }) {
+  const [open, setOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  
+  const form = useForm<TaskForm>({
+    resolver: zodResolver(taskFormSchema),
+    defaultValues: {
+      task: "",
+      technology: "",
+      subcategory: "",
+      category: "",
+      order: 0,
+      status: "not_started",
+      progress: 0,
+      priority: "medium",
+      type: "implementation",
+      level: "intermediate",
+      section: "",
+      topics: [],
+      source: "",
+      estimated_duration: 0,
+      actual_duration: null,
+      start_date: null,
+      end_date: null,
+    },
+  })
+
+  const onSubmit = async (data: TaskForm) => {
+    setIsSubmitting(true)
+    setError(null)
+    
+    try {
+      const response = await fetch('http://localhost:8000/api/tasks', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.detail || 'Failed to add task')
+      }
+
+      const newTask = await response.json()
+      onAddTask(newTask)
+      setOpen(false)
+      form.reset()
+    } catch (error) {
+      console.error('Error adding task:', error)
+      setError(error instanceof Error ? error.message : 'An unexpected error occurred')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm" disabled={disabled}>
+          <Plus className="h-4 w-4 mr-2" />
+          Add Task
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Add New Task</DialogTitle>
+          <DialogDescription>
+            Fill in the details for the new task. All required fields are marked with an asterisk (*).
+          </DialogDescription>
+        </DialogHeader>
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative mb-4">
+            {error}
+          </div>
+        )}
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="task"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Task Name *</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="order"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Order</FormLabel>
+                    <FormControl>
+                      <Input type="number" {...field} onChange={e => field.onChange(Number(e.target.value))} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status *</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="not_started">Not Started</SelectItem>
+                        <SelectItem value="in_progress">In Progress</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="on_hold">On Hold</SelectItem>
+                        <SelectItem value="cancelled">Cancelled</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="priority"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Priority *</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select priority" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="low">Low</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="high">High</SelectItem>
+                        <SelectItem value="critical">Critical</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              {/* Add more form fields for other task properties */}
+              <FormField
+                control={form.control}
+                name="type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Type *</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="learning">Learning</SelectItem>
+                        <SelectItem value="implementation">Implementation</SelectItem>
+                        <SelectItem value="research">Research</SelectItem>
+                        <SelectItem value="documentation">Documentation</SelectItem>
+                        <SelectItem value="maintenance">Maintenance</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="level"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Level *</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select level" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="beginner">Beginner</SelectItem>
+                        <SelectItem value="intermediate">Intermediate</SelectItem>
+                        <SelectItem value="advanced">Advanced</SelectItem>
+                        <SelectItem value="expert">Expert</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              {/* Add remaining form fields */}
+              <FormField
+                control={form.control}
+                name="section"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Section *</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Category *</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="subcategory"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Subcategory *</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="technology"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Technology *</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="topics"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Topics</FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...field} 
+                        value={field.value.join(', ')}
+                        onChange={(e) => field.onChange(e.target.value.split(',').map(t => t.trim()))}
+                        placeholder="Comma-separated topics"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="source"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Source *</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="estimated_duration"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Estimated Duration (hours) *</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        {...field} 
+                        onChange={e => field.onChange(Number(e.target.value))}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="actual_duration"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Actual Duration (hours)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        {...field} 
+                        value={field.value || ''} 
+                        onChange={e => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="start_date"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Start Date</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="date" 
+                        {...field} 
+                        value={field.value || ''} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="end_date"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>End Date</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="date" 
+                        {...field} 
+                        value={field.value || ''} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="progress"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Progress (%)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        min="0" 
+                        max="100" 
+                        {...field} 
+                        onChange={e => field.onChange(Number(e.target.value))}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <DialogFooter>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <span className="animate-spin mr-2">⏳</span>
+                    Adding Task...
+                  </>
+                ) : (
+                  'Add Task'
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+
+export const saveTask = async (newTask: TaskForm) => {
+  try {
+    const response = await fetch('/api/tasks', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(newTask),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.detail || 'Failed to add task')
+    }
+
+    const addedTask = await response.json()
+    setTasks(prevTasks => [...prevTasks, addedTask])
+  } catch (error) {
+    console.error('Error adding task:', error)
+    // TODO: Show error message to user
+  }
+}
 
 
 /*******************
@@ -906,23 +1350,23 @@ export default function TasksPage() {
         <CheckSquare className="h-8 w-8" />
         <h1 className="text-3xl font-bold">Tasks</h1>
       </div>
-      {/*
+      
       <div className="grid gap-6">
-        <TasksWidget tasks={tasks} />
+        <TasksWidget tasks={rows} />
       </div>
       <br />
       <div className="grid gap-6">
-        <TempWidget 
-          tasks={tasks} 
-          onTaskUpdate={handleTaskUpdate}
-        />
+        {/*<TempWidget 
+          tasks={rows} 
+          onTaskUpdate={handleRowUpdate}
+        />*/}
       </div>
       <br />
       <div className="grid gap-6">
         <h2 className="text-2xl font-bold">New Widget</h2>
-        <NewWidget tasks={tasks} />
+        <NewWidget tasks={rows} />
       </div>
-      <br />*/}
+      <br />
       <div className="grid gap-6">
         <DataTableWidget
           title=""

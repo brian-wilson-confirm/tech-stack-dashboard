@@ -45,6 +45,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Separator } from "@/components/ui/separator"
 import { capitalizeWords, cn } from "@/lib/utils"
+import { ShowAddTaskDialog, saveTask } from "@/pages/TasksPage"
 
 export type EditModeRenderer<T> = Partial<
   Record<keyof T, (value: T[keyof T], onChange: (val: T[keyof T]) => void) => React.ReactNode>
@@ -390,7 +391,13 @@ export function DataTableWidget<T extends Record<string, any>>({
             />
             )}
         </div>
-          {/* <AddTaskDialog onAddTask={addRow} disabled={!!editingRow} /> */}
+        {/* <div className="flex items-center space-x-2">
+          <Button disabled={!!editingRow}>
+            <PlusCircledIcon className="mr-2 h-4 w-4" />
+              Add Task
+          </Button>
+        </div>*/}
+        <ShowAddTaskDialog onAddTask={saveTask} disabled={!!editingRow} />
       </div>
 
 
@@ -417,8 +424,7 @@ export function DataTableWidget<T extends Record<string, any>>({
 
                   {headerGroup.headers.map((header) =>
                     header.column.id in visibleColumns && visibleColumns[header.column.id] ? (
-                      <TableHead key={header.id} 
-                        //className="w-[200px]"
+                      <TableHead key={header.id}
                         style={{
                           width: `${header.getSize()}px`,
                           maxWidth: `${header.column.columnDef.maxSize ?? header.getSize()}px`,

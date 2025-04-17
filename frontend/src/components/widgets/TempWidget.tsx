@@ -5,7 +5,7 @@ import { Task } from "@/components/data/schema"
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Cross2Icon, PlusCircledIcon, ViewVerticalIcon } from "@radix-ui/react-icons"
-import { priorities, statuses } from "../data/data"
+//import { priorities, statuses } from "@/components/data/data"
 import {
     DropdownMenu,
     DropdownMenuCheckboxItem,

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Button } from "@/components/ui/button"
 import { Code2, Server, Database, Cloud, Clock } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
@@ -76,8 +76,6 @@ export default function Dashboard() {
   const [visibleColumns, setVisibleColumns] = useState<VisibilityState>(initialVisibleColumns);
   
   // Table Pagination
-  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
-  
   // Row Filter
   // Row Sorting
   // Row Selection
@@ -92,7 +90,6 @@ export default function Dashboard() {
   const [editForm, setEditForm] = useState<Task | null>(null);
 
   // Fetching Options
-  const [hasFetchedOptions, setHasFetchedOptions] = useState(false);
   const [priorityOptions, setPriorityOptions] = useState<{ name: string; id: number }[]>([]);
   const [typeOptions, setTypeOptions] = useState<{ name: string; id: number }[]>([]);
   const [statusOptions, setStatusOptions] = useState<{ name: string; id: number }[]>([]);

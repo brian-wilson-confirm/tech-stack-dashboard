@@ -12,10 +12,12 @@ class TaskTopicLink(SQLModel, table=True):
     topic_id: Optional[int] = Field(default=None, foreign_key="topic.id", primary_key=True)
 
 
+# Actively using 4/18
 class Task(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     task_id: str
     task: str
+    description: str
     technology_id: int = Field(foreign_key="technology.id")
     subcategory_id: int = Field(foreign_key="subcategory.id")
     category_id: int = Field(foreign_key="category.id")

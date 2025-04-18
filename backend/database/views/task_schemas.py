@@ -3,9 +3,10 @@ from datetime import date
 from sqlmodel import SQLModel
 
 
+# Actively using 4/18
 class TaskCreate(SQLModel):
     task: str
-    #task_id: str
+    description: str
     technology_id: int
     subcategory_id: int
     category_id: int

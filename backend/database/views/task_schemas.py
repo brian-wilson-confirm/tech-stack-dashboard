@@ -5,7 +5,7 @@ from sqlmodel import SQLModel
 
 class TaskCreate(SQLModel):
     task: str
-    task_id: str
+    #task_id: str
     technology_id: int
     subcategory_id: int
     category_id: int

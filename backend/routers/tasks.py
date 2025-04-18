@@ -1,3 +1,4 @@
+import random
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 
@@ -368,8 +369,19 @@ def serialize_task(task: Task, session: Session) -> TaskRead:
 
 def create_task(task_in: TaskCreate, session: Session = Depends(get_session)):
     task_data = task_in.model_dump(exclude={"topics"})  # ⬅️ This prevents the validation error
+    task_data["task_id"] = generate_unique_task_id(session)
     task = Task(**task_data)  # ✅ Only valid fields passed
     session.add(task)
     session.commit()
     session.refresh(task)
     return task
+
+
+def generate_unique_task_id(session, prefix="TASK-", digits=4, max_attempts=10):
+    for _ in range(max_attempts):
+        random_digits = f"{random.randint(0, 10**digits - 1):0{digits}}"
+        task_id = f"{prefix}{random_digits}"
+        exists = session.exec(select(Task).where(Task.task_id == task_id)).first()
+        if not exists:
+            return task_id
+    raise ValueError("Failed to generate unique task_id after multiple attempts")

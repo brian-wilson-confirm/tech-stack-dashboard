@@ -13,7 +13,7 @@ import { TaskSheet } from "@/components/ui/task-sheet"
 import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
 import { toast } from "@/components/ui/use-toast"
-import { Task } from "@/components/data/schema"
+import { Task, TaskFormSubmit, TaskForm, taskFormSchema, taskFormSubmitSchema } from "@/components/data/schema"
 import { getStatusColor, getPriorityColor } from "@/styles/style"
 import React from "react"
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -36,7 +36,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
-import { TaskForm, taskFormSchema } from "@/components/data/schema"
 import { Textarea } from "@/components/ui/textarea"
 
 
@@ -50,61 +49,66 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
   const [typeOptions, setTypeOptions] = useState<{ name: string; id: number }[]>([])
   const [levelOptions, setLevelOptions] = useState<{ name: string; id: number }[]>([])
   const [statusOptions, setStatusOptions] = useState<{ name: string; id: number }[]>([])
+  const [priorityOptions, setPriorityOptions] = useState<{ name: string; id: number }[]>([])
   const [categoryOptions, setCategoryOptions] = useState<{ name: string; id: number }[]>([])
   const [subcategoryOptions, setSubcategoryOptions] = useState<{ name: string; id: number }[]>([])
   const [technologyOptions, setTechnologyOptions] = useState<{ name: string; id: number }[]>([])
   
-  const form = useForm<TaskForm>({
-    resolver: zodResolver(taskFormSchema),
+  const form = useForm<TaskFormSubmit>({
+    resolver: zodResolver(taskFormSubmitSchema),
     defaultValues: {
       task: "",
       description: "",
-      technology: "",
-      subcategory: "",
-      category: "",
+      technology_id: "",
+      subcategory_id: "",
+      category_id: "",
       order: 0,
-      status: "",
+      status_id: "",
       progress: 0,
-      priority: "medium",
-      type: "",
-      level: "",
+      priority_id: "",
+      type_id: "",
+      level_id: "",
       section: "",
       topics: [],
-      source: "",
+      source_id: "",
       estimated_duration: 8,
       actual_duration: null,
+      due_date: null,
       start_date: null,
       end_date: null,
     },
   })
 
-  // Fetch categories, types, levels, and statuses when dialog opens
+  // Fetch categories, types, levels, statuses, and priorities when dialog opens
   useEffect(() => {
     if (open) {
       const fetchOptions = async () => {
         try {
-          const [categoriesRes, typesRes, levelsRes, statusesRes] = await Promise.all([
-            fetch('/api/tasks/categories'),
+          const [typesRes, levelsRes, statusesRes, prioritiesRes, categoriesRes] = await Promise.all([
             fetch('/api/tasks/types'),
             fetch('/api/tasks/levels'),
-            fetch('/api/tasks/statuses')
+            fetch('/api/tasks/statuses'),
+            fetch('/api/tasks/priorities'),
+            fetch('/api/tasks/categories')
           ])
           
-          if (!categoriesRes.ok || !typesRes.ok || !levelsRes.ok || !statusesRes.ok) {
+          if (!typesRes.ok || !levelsRes.ok || !statusesRes.ok || !prioritiesRes.ok || !categoriesRes.ok) {
             throw new Error('Failed to fetch options')
           }
           
-          const [categories, types, levels, statuses] = await Promise.all([
-            categoriesRes.json(),
+          const [types, levels, statuses, priorities, categories] = await Promise.all([
             typesRes.json(),
             levelsRes.json(),
-            statusesRes.json()
+            statusesRes.json(),
+            prioritiesRes.json(),
+            categoriesRes.json()
           ])
           
-          setCategoryOptions(categories)
           setTypeOptions(types)
           setLevelOptions(levels)
           setStatusOptions(statuses)
+          setPriorityOptions(priorities)
+          setCategoryOptions(categories)
         } catch (error) {
           console.error('Error fetching options:', error)
           toast({
@@ -120,7 +124,7 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
 
   // Fetch subcategories when category changes
   useEffect(() => {
-    const categoryId = form.watch('category')
+    const categoryId = form.watch('category_id')
     if (categoryId) {
       const fetchSubcategories = async () => {
         try {
@@ -131,8 +135,8 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
           const data = await response.json()
           setSubcategoryOptions(data)
           // Reset subcategory and technology when category changes
-          form.setValue('subcategory', '')
-          form.setValue('technology', '')
+          form.setValue('subcategory_id', '')
+          form.setValue('technology_id', '')
         } catch (error) {
           console.error('Error fetching subcategories:', error)
           toast({
@@ -146,11 +150,11 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
     } else {
       setSubcategoryOptions([])
     }
-  }, [form.watch('category')])
+  }, [form.watch('category_id')])
 
   // Fetch technologies when subcategory changes
   useEffect(() => {
-    const subcategoryId = form.watch('subcategory')
+    const subcategoryId = form.watch('subcategory_id')
     if (subcategoryId) {
       const fetchTechnologies = async () => {
         try {
@@ -161,7 +165,7 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
           const data = await response.json()
           setTechnologyOptions(data)
           // Reset technology when subcategory changes
-          form.setValue('technology', '')
+          form.setValue('technology_id', '')
         } catch (error) {
           console.error('Error fetching technologies:', error)
           toast({
@@ -175,9 +179,9 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
     } else {
       setTechnologyOptions([])
     }
-  }, [form.watch('subcategory')])
+  }, [form.watch('subcategory_id')])
 
-  const onSubmit = async (data: TaskForm) => {
+  const onSubmit = async (data: TaskFormSubmit) => {
     console.log('ShowAddTaskDialog onSubmit', data)
     setIsSubmitting(true)
     setError(null)
@@ -266,7 +270,7 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
             <div className="space-y-2">
               <h3 className="text-lg font-semibold">Metadata</h3>
               <div className="grid grid-cols-4 gap-4">
-                <FormField control={form.control} name="type" render={({ field }) => (
+                <FormField control={form.control} name="type_id" render={({ field }) => (
                   <FormItem>
                     <FormLabel className="capitalize">Type *</FormLabel>
                     <Select
@@ -286,7 +290,7 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
                   </FormItem>
                 )} />
 
-                <FormField control={form.control} name="level" render={({ field }) => (
+                <FormField control={form.control} name="level_id" render={({ field }) => (
                   <FormItem>
                     <FormLabel className="capitalize">Level *</FormLabel>
                     <Select
@@ -306,7 +310,7 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
                   </FormItem>
                 )} />
 
-                <FormField control={form.control} name="status" render={({ field }) => (
+                <FormField control={form.control} name="status_id" render={({ field }) => (
                   <FormItem>
                     <FormLabel className="capitalize">Status *</FormLabel>
                     <Select
@@ -326,16 +330,20 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
                   </FormItem>
                 )} />
 
-                <FormField control={form.control} name="priority" render={({ field }) => (
+                <FormField control={form.control} name="priority_id" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Priority *</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl><SelectTrigger><SelectValue placeholder="Select priority" /></SelectTrigger></FormControl>
+                    <FormLabel className="capitalize">Priority *</FormLabel>
+                    <Select 
+                      value={statusOptions.find((s: { name: string; id: number }) => s.name === field.value || s.id.toString() === field.value?.toString())?.id.toString() ?? ""}
+                      onValueChange={(value) => field.onChange(value)}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="low">Low</SelectItem>
-                        <SelectItem value="medium">Medium</SelectItem>
-                        <SelectItem value="high">High</SelectItem>
-                        <SelectItem value="critical">Critical</SelectItem>
+                        {priorityOptions.map((status: { name: string; id: number }) => (
+                          <SelectItem key={status.id} value={status.id.toString()}>{capitalizeWords(status.name.replace('_', ' '))}</SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -348,7 +356,7 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
             <div className="space-y-2">
               <h3 className="text-lg font-semibold">Categorization</h3>
               <div className="grid grid-cols-3 gap-4">
-                <FormField control={form.control} name="category" render={({ field }) => (
+                <FormField control={form.control} name="category_id" render={({ field }) => (
                   <FormItem>
                     <FormLabel className="capitalize">Category *</FormLabel>
                     <Select
@@ -368,7 +376,7 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
                   </FormItem>
                 )} />
 
-                <FormField control={form.control} name="subcategory" render={({ field }) => (
+                <FormField control={form.control} name="subcategory_id" render={({ field }) => (
                   <FormItem>
                     <FormLabel className="capitalize">Subcategory *</FormLabel>
                     <Select
@@ -376,9 +384,9 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
                       onValueChange={(value) => {
                         field.onChange(value)
                         // Reset technology when subcategory changes
-                        form.setValue('technology', '')
+                        form.setValue('technology_id', '')
                       }}
-                      disabled={!form.watch('category')}
+                      disabled={!form.watch('category_id')}
                     >
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select" />
@@ -393,13 +401,13 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
                   </FormItem>
                 )} />
 
-                <FormField control={form.control} name="technology" render={({ field }) => (
+                <FormField control={form.control} name="technology_id" render={({ field }) => (
                   <FormItem>
                     <FormLabel className="capitalize">Technology *</FormLabel>
                     <Select
                       value={technologyOptions.find((t: { name: string; id: number }) => t.name === field.value || t.id.toString() === field.value?.toString())?.id.toString() ?? ""}
                       onValueChange={(value) => field.onChange(value)}
-                      disabled={!form.watch('subcategory')}
+                      disabled={!form.watch('subcategory_id')}
                     >
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select" />
@@ -420,7 +428,7 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
             <div className="space-y-2">
               <h3 className="text-lg font-semibold">Sources & Topics</h3>
               <div className="grid grid-cols-3 gap-4">
-                <FormField control={form.control} name="source" render={({ field }) => (
+                <FormField control={form.control} name="source_id" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Source *</FormLabel>
                     <FormControl><Input {...field} /></FormControl>
@@ -456,7 +464,7 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
             {/* 5. Time & Progress */}
             <div className="space-y-2">
               <h3 className="text-lg font-semibold">Time & Progress</h3>
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-5 gap-4">
 
                 <FormField control={form.control} name="estimated_duration" render={({ field }) => (
                   <FormItem>
@@ -470,6 +478,14 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
                   <FormItem>
                     <FormLabel>Actual Duration (hours)</FormLabel>
                     <FormControl><Input type="number" {...field} value={field.value || ''} onChange={e => field.onChange(e.target.value ? Number(e.target.value) : null)} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+
+                <FormField control={form.control} name="due_date" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Due Date</FormLabel>
+                    <FormControl><Input type="date" {...field} value={field.value || ''} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />

@@ -53,6 +53,7 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
   const [categoryOptions, setCategoryOptions] = useState<{ name: string; id: number }[]>([])
   const [subcategoryOptions, setSubcategoryOptions] = useState<{ name: string; id: number }[]>([])
   const [technologyOptions, setTechnologyOptions] = useState<{ name: string; id: number }[]>([])
+  const [sourceOptions, setSourceOptions] = useState<{ name: string; id: number }[]>([])
   
   const form = useForm<TaskFormSubmit>({
     resolver: zodResolver(taskFormSubmitSchema),
@@ -63,11 +64,11 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
       subcategory_id: "",
       category_id: "",
       order: 0,
-      status_id: "",
+      status_id: "1",
       progress: 0,
-      priority_id: "",
-      type_id: "",
-      level_id: "",
+      priority_id: "1",
+      type_id: "Learning",
+      level_id: "1",
       section: "",
       topics: [],
       source_id: "",
@@ -79,29 +80,31 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
     },
   })
 
-  // Fetch categories, types, levels, statuses, and priorities when dialog opens
+  // Fetch types, levels, statuses, priorities, categories, and sources when dialog opens
   useEffect(() => {
     if (open) {
       const fetchOptions = async () => {
         try {
-          const [typesRes, levelsRes, statusesRes, prioritiesRes, categoriesRes] = await Promise.all([
+          const [typesRes, levelsRes, statusesRes, prioritiesRes, categoriesRes, sourcesRes] = await Promise.all([
             fetch('/api/tasks/types'),
             fetch('/api/tasks/levels'),
             fetch('/api/tasks/statuses'),
             fetch('/api/tasks/priorities'),
-            fetch('/api/tasks/categories')
+            fetch('/api/tasks/categories'),
+            fetch('/api/tasks/sources')
           ])
           
-          if (!typesRes.ok || !levelsRes.ok || !statusesRes.ok || !prioritiesRes.ok || !categoriesRes.ok) {
+          if (!typesRes.ok || !levelsRes.ok || !statusesRes.ok || !prioritiesRes.ok || !categoriesRes.ok || !sourcesRes.ok) {
             throw new Error('Failed to fetch options')
           }
           
-          const [types, levels, statuses, priorities, categories] = await Promise.all([
+          const [types, levels, statuses, priorities, categories, sources] = await Promise.all([
             typesRes.json(),
             levelsRes.json(),
             statusesRes.json(),
             prioritiesRes.json(),
-            categoriesRes.json()
+            categoriesRes.json(),
+            sourcesRes.json()
           ])
           
           setTypeOptions(types)
@@ -109,6 +112,7 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
           setStatusOptions(statuses)
           setPriorityOptions(priorities)
           setCategoryOptions(categories)
+          setSourceOptions(sources)
         } catch (error) {
           console.error('Error fetching options:', error)
           toast({
@@ -431,7 +435,19 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
                 <FormField control={form.control} name="source_id" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Source *</FormLabel>
-                    <FormControl><Input {...field} /></FormControl>
+                    <Select
+                      value={sourceOptions.find((s: { name: string; id: number }) => s.name === field.value || s.id.toString() === field.value?.toString())?.id.toString() ?? ""}
+                      onValueChange={(value) => field.onChange(value)}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {sourceOptions.map((source: { name: string; id: number }) => (
+                          <SelectItem key={source.id} value={source.id.toString()}>{capitalizeWords(source.name)}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )} />
@@ -458,13 +474,13 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
                     <FormMessage />
                   </FormItem>
                 )} />
-              </div>
-            </div>
+        </div>
+        </div>
 
             {/* 5. Time & Progress */}
             <div className="space-y-2">
               <h3 className="text-lg font-semibold">Time & Progress</h3>
-              <div className="grid grid-cols-5 gap-4">
+              <div className="grid grid-cols-3 gap-4">
 
                 <FormField control={form.control} name="estimated_duration" render={({ field }) => (
                   <FormItem>
@@ -490,6 +506,7 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
                   </FormItem>
                 )} />
 
+                {/*
                 <FormField control={form.control} name="start_date" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Start Date</FormLabel>
@@ -506,7 +523,7 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
                   </FormItem>
                 )} />
 
-                {/*
+                
                 <FormField control={form.control} name="progress" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Progress (%)</FormLabel>
@@ -638,7 +655,7 @@ export default function TasksPage() {
             {topic}
           </Badge>
         ))}
-      </div>
+          </div>
     )},
     { accessorKey: "section", header: "Section" },
     { accessorKey: "source", header: "Source", cell: ({ row }) => (
@@ -654,7 +671,7 @@ export default function TasksPage() {
       <div className="flex items-center gap-1">
         <Clock className="h-4 w-4" />
         <span>{row.original.estimated_duration}h</span>
-      </div>
+          </div>
     )},
     { accessorKey: "actual_duration", header: "Actual Duration", cell: ({ row }) => (
       <div className="flex items-center gap-1">
@@ -1364,7 +1381,7 @@ export default function TasksPage() {
       const typedValue = value as string | Date | null;
     
       return (
-        <Input
+      <Input
           type="date"
           value={toLocalInputDate(typedValue)}
           onChange={(e) => onChange(fromLocalInputDate(e.target.value))}

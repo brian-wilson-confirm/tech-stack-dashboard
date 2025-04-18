@@ -1,4 +1,3 @@
-from pydantic import BaseModel
 from typing import List, Optional
 from datetime import date
 from sqlmodel import SQLModel
@@ -6,10 +5,11 @@ from sqlmodel import SQLModel
 
 class TaskCreate(SQLModel):
     task: str
+    task_id: str
     technology_id: int
     subcategory_id: int
     category_id: int
-    topic_ids: List[int]
+    topics: List[str]
     section_id: int
     source_id: int
     level_id: int

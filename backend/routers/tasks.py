@@ -10,6 +10,8 @@ from backend.database.views.task_schemas import TaskCreate, TaskRead, TaskUpdate
 from backend.database.views.technology_schemas import TechnologyCreate, TechnologyRead
 from sqlalchemy import text
 
+from backend.routers.topics import get_topic_ids
+
 router = APIRouter(prefix="/tasks")
 
 """
@@ -17,13 +19,15 @@ router = APIRouter(prefix="/tasks")
 """
 
 @router.post("/", response_model=Task)
-async def create_task(task_in: TaskCreate, session: Session = Depends(get_session)):
-    task = Task.model_validate(task_in)
-    session.add(task)
-    session.commit()
-    session.refresh(task)
+async def create_task_with_topics(task_in: TaskCreate, session: Session = Depends(get_session)):
+    # Get/Create the topic id(s) for the task
+    topic_ids = get_topic_ids(task_in.topics, session)
 
-    for topic_id in task_in.topic_ids:
+    # Create the task
+    task = create_task(task_in, session)
+
+    # Link the task to the topic(s)
+    for topic_id in topic_ids:
         session.add(TaskTopicLink(task_id=task.id, topic_id=topic_id))
     
     session.commit()
@@ -130,6 +134,9 @@ async def delete_task(task_id: str, session: Session = Depends(get_session)):
     session.commit()
 
 
+
+
+
 """
     Task Priority: CRUD operations
 """
@@ -137,6 +144,10 @@ async def delete_task(task_id: str, session: Session = Depends(get_session)):
 @router.get("/priorities", response_model=List[TaskPriority])
 async def get_task_priorities(session: Session = Depends(get_session)):
     return session.exec(select(TaskPriority)).all()
+
+
+
+
 
 """
     Task Status: CRUD operations
@@ -146,6 +157,10 @@ async def get_task_priorities(session: Session = Depends(get_session)):
 async def get_task_statuses(session: Session = Depends(get_session)):
     return session.exec(select(TaskStatus)).all()
 
+
+
+
+
 """
     Task Type: CRUD operations
 """
@@ -153,6 +168,10 @@ async def get_task_statuses(session: Session = Depends(get_session)):
 @router.get("/types", response_model=List[TaskType])
 async def get_task_types(session: Session = Depends(get_session)):
     return session.exec(select(TaskType)).all()
+
+
+
+
 
 """
     Task Level: CRUD operations
@@ -162,6 +181,10 @@ async def get_task_types(session: Session = Depends(get_session)):
 async def get_task_levels(session: Session = Depends(get_session)):
     return session.exec(select(TaskLevel)).all()
 
+
+
+
+
 """
     Task Source: CRUD operations
 """
@@ -169,6 +192,10 @@ async def get_task_levels(session: Session = Depends(get_session)):
 @router.get("/sources", response_model=List[Source])
 async def get_task_sources(session: Session = Depends(get_session)):
     return session.exec(select(Source)).all()
+
+
+
+
 
 """
     Task Category: CRUD operations
@@ -179,6 +206,9 @@ async def get_task_categories(session: Session = Depends(get_session)):
     return session.exec(select(Category)).all()
 
 
+
+
+
 """
     Task Subcategory: CRUD operations
 """
@@ -186,6 +216,9 @@ async def get_task_categories(session: Session = Depends(get_session)):
 @router.get("/subcategories/{category_id}", response_model=List[Subcategory])
 async def get_task_subcategories_by_category(category_id: int, session: Session = Depends(get_session)):
     return session.exec(select(Subcategory).where(Subcategory.category_id == category_id)).all()
+
+
+
 
 
 """
@@ -302,6 +335,7 @@ async def get_technologies_with_subcategory_and_category(session: Session = Depe
 
 
 
+
 """
     Helper functions
 """
@@ -330,3 +364,12 @@ def serialize_task(task: Task, session: Session) -> TaskRead:
             done=task.done,
             topics=[t.name for t in task.topics]
         )
+
+
+def create_task(task_in: TaskCreate, session: Session = Depends(get_session)):
+    task_data = task_in.model_dump(exclude={"topics"})  # ⬅️ This prevents the validation error
+    task = Task(**task_data)  # ✅ Only valid fields passed
+    session.add(task)
+    session.commit()
+    session.refresh(task)
+    return task

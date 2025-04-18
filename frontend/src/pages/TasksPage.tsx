@@ -48,6 +48,8 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [typeOptions, setTypeOptions] = useState<{ name: string; id: number }[]>([])
+  const [levelOptions, setLevelOptions] = useState<{ name: string; id: number }[]>([])
+  const [statusOptions, setStatusOptions] = useState<{ name: string; id: number }[]>([])
   const [categoryOptions, setCategoryOptions] = useState<{ name: string; id: number }[]>([])
   const [subcategoryOptions, setSubcategoryOptions] = useState<{ name: string; id: number }[]>([])
   const [technologyOptions, setTechnologyOptions] = useState<{ name: string; id: number }[]>([])
@@ -61,11 +63,11 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
       subcategory: "",
       category: "",
       order: 0,
-      status: "not_started",
+      status: "",
       progress: 0,
       priority: "medium",
       type: "",
-      level: "intermediate",
+      level: "",
       section: "",
       topics: [],
       source: "",
@@ -76,27 +78,33 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
     },
   })
 
-  // Fetch categories and types when dialog opens
+  // Fetch categories, types, levels, and statuses when dialog opens
   useEffect(() => {
     if (open) {
       const fetchOptions = async () => {
         try {
-          const [categoriesRes, typesRes] = await Promise.all([
+          const [categoriesRes, typesRes, levelsRes, statusesRes] = await Promise.all([
             fetch('/api/tasks/categories'),
-            fetch('/api/tasks/types')
+            fetch('/api/tasks/types'),
+            fetch('/api/tasks/levels'),
+            fetch('/api/tasks/statuses')
           ])
           
-          if (!categoriesRes.ok || !typesRes.ok) {
+          if (!categoriesRes.ok || !typesRes.ok || !levelsRes.ok || !statusesRes.ok) {
             throw new Error('Failed to fetch options')
           }
           
-          const [categories, types] = await Promise.all([
+          const [categories, types, levels, statuses] = await Promise.all([
             categoriesRes.json(),
-            typesRes.json()
+            typesRes.json(),
+            levelsRes.json(),
+            statusesRes.json()
           ])
           
           setCategoryOptions(categories)
           setTypeOptions(types)
+          setLevelOptions(levels)
+          setStatusOptions(statuses)
         } catch (error) {
           console.error('Error fetching options:', error)
           toast({
@@ -280,14 +288,18 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
 
                 <FormField control={form.control} name="level" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Level *</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl><SelectTrigger><SelectValue placeholder="Select level" /></SelectTrigger></FormControl>
+                    <FormLabel className="capitalize">Level *</FormLabel>
+                    <Select
+                      value={levelOptions.find((l: { name: string; id: number }) => l.name === field.value || l.id.toString() === field.value?.toString())?.id.toString() ?? ""}
+                      onValueChange={(value) => field.onChange(value)}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="beginner">Beginner</SelectItem>
-                        <SelectItem value="intermediate">Intermediate</SelectItem>
-                        <SelectItem value="advanced">Advanced</SelectItem>
-                        <SelectItem value="expert">Expert</SelectItem>
+                        {levelOptions.map((level: { name: string; id: number }) => (
+                          <SelectItem key={level.id} value={level.id.toString()}>{capitalizeWords(level.name)}</SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -296,15 +308,18 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
 
                 <FormField control={form.control} name="status" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Status *</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl><SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger></FormControl>
+                    <FormLabel className="capitalize">Status *</FormLabel>
+                    <Select
+                      value={statusOptions.find((s: { name: string; id: number }) => s.name === field.value || s.id.toString() === field.value?.toString())?.id.toString() ?? ""}
+                      onValueChange={(value) => field.onChange(value)}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="not_started">Not Started</SelectItem>
-                        <SelectItem value="in_progress">In Progress</SelectItem>
-                        <SelectItem value="completed">Completed</SelectItem>
-                        <SelectItem value="on_hold">On Hold</SelectItem>
-                        <SelectItem value="cancelled">Cancelled</SelectItem>
+                        {statusOptions.map((status: { name: string; id: number }) => (
+                          <SelectItem key={status.id} value={status.id.toString()}>{capitalizeWords(status.name.replace('_', ' '))}</SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />

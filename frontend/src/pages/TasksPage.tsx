@@ -67,7 +67,7 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
       status_id: "1",
       progress: 0,
       priority_id: "1",
-      type_id: "Learning",
+      type_id: "1",
       level_id: "1",
       section: "",
       topics: [],
@@ -79,6 +79,13 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
       end_date: null,
     },
   })
+
+  // Reset form when dialog opens/closes
+  useEffect(() => {
+    if (!open) {
+      form.reset()
+    }
+  }, [open, form])
 
   // Fetch types, levels, statuses, priorities, categories, and sources when dialog opens
   useEffect(() => {
@@ -278,7 +285,7 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
                   <FormItem>
                     <FormLabel className="capitalize">Type *</FormLabel>
                     <Select
-                      value={typeOptions.find((t: { name: string; id: number }) => t.name === field.value || t.id.toString() === field.value?.toString())?.id.toString() ?? ""}
+                      value={typeOptions.find((t: { name: string; id: number }) => t.name === field.value || t.id.toString() === field.value?.toString())?.id.toString() ?? "1"}
                       onValueChange={(value) => field.onChange(value)}
                     >
                       <SelectTrigger className="w-full">
@@ -298,7 +305,7 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
                   <FormItem>
                     <FormLabel className="capitalize">Level *</FormLabel>
                     <Select
-                      value={levelOptions.find((l: { name: string; id: number }) => l.name === field.value || l.id.toString() === field.value?.toString())?.id.toString() ?? ""}
+                      value={levelOptions.find((l: { name: string; id: number }) => l.name === field.value || l.id.toString() === field.value?.toString())?.id.toString() ?? "1"}
                       onValueChange={(value) => field.onChange(value)}
                     >
                       <SelectTrigger className="w-full">
@@ -318,7 +325,7 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
                   <FormItem>
                     <FormLabel className="capitalize">Status *</FormLabel>
                     <Select
-                      value={statusOptions.find((s: { name: string; id: number }) => s.name === field.value || s.id.toString() === field.value?.toString())?.id.toString() ?? ""}
+                      value={statusOptions.find((s: { name: string; id: number }) => s.name === field.value || s.id.toString() === field.value?.toString())?.id.toString() ?? "1"}
                       onValueChange={(value) => field.onChange(value)}
                     >
                       <SelectTrigger className="w-full">
@@ -338,7 +345,7 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
                   <FormItem>
                     <FormLabel className="capitalize">Priority *</FormLabel>
                     <Select 
-                      value={statusOptions.find((s: { name: string; id: number }) => s.name === field.value || s.id.toString() === field.value?.toString())?.id.toString() ?? ""}
+                      value={statusOptions.find((s: { name: string; id: number }) => s.name === field.value || s.id.toString() === field.value?.toString())?.id.toString() ?? "1"}
                       onValueChange={(value) => field.onChange(value)}
                     >
                       <SelectTrigger className="w-full">

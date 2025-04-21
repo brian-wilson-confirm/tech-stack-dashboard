@@ -67,7 +67,7 @@ async def update_task(id: int, task_update: TaskUpdate, session: Session = Depen
         "technology": (Technology, "technology_id"),
         "category": (Category, "category_id"),
         "subcategory": (Subcategory, "subcategory_id"),
-        "section": (Section, "section_id"),
+        #"section": (Section, "section_id"),
         "source": (Source, "source_id"),
     }
 
@@ -77,17 +77,17 @@ async def update_task(id: int, task_update: TaskUpdate, session: Session = Depen
         if field == "topics":
             value = session.exec(select(Topic).where(Topic.name.in_(value))).all()
             updates[field] = value
-        elif field == "section":
-            resp = session.exec(select(Section).where(Section.name == value)).first()
-            if not resp:
-                # Create a new section since it doesn't exist
-                print(f"Creating new section: {value}")
-                new_section = Section(name=value)
-                session.add(new_section)
-                session.commit()
-                session.refresh(new_section)
-                resp = new_section
-            updates["section_id"] = resp.id
+        #elif field == "section":
+        #    resp = session.exec(select(Section).where(Section.name == value)).first()
+        #    if not resp:
+        #        # Create a new section since it doesn't exist
+        #        print(f"Creating new section: {value}")
+        #        new_section = Section(name=value)
+        #        session.add(new_section)
+        #        session.commit()
+        #        session.refresh(new_section)
+        #        resp = new_section
+        #    updates["section_id"] = resp.id
         elif field in model_mappings:
             model_class, id_field = model_mappings[field]
             # Look up the ID for the string value

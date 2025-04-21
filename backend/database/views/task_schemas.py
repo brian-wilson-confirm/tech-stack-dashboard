@@ -11,7 +11,7 @@ class TaskCreate(SQLModel):
     subcategory_id: int
     category_id: int
     topics: List[str]
-    section_id: int
+    section: Optional[str]
     source_id: int
     level_id: int
     type_id: int
@@ -27,15 +27,17 @@ class TaskCreate(SQLModel):
     done: bool = False
 
 
+# Actively using 4/21
 class TaskRead(SQLModel):
     id: int
     task_id: str
     task: str
+    description: Optional[str] = None
     technology: str
     subcategory: str
     category: str
     topics: List[str]
-    section: str
+    section: Optional[str] = None
     source: str
     level: Optional[str] = None
     type: Optional[str] = None

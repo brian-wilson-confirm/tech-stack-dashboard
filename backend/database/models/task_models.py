@@ -21,7 +21,7 @@ class Task(SQLModel, table=True):
     technology_id: int = Field(foreign_key="technology.id")
     subcategory_id: int = Field(foreign_key="subcategory.id")
     category_id: int = Field(foreign_key="category.id")
-    section_id: int = Field(foreign_key="section.id")
+    section: str
     source_id: int = Field(foreign_key="source.id")
     topics: List["Topic"] = Relationship(back_populates="tasks", link_model=TaskTopicLink)
     level_id: int = Field(foreign_key="task_level.id")

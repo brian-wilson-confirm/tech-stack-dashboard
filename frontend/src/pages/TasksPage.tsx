@@ -13,7 +13,7 @@ import { TaskSheet } from "@/components/ui/task-sheet"
 import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
 import { toast } from "@/components/ui/use-toast"
-import { Task, TaskFormSubmit, TaskForm, taskFormSchema, taskFormSubmitSchema } from "@/components/data/schema"
+import { Task, TaskForm, taskFormSchema } from "@/components/data/schema"
 import { getStatusColor, getPriorityColor } from "@/styles/style"
 import React from "react"
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -42,7 +42,7 @@ import { Textarea } from "@/components/ui/textarea"
 /*******************
   ADD NEW TASK DIALOG
 ********************/
-function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskFormSubmit) => Promise<any>, disabled?: boolean }) {
+function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm) => Promise<any>, disabled?: boolean }) {
   const [open, setOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -55,8 +55,8 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
   const [technologyOptions, setTechnologyOptions] = useState<{ name: string; id: number }[]>([])
   const [sourceOptions, setSourceOptions] = useState<{ name: string; id: number }[]>([])
   
-  const form = useForm<TaskFormSubmit>({
-    resolver: zodResolver(taskFormSubmitSchema),
+  const form = useForm<TaskForm>({
+    resolver: zodResolver(taskFormSchema),
     defaultValues: {
       task: "",
       description: "",
@@ -192,7 +192,7 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
     }
   }, [form.watch('subcategory_id')])
 
-  const onSubmit = async (data: TaskFormSubmit) => {
+  const onSubmit = async (data: TaskForm) => {
     setIsSubmitting(true)
     setError(null)
     
@@ -543,31 +543,32 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
 }
 
 
+
 /*******************
   INITIAL VISIBLE COLUMNS
 ********************/
 const initialVisibleColumns = {
-  id: false,                  // ✓ ID  
-  task_id: true,              // ✓ Task ID
-  task: true,                 // ✓ Task
-  technology: true,           // ✓ Technology
-  subcategory: true,         // Subcategory
-  category: true,             // ✓ Category
-  topics: false,              // Topics
-  section: false,             // Section
-  source: true,               // ✓ Source
-  level: false,               // Level
-  type: true,                 // ✓ Type
-  status: true,               // ✓ Status
-  priority: true,             // ✓ Priority
-  progress: false,            // Progress
-  order: false,               // Order
-  due_date: true,            // Due Date
-  start_date: false,           // Start Date
-  end_date: false,            // End Date
-  estimated_duration: false,   // ✓ Est. Duration
-  actual_duration: false,     // Actual Duration
-  done: false                 // Done
+  id: false,   
+  task_id: true,
+  task: true,
+  technology: true,
+  subcategory: true,
+  category: true,
+  topics: false,
+  section: false,
+  source: false,
+  level: false,
+  type: false,
+  status: true,
+  priority: true,
+  progress: false,
+  order: false,
+  due_date: true,
+  start_date: false,
+  end_date: false,
+  estimated_duration: false,
+  actual_duration: false,
+  done: false
 }
 
 
@@ -859,7 +860,7 @@ export default function TasksPage() {
     } catch (err) {
       toast({
         title: "Error",
-        description: "Failed to load tasks.",
+        description: "Failed to fetch tasks",
         variant: "destructive",
       });
     } finally {
@@ -878,7 +879,6 @@ export default function TasksPage() {
       setHasFetchedRows(true);
     }
   }, []);
-
 
 
 
@@ -925,7 +925,6 @@ export default function TasksPage() {
       });
     }
   };
-
 
 
 
@@ -1052,12 +1051,10 @@ export default function TasksPage() {
     }
   }
 
-
   // Edit Change
   const onEditChange = (field: keyof Task, value: Task[keyof Task]) => {
     setEditForm(prev => prev ? { ...prev, [field]: value } : prev)
   }
-
 
   // Update handleEditChange to fetch technologies when subcategory changes
   const handleEditChange = (field: keyof Task, value: string | number | boolean | string[] | Date | null) => {
@@ -1115,14 +1112,12 @@ export default function TasksPage() {
     }
   };
 
-
   // Save Edit
   const onSaveEdit = async () => {
     if (editForm) {
       await handleRowUpdate(editForm)
     }
   }
-
 
   // Update Row
   const handleRowUpdate = async (updatedRow: Task) => {
@@ -1175,13 +1170,11 @@ export default function TasksPage() {
     }
   };
 
-
   // Cancel Edit
   const onCancelEdit = () => {
     setEditingRow(null)
     setEditForm(null)
   }
-
 
   // Delete Row
   const handleRowDelete = async (rowId: string) => {
@@ -1210,7 +1203,6 @@ export default function TasksPage() {
       setIsLoading(false);
     }
   };
-
 
 
 
@@ -1428,7 +1420,7 @@ export default function TasksPage() {
   /*******************
     ADD NEW TASKS
   ********************/
-  const handleAddTask = async (newTask: TaskFormSubmit) => {
+  const handleAddTask = async (newTask: TaskForm) => {
     console.log('Adding newTask to the table', newTask)
     try {
       // First, create the task
@@ -1476,6 +1468,7 @@ export default function TasksPage() {
       throw error
     }
   }
+
 
 
   return (

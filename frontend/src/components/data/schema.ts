@@ -28,34 +28,12 @@ export const taskSchema = z.object({
 })
 export type Task = z.infer<typeof taskSchema> 
 
+
+
 /*******************
   TASK FORM SCHEMA  
 *******************/
 export const taskFormSchema = z.object({
-  task: z.string().min(1, "Task name is required"),
-  description: z.string(),
-  technology: z.string().min(1, "Technology is required"),
-  subcategory: z.string().min(1, "Subcategory is required"),
-  category: z.string().min(1, "Category is required"),
-  order: z.number().min(0),
-  status: z.string(),
-  progress: z.number().min(0).max(100),
-  priority: z.string(),
-  type: z.string().min(1, "Type is required"),
-  level: z.string(),
-  section: z.string(),
-  topics: z.array(z.string()),
-  source: z.string().min(1, "Source is required"),
-  estimated_duration: z.number().min(0),
-  actual_duration: z.number().nullable(),
-  due_date: z.string().nullable(),
-  start_date: z.string().nullable(),
-  end_date: z.string().nullable(),
-})
-export type TaskForm = z.infer<typeof taskFormSchema>
-
-
-export const taskFormSubmitSchema = z.object({
   task: z.string().min(1, "Task name is required"),
   description: z.string(),
   technology_id: z.string().min(1, "Technology is required"),
@@ -76,7 +54,8 @@ export const taskFormSubmitSchema = z.object({
   start_date: z.string().nullable(),
   end_date: z.string().nullable(),
 })
-export type TaskFormSubmit = z.infer<typeof taskFormSubmitSchema>
+export type TaskForm = z.infer<typeof taskFormSchema>
+
 
 
 /*******************
@@ -88,6 +67,7 @@ export const technologySchema = z.object({
   description: z.string(),
 })
 export type Technology = z.infer<typeof technologySchema> 
+
 
 
 /*******************

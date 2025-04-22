@@ -100,8 +100,8 @@ type Props<T extends Record<string, any>> = {
   showActions?: boolean;
   showPagination?: boolean;
   tableClassName?: string;
-  AddTaskDialog?: React.ComponentType<{ onAddTask: (task: any) => Promise<any>, disabled?: boolean }>;
-  onAddTask?: (task: any) => Promise<any>;
+  AddItemDialog?: React.ComponentType<{ onAddItem: (item: any) => Promise<any>, disabled?: boolean }>;
+  onAddItem?: (item: any) => Promise<any>;
 }
 
 const FilterDropdown = ({ config, editingRow }: { config: FilterConfig, editingRow: string | null }) => {
@@ -217,8 +217,8 @@ export function DataTableWidget<T extends Record<string, any>>({
   showActions,
   showPagination = true,
   tableClassName,
-  AddTaskDialog,
-  onAddTask,
+  AddItemDialog,
+  onAddItem,
 }: Props<T>) {
 
   const table = useReactTable({
@@ -395,8 +395,8 @@ export function DataTableWidget<T extends Record<string, any>>({
             )}
         </div>
         <div className="flex items-center space-x-2">
-          {AddTaskDialog && onAddTask && (
-            <AddTaskDialog onAddTask={onAddTask} disabled={!!editingRow} />
+          {AddItemDialog && onAddItem && (
+            <AddItemDialog onAddItem={onAddItem} disabled={!!editingRow} />
           )}
         </div>
       </div>

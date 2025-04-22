@@ -114,13 +114,13 @@ export function TaskSheet({ task, open, onOpenChange }: TaskSheetProps) {
                 <div className="grid grid-cols-4 items-center">
                   <span className="text-sm text-muted-foreground">Start Date</span>
                   <span className="text-sm col-span-3">
-                    {new Date(task.start_date).toLocaleDateString()}
+                    {task.start_date ? new Date(task.start_date).toLocaleDateString() : 'N/A'}
                   </span>
                 </div>
                 <div className="grid grid-cols-4 items-center">
                   <span className="text-sm text-muted-foreground">End Date</span>
                   <span className="text-sm col-span-3">
-                    {new Date(task.end_date).toLocaleDateString()}
+                    {task.end_date ? new Date(task.end_date).toLocaleDateString() : 'N/A'}
                   </span>
                 </div>
               </div>

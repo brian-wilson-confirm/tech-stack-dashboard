@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from "react"
 import { ColumnDef, SortingState, VisibilityState, FilterFn, ColumnFiltersState, OnChangeFn, PaginationState } from "@tanstack/react-table"
 import { DataTableWidget, EditModeRenderer } from "@/components/widgets/DataTableWidget"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { CheckSquare, Clock, Plus } from "lucide-react"
+import { BookOpen, CheckSquare, Clock, Plus } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { capitalizeWords } from "@/lib/utils"
 import { StatusEnum } from "@/types/enums"
@@ -42,7 +42,7 @@ import { Textarea } from "@/components/ui/textarea"
 /*******************
   ADD NEW TASK DIALOG
 ********************/
-function ShowAddTaskDialog({ onAddItem, disabled }: { onAddItem: (item: TaskForm) => Promise<any>, disabled?: boolean }) {
+function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm) => Promise<any>, disabled?: boolean }) {
   const [open, setOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -197,7 +197,7 @@ function ShowAddTaskDialog({ onAddItem, disabled }: { onAddItem: (item: TaskForm
     setError(null)
     
     try {
-      await onAddItem(data)
+      await onAddTask(data)
       setOpen(false)
       form.reset()
     } catch (error) {
@@ -573,9 +573,9 @@ const initialVisibleColumns = {
 
 
 
-export default function TasksPage() {
+export default function LessonsPage() {
   // Set page title
-  usePageTitle('Tasks')
+  usePageTitle('Lessons')
 
   /*******************
     STATE VARIABLES
@@ -1474,8 +1474,8 @@ export default function TasksPage() {
   return (
     <div className="p-8">
       <div className="flex items-center gap-3 mb-8">
-        <CheckSquare className="h-8 w-8" />
-        <h1 className="text-3xl font-bold">Tasks</h1>
+        <BookOpen className="h-8 w-8" />
+        <h1 className="text-3xl font-bold">Lessons</h1>
       </div>
       <div className="grid gap-6">
         <DataTableWidget
@@ -1508,16 +1508,17 @@ export default function TasksPage() {
           onDeleteRow={handleRowDelete}
           showCheckboxes={true}
           showActions={true}
-          AddItemDialog={ShowAddTaskDialog}
-          onAddItem={handleAddTask}
+          AddTaskDialog={ShowAddTaskDialog}
+          onAddTask={handleAddTask}
         />
       </div>
 
+      {/*
       <TaskSheet
         task={selectedRow}
         open={sheetOpen}
         onOpenChange={setSheetOpen}
-      />
+      />*/}
     </div>
   )
 }

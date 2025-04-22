@@ -55,6 +55,7 @@ import TasksPage from './pages/TasksPage'
 import AssessmentsPage from './pages/AssessmentsPage'
 import { Toaster } from './components/ui/toaster'
 import SettingsPage from './pages/SettingsPage'
+import LessonsPage from './pages/LessonsPage'
 
 function App() {
   return (
@@ -115,6 +116,7 @@ function App() {
             
             {/* Other routes */}
             <Route path="/assessments" element={<AssessmentsPage />} />
+            <Route path="/lessons" element={<LessonsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/tasks" element={<TasksPage />} />
           </Routes>

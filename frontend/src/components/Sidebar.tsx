@@ -20,6 +20,7 @@ import {
   CheckSquare,
   ClipboardCheck,
   Settings,
+  BookOpen,
 } from "lucide-react"
 
 interface NavItem {
@@ -161,6 +162,11 @@ export function Sidebar({ className }: React.HTMLAttributes<HTMLDivElement>) {
           label: "Tasks",
           icon: CheckSquare,
           href: "/tasks",
+        },
+        {
+          label: "Lessons",
+          icon: BookOpen,
+          href: "/lessons"
         },
         {
           label: "Assessments",

@@ -405,8 +405,8 @@ export function DataTableWidget<T extends Record<string, any>>({
 
 
         {/* Table */}
-        <div className="rounded-md border">
-          <Table className={cn("w-full table-fixed", tableClassName)}>
+        <div className="rounded-md border overflow-x-auto">
+          <Table className={cn("w-full", tableClassName)}>
 
 
           {/* Table Header */}
@@ -490,24 +490,21 @@ export function DataTableWidget<T extends Record<string, any>>({
 
                     {row.getVisibleCells().map((cell) => (
                       <TableCell 
-                        key={cell.id} 
-                        //className="w-[200px]"
-                        style={{
-                          width: `${cell.column.getSize()}px`,
-                          maxWidth: `${cell.column.columnDef.maxSize ?? cell.column.getSize()}px`,
-                          minWidth: `${cell.column.columnDef.size ?? cell.column.getSize()}px`,
-                        }}
+                        key={cell.id}
+                        className="relative"
                       >
-                        {editingRow === row.original.id ? (
-                          renderEditableCell(cell)
-                        ) : (
-                          flexRender(cell.column.columnDef.cell, cell.getContext())
-                      )}
-                    </TableCell>
-                  ))}
+                        <div className="overflow-hidden text-ellipsis">
+                          {editingRow === row.original.id ? (
+                            renderEditableCell(cell)
+                          ) : (
+                            flexRender(cell.column.columnDef.cell, cell.getContext())
+                          )}
+                        </div>
+                      </TableCell>
+                    ))}
 
                     {showActions && (
-                    <TableCell>
+                    <TableCell className="w-[100px] shrink-0">
                         {editingRow === row.original.id ? (
                         <>
                             <Button variant="ghost" size="icon" onClick={onSaveEdit}>

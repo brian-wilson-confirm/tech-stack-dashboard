@@ -67,7 +67,6 @@ async def update_task(id: int, task_update: TaskUpdate, session: Session = Depen
         "technology": (Technology, "technology_id"),
         "category": (Category, "category_id"),
         "subcategory": (Subcategory, "subcategory_id"),
-        #"section": (Section, "section_id"),
         "source": (Source, "source_id"),
     }
 
@@ -350,8 +349,9 @@ def serialize_task(task: Task, session: Session) -> TaskRead:
             technology=session.get(Technology, task.technology_id).name,
             subcategory=(sub := session.get(Subcategory, task.subcategory_id)) and sub.name,
             category=(cat := session.get(Category, task.category_id)) and cat.name,
-            section=task.section,
+            topics=[t.name for t in task.topics],
             source=(src := session.get(Source, task.source_id)) and src.name,
+            section=task.section,
             level=(lvl := session.get(TaskLevel, task.level_id)) and lvl.name,
             type=(typ := session.get(TaskType, task.type_id)) and typ.name,
             status=(stat := session.get(TaskStatus, task.status_id)) and stat.name,
@@ -363,8 +363,7 @@ def serialize_task(task: Task, session: Session) -> TaskRead:
             end_date=task.end_date,
             estimated_duration=task.estimated_duration,
             actual_duration=task.actual_duration,
-            done=task.done,
-            topics=[t.name for t in task.topics]
+            done=task.done
         )
 
 

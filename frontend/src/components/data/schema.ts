@@ -1,29 +1,37 @@
 import { z } from "zod"
 
 /*******************
-  TASK
+  TASK SCHEMA
 *******************/
-export const taskSchema = z.object({
+export const taskBaseSchema = z.object({
+  task: z.string().min(1, "Task name is required"),
+  description: z.string(),
+  topics: z.array(z.string()),
+  section: z.string(),
+  progress: z.number().min(0).max(100),
+  order: z.number().min(0),
+  estimated_duration: z.number().min(0),
+  actual_duration: z.number().nullable(),
+  due_date: z.string().nullable(),
+  start_date: z.string().nullable(),
+  end_date: z.string().nullable(),
+})
+
+
+/*******************
+  TASK SCHEMA
+*******************/
+export const taskSchema = taskBaseSchema.extend({
   id: z.string(),
   task_id: z.string(),
-  task: z.string().min(1, "Task name is required"),
   technology: z.string(),
   subcategory: z.string(),
   category: z.string(),
-  topics: z.array(z.string()),
-  section: z.string(),
-  source: z.string(),
+  source: z.string(), 
   level: z.string(),
   type: z.string(),
   status: z.string(),
   priority: z.string(),
-  progress: z.number().min(0).max(100),
-  order: z.number(),
-  estimated_duration: z.number(),
-  actual_duration: z.number(),
-  due_date: z.date(),
-  start_date: z.date(),
-  end_date: z.date(),
   done: z.boolean(),
 })
 export type Task = z.infer<typeof taskSchema> 
@@ -33,26 +41,15 @@ export type Task = z.infer<typeof taskSchema>
 /*******************
   TASK FORM SCHEMA  
 *******************/
-export const taskFormSchema = z.object({
-  task: z.string().min(1, "Task name is required"),
-  description: z.string(),
+export const taskFormSchema = taskBaseSchema.extend({
   technology_id: z.string().min(1, "Technology is required"),
   subcategory_id: z.string().min(1, "Subcategory is required"),
   category_id: z.string().min(1, "Category is required"),
-  order: z.number().min(0),
-  status_id: z.string().min(1, "Status is required"),
-  progress: z.number().min(0).max(100),
-  priority_id: z.string().min(1, "Priority is required"),
-  type_id: z.string().min(1, "Type is required"),
-  level_id: z.string().min(1, "Level is required"),
-  section: z.string(),
-  topics: z.array(z.string()),
   source_id: z.string().min(1, "Source is required"),
-  estimated_duration: z.number().min(0),
-  actual_duration: z.number().nullable(),
-  due_date: z.string().nullable(),
-  start_date: z.string().nullable(),
-  end_date: z.string().nullable(),
+  level_id: z.string().min(1, "Level is required"),
+  type_id: z.string().min(1, "Type is required"),
+  status_id: z.string().min(1, "Status is required"),
+  priority_id: z.string().min(1, "Priority is required"),
 })
 export type TaskForm = z.infer<typeof taskFormSchema>
 

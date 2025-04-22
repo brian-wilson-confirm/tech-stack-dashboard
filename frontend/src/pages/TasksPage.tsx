@@ -193,7 +193,6 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
   }, [form.watch('subcategory_id')])
 
   const onSubmit = async (data: TaskFormSubmit) => {
-    console.log('ShowAddTaskDialog onSubmit', data)
     setIsSubmitting(true)
     setError(null)
     
@@ -1441,39 +1440,15 @@ export default function TasksPage() {
   
   
   /*******************
-    ADD NEW TASK
+    ADD NEW TASKSubmit
   ********************/
-  const handleAddTask = async (newTask: TaskForm) => {
-    console.log('Brian handleAddTask', newTask)
-    try {
-      const response = await fetch('/api/tasks', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newTask),
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.detail || 'Failed to add task')
-      }
-
-      const addedTask = await response.json() as Task
-      setRows(prevRows => [...prevRows, addedTask])
-      toast({
-        title: "Success",
-        description: "Task added successfully",
-        duration: 3000,
-      })
-    } catch (error) {
-      console.error('Error adding task:', error)
-      toast({
-        title: "Error",
-        description: "Failed to add task",
-        variant: "destructive",
-      })
-    }
+  const handleAddTask = async (newTask: Task) => {  
+    setRows(prevRows => [...prevRows, newTask]);
+    toast({
+      title: "Success",
+      description: "Task added successfully",
+      duration: 3000,
+    })
   }
 
 
@@ -1483,23 +1458,6 @@ export default function TasksPage() {
         <CheckSquare className="h-8 w-8" />
         <h1 className="text-3xl font-bold">Tasks</h1>
       </div>
-      {/*
-      <div className="grid gap-6">
-        <TasksWidget tasks={rows} />
-      </div>
-      <br />
-      <div className="grid gap-6">
-        <TempWidget 
-          tasks={rows} 
-          onTaskUpdate={handleRowUpdate}
-        />
-      </div>
-      <br />
-      <div className="grid gap-6">
-        <h2 className="text-2xl font-bold">New Widget</h2>
-        <NewWidget tasks={rows} />
-      </div>
-      <br />*/}
       <div className="grid gap-6">
         <DataTableWidget
           title=""

@@ -13,7 +13,7 @@ import { TaskSheet } from "@/components/ui/task-sheet"
 import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
 import { toast } from "@/components/ui/use-toast"
-import { Task, TaskForm, taskFormSchema } from "@/components/data/schema"
+import { Lesson, Task, TaskForm, taskFormSchema } from "@/components/data/schema"
 import { getStatusColor, getPriorityColor } from "@/styles/style"
 import React from "react"
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -42,7 +42,7 @@ import { Textarea } from "@/components/ui/textarea"
 /*******************
   ADD NEW TASK DIALOG
 ********************/
-function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm) => Promise<any>, disabled?: boolean }) {
+function ShowAddLessonDialog({ onAddItem, disabled }: { onAddItem: (item: TaskForm) => Promise<any>, disabled?: boolean }) {
   const [open, setOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -197,11 +197,11 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
     setError(null)
     
     try {
-      await onAddTask(data)
+      await onAddItem(data)
       setOpen(false)
       form.reset()
     } catch (error) {
-      console.error('Error adding task:', error)
+      console.error('Error adding lesson:', error)
       setError(error instanceof Error ? error.message : 'An unexpected error occurred')
     } finally {
       setIsSubmitting(false)
@@ -213,14 +213,14 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" disabled={disabled}>
           <Plus className="h-4 w-4 mr-2" />
-          Add Task
+          Add Lesson
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add New Task</DialogTitle>
           <DialogDescription>
-            Fill in the details for the new task. All required fields are marked with an asterisk (*).
+            Fill in the details for the new lesson. All required fields are marked with an asterisk (*).
           </DialogDescription>
         </DialogHeader>
         {error && (
@@ -549,26 +549,14 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
 ********************/
 const initialVisibleColumns = {
   id: false,   
-  task_id: true,
-  task: true,
-  technology: true,
-  subcategory: true,
-  category: true,
-  topics: false,
-  section: false,
-  source: false,
-  level: false,
-  type: false,
-  status: true,
-  priority: true,
-  progress: false,
-  order: false,
-  due_date: true,
-  start_date: false,
-  end_date: false,
-  estimated_duration: false,
-  actual_duration: false,
-  done: false
+  lesson_id: true,
+  title: true,
+  description: true,
+  module: true,
+  content: true,
+  video_url: true,
+  order: true,
+  estimated_duration: true
 }
 
 
@@ -581,7 +569,7 @@ export default function LessonsPage() {
     STATE VARIABLES
   ********************/
   // Fetching Data
-  const [rows, setRows] = useState<Task[]>([]);
+  const [rows, setRows] = useState<Lesson[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasFetchedRows, setHasFetchedRows] = useState(false);
 
@@ -602,14 +590,14 @@ export default function LessonsPage() {
 
   // Row Selection
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
-  const [selectedRow, setSelectedRow] = useState<Task | null>(null);  
+  const [selectedRow, setSelectedRow] = useState<Lesson | null>(null);  
 
   // Row Sheet
   const [sheetOpen, setSheetOpen] = useState(false);
 
   // Row Editing
   const [editingRow, setEditingRow] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState<Task | null>(null);
+  const [editForm, setEditForm] = useState<Lesson | null>(null);
 
   // Fetching Options
   const [hasFetchedOptions, setHasFetchedOptions] = useState(false);
@@ -627,105 +615,23 @@ export default function LessonsPage() {
   /*******************
     COLUMN DEFINITIONS
   ********************/
-  const columns: ColumnDef<Task>[] = [
-    { accessorKey: "task_id", header: "Task ID", cell: ({ row }) => (
+  const columns: ColumnDef<Lesson>[] = [
+    { accessorKey: "lesson_id", header: "Lesson ID", cell: ({ row }) => (
         <Button
           variant="link"
           className="p-0 h-auto font-normal"
           onClick={() => handleRowClick(row.original)}
         >
-          {row.original.task_id}
+          {row.original.lesson_id}
         </Button>
     )},
-    { accessorKey: "task", header: "Task" },
-    { accessorKey: "technology", header: "Technology" },
-    { accessorKey: "subcategory", header: "Subcategory" },
-    { accessorKey: "category", header: "Category" },
-    { accessorKey: "topics", header: "Topics", cell: ({ row }) => (
-      <div className="flex flex-wrap gap-2">
-        {row.original.topics.map((topic, index) => (
-          <Badge key={index} variant="secondary" className="bg-gray-200 text-gray-800">
-            {topic}
-          </Badge>
-        ))}
-          </div>
-    )},
-    { accessorKey: "section", header: "Section" },
-    { accessorKey: "source", header: "Source", cell: ({ row }) => (
-        <span>{capitalizeWords(row.original.source)}</span>
-    )},
-    { accessorKey: "level", header: "Level", cell: ({ row }) => (
-        <span>{capitalizeWords(row.original.level)}</span>
-    )},
-    { accessorKey: "type", header: "Type", cell: ({ row }) => (
-        <span>{capitalizeWords(row.original.type)}</span>
-    )},
-    { accessorKey: "estimated_duration", header: "Est. Duration", cell: ({ row }) => (
-      <div className="flex items-center gap-1">
-        <Clock className="h-4 w-4" />
-        <span>{row.original.estimated_duration}h</span>
-          </div>
-    )},
-    { accessorKey: "actual_duration", header: "Actual Duration", cell: ({ row }) => (
-      <div className="flex items-center gap-1">
-        <Clock className="h-4 w-4" />
-        <span>{row.original.actual_duration}h</span>
-      </div>
-    )},
-    { accessorKey: "status", header: "Status", 
-      filterFn: ((row, columnId, filterValue) => {
-        return filterValue.includes(row.getValue(columnId))
-      }) as FilterFn<Task>,
-      cell: ({ row }) => (
-        <Badge variant="secondary" className={`${getStatusColor(row.original.status as StatusEnum)} text-white`}>
-          {capitalizeWords((row.original.status ?? '').replace('_', ' '))}
-        </Badge>
-      )
-    },
-    { accessorKey: "priority", header: "Priority", 
-      filterFn: ((row, columnId, filterValue) => {
-        return filterValue.includes(row.getValue(columnId))
-      }) as FilterFn<Task>,
-      cell: ({ row }) => (
-        <Badge variant="secondary" className={`${getPriorityColor(row.original.priority as PriorityEnum)} text-white`}>
-          {capitalizeWords(row.original.priority)}
-        </Badge>
-      )
-    },
-    { accessorKey: "progress", header: "Progress", cell: ({ row }) => (
-      <div className="flex items-center gap-2">
-        <Progress value={row.original.progress} className="w-[60px]" />
-        <span className="text-sm">{row.original.progress}%</span>
-      </div>
-    )},
+    { accessorKey: "title", header: "Title" },
+    { accessorKey: "description", header: "Description" },
+    { accessorKey: "module", header: "Module" },
+    { accessorKey: "content", header: "Content" },
+    { accessorKey: "video_url", header: "Video URL" },
     { accessorKey: "order", header: "Order" },
-    { accessorKey: "due_date", header: "Due Date", cell: ({ row }) => {
-      const toLocalInputDate = (date: Date | string | null) => {
-        if (!date) return '';
-        const dateObj = date instanceof Date ? date : new Date(date);
-        if (isNaN(dateObj.getTime())) return '';
-        return dateObj.toISOString().split('T')[0]; // Return the date part directly
-      }
-      return <span>{toLocalInputDate(row.original.due_date)}</span>
-    }}, 
-    { accessorKey: "start_date", header: "Start Date", cell: ({ row }) => {
-      const toLocalInputDate = (date: Date | string | null) => {
-        if (!date) return '';
-        const dateObj = date instanceof Date ? date : new Date(date);
-        if (isNaN(dateObj.getTime())) return '';
-        return dateObj.toISOString().split('T')[0]; // Return the date part directly
-      }
-      return <span>{toLocalInputDate(row.original.start_date)}</span>
-    }},
-    { accessorKey: "end_date", header: "End Date", cell: ({ row }) => {
-      const toLocalInputDate = (date: Date | string | null) => {
-        if (!date) return '';
-        const dateObj = date instanceof Date ? date : new Date(date);
-        if (isNaN(dateObj.getTime())) return '';
-        return dateObj.toISOString().split('T')[0]; // Return the date part directly
-      }
-      return <span>{toLocalInputDate(row.original.end_date)}</span>
-    }},
+    { accessorKey: "estimated_duration", header: "Est. Duration" }
   ]
 
 
@@ -781,7 +687,7 @@ export default function LessonsPage() {
     // Add search filter
     if (searchQuery) {
       filters.push({
-        id: 'task',
+        id: 'title',
         value: searchQuery,
       })
     }
@@ -851,16 +757,16 @@ export default function LessonsPage() {
   const fetchRows = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/tasks');
+      const response = await fetch('/api/lessons');
       if (!response.ok) {
-        throw new Error('Failed to fetch tasks');
+        throw new Error('Failed to fetch lessons');
       }
       const data = await response.json();
       setRows(data);
     } catch (err) {
       toast({
         title: "Error",
-        description: "Failed to fetch tasks",
+        description: "Failed to fetch lessons",
         variant: "destructive",
       });
     } finally {
@@ -1420,10 +1326,11 @@ export default function LessonsPage() {
   /*******************
     ADD NEW TASKS
   ********************/
-  const handleAddTask = async (newTask: TaskForm) => {
-    console.log('Adding newTask to the table', newTask)
+  /*
+  const handleAddLesson = async (newLesson: LessonForm) => {
+    console.log('Adding newLesson to the table', newLesson)
     try {
-      // First, create the task
+      // First, create the lesson
       const response = await fetch('/api/tasks', {
         method: 'POST',
         headers: {
@@ -1467,7 +1374,7 @@ export default function LessonsPage() {
       })
       throw error
     }
-  }
+  }*/
 
 
 
@@ -1499,7 +1406,7 @@ export default function LessonsPage() {
           onRowSelectionChange={setRowSelection}
           editForm={editForm}
           editModeRenderers={editModeRenderers}
-          nonEditableColumns={['task_id']}
+          nonEditableColumns={['lesson_id']}
           onStartEdit={startEditing}
           onEditChange={onEditChange}
           editingRow={editingRow}
@@ -1508,8 +1415,8 @@ export default function LessonsPage() {
           onDeleteRow={handleRowDelete}
           showCheckboxes={true}
           showActions={true}
-          AddTaskDialog={ShowAddTaskDialog}
-          onAddTask={handleAddTask}
+          AddItemDialog={ShowAddLessonDialog}
+          onAddItem={undefined}
         />
       </div>
 

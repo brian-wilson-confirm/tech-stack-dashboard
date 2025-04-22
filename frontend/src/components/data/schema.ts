@@ -1,7 +1,7 @@
 import { z } from "zod"
 
 /*******************
-  TASK SCHEMA
+  TASK BASE
 *******************/
 export const taskBaseSchema = z.object({
   task: z.string().min(1, "Task name is required"),
@@ -78,3 +78,24 @@ export const techSubCategorySchema = z.object({
   description: z.string(),
 })
 export type TechSubCat = z.infer<typeof techSubCategorySchema> 
+
+
+
+/*******************
+  LESSON SCHEMA
+*******************/
+export const lessonSchema = z.object({
+  lesson_id: z.string(),
+  title: z.string().min(1, "Title is required"),
+  description: z.string(),
+  module: z.string(),
+  content: z.string(),
+  video_url: z.string(),
+  order: z.number().min(0),
+  estimated_duration: z.number().min(0),
+})
+export type Lesson = z.infer<typeof lessonSchema> 
+
+
+
+

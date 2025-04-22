@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import SQLModel
 
-from backend.routers import tasks, other, topics
+from backend.routers import tasks, other, topics, lessons
 from backend.database.connection import engine
 
 @asynccontextmanager
@@ -15,6 +15,7 @@ app = FastAPI(lifespan=lifespan)
 app.include_router(other.router, prefix="/api", tags=["other"])
 app.include_router(tasks.router, prefix="/api", tags=["tasks"])
 app.include_router(topics.router, prefix="/api", tags=["topics"])
+app.include_router(lessons.router, prefix="/api", tags=["lessons"])
 
 # Configure CORS
 app.add_middleware(

@@ -628,7 +628,11 @@ export default function TasksPage() {
     COLUMN DEFINITIONS
   ********************/
   const columns: ColumnDef<Task>[] = [
-    { accessorKey: "task_id", header: "Task ID", cell: ({ row }) => (
+    {
+      accessorKey: "task_id",
+      header: "Task ID",
+      enableSorting: true,
+      cell: ({ row }) => (
         <Button
           variant="link"
           className="p-0 h-auto font-normal"
@@ -636,96 +640,177 @@ export default function TasksPage() {
         >
           {row.original.task_id}
         </Button>
-    )},
-    { accessorKey: "task", header: "Task" },
-    { accessorKey: "technology", header: "Technology" },
-    { accessorKey: "subcategory", header: "Subcategory" },
-    { accessorKey: "category", header: "Category" },
-    { accessorKey: "topics", header: "Topics", cell: ({ row }) => (
-      <div className="flex flex-wrap gap-2">
-        {row.original.topics.map((topic, index) => (
-          <Badge key={index} variant="secondary" className="bg-gray-200 text-gray-800">
-            {topic}
-          </Badge>
-        ))}
-          </div>
-    )},
-    { accessorKey: "section", header: "Section" },
-    { accessorKey: "source", header: "Source", cell: ({ row }) => (
+      ),
+    },
+    {
+      accessorKey: "task",
+      header: "Task",
+      enableSorting: true,
+    },
+    {
+      accessorKey: "technology",
+      header: "Technology",
+      enableSorting: true,
+    },
+    {
+      accessorKey: "subcategory",
+      header: "Subcategory",
+      enableSorting: true,
+    },
+    {
+      accessorKey: "category",
+      header: "Category",
+      enableSorting: true,
+    },
+    {
+      accessorKey: "topics",
+      header: "Topics",
+      enableSorting: true,
+      cell: ({ row }) => (
+        <div className="flex flex-wrap gap-2">
+          {row.original.topics.map((topic, index) => (
+            <Badge key={index} variant="secondary" className="bg-gray-200 text-gray-800">
+              {topic}
+            </Badge>
+          ))}
+        </div>
+      ),
+    },
+    {
+      accessorKey: "section",
+      header: "Section",
+      enableSorting: true,
+    },
+    {
+      accessorKey: "source",
+      header: "Source",
+      enableSorting: true,
+      cell: ({ row }) => (
         <span>{capitalizeWords(row.original.source)}</span>
-    )},
-    { accessorKey: "level", header: "Level", cell: ({ row }) => (
+      ),
+    },
+    {
+      accessorKey: "level",
+      header: "Level",
+      enableSorting: true,
+      cell: ({ row }) => (
         <span>{capitalizeWords(row.original.level)}</span>
-    )},
-    { accessorKey: "type", header: "Type", cell: ({ row }) => (
+      ),
+    },
+    {
+      accessorKey: "type",
+      header: "Type",
+      enableSorting: true,
+      cell: ({ row }) => (
         <span>{capitalizeWords(row.original.type)}</span>
-    )},
-    { accessorKey: "estimated_duration", header: "Est. Duration", cell: ({ row }) => (
-      <div className="flex items-center gap-1">
-        <Clock className="h-4 w-4" />
-        <span>{row.original.estimated_duration}h</span>
-          </div>
-    )},
-    { accessorKey: "actual_duration", header: "Actual Duration", cell: ({ row }) => (
-      <div className="flex items-center gap-1">
-        <Clock className="h-4 w-4" />
-        <span>{row.original.actual_duration}h</span>
-      </div>
-    )},
-    { accessorKey: "status", header: "Status", 
+      ),
+    },
+    {
+      accessorKey: "estimated_duration",
+      header: "Est. Duration",
+      enableSorting: true,
+      cell: ({ row }) => (
+        <div className="flex items-center gap-1">
+          <Clock className="h-4 w-4" />
+          <span>{row.original.estimated_duration}h</span>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "actual_duration",
+      header: "Actual Duration",
+      enableSorting: true,
+      cell: ({ row }) => (
+        <div className="flex items-center gap-1">
+          <Clock className="h-4 w-4" />
+          <span>{row.original.actual_duration}h</span>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "status",
+      header: "Status",
+      enableSorting: true,
       filterFn: ((row, columnId, filterValue) => {
-        return filterValue.includes(row.getValue(columnId))
+        return filterValue.includes(row.getValue(columnId));
       }) as FilterFn<Task>,
       cell: ({ row }) => (
         <Badge variant="secondary" className={`${getStatusColor(row.original.status as StatusEnum)} text-white`}>
           {capitalizeWords((row.original.status ?? '').replace('_', ' '))}
         </Badge>
-      )
+      ),
     },
-    { accessorKey: "priority", header: "Priority", 
+    {
+      accessorKey: "priority",
+      header: "Priority",
+      enableSorting: true,
       filterFn: ((row, columnId, filterValue) => {
-        return filterValue.includes(row.getValue(columnId))
+        return filterValue.includes(row.getValue(columnId));
       }) as FilterFn<Task>,
       cell: ({ row }) => (
         <Badge variant="secondary" className={`${getPriorityColor(row.original.priority as PriorityEnum)} text-white`}>
           {capitalizeWords(row.original.priority)}
         </Badge>
-      )
+      ),
     },
-    { accessorKey: "progress", header: "Progress", cell: ({ row }) => (
-      <div className="flex items-center gap-2">
-        <Progress value={row.original.progress} className="w-[60px]" />
-        <span className="text-sm">{row.original.progress}%</span>
-      </div>
-    )},
-    { accessorKey: "order", header: "Order" },
-    { accessorKey: "due_date", header: "Due Date", cell: ({ row }) => {
-      const toLocalInputDate = (date: Date | string | null) => {
-        if (!date) return '';
-        const dateObj = date instanceof Date ? date : new Date(date);
-        if (isNaN(dateObj.getTime())) return '';
-        return dateObj.toISOString().split('T')[0]; // Return the date part directly
-      }
-      return <span>{toLocalInputDate(row.original.due_date)}</span>
-    }}, 
-    { accessorKey: "start_date", header: "Start Date", cell: ({ row }) => {
-      const toLocalInputDate = (date: Date | string | null) => {
-        if (!date) return '';
-        const dateObj = date instanceof Date ? date : new Date(date);
-        if (isNaN(dateObj.getTime())) return '';
-        return dateObj.toISOString().split('T')[0]; // Return the date part directly
-      }
-      return <span>{toLocalInputDate(row.original.start_date)}</span>
-    }},
-    { accessorKey: "end_date", header: "End Date", cell: ({ row }) => {
-      const toLocalInputDate = (date: Date | string | null) => {
-        if (!date) return '';
-        const dateObj = date instanceof Date ? date : new Date(date);
-        if (isNaN(dateObj.getTime())) return '';
-        return dateObj.toISOString().split('T')[0]; // Return the date part directly
-      }
-      return <span>{toLocalInputDate(row.original.end_date)}</span>
-    }},
+    {
+      accessorKey: "progress",
+      header: "Progress",
+      enableSorting: true,
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2">
+          <Progress value={row.original.progress} className="w-[60px]" />
+          <span className="text-sm">{row.original.progress}%</span>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "order",
+      header: "Order",
+      enableSorting: true,
+    },
+    {
+      accessorKey: "due_date",
+      header: "Due Date",
+      enableSorting: true,
+      cell: ({ row }) => {
+        const toLocalInputDate = (date: Date | string | null) => {
+          if (!date) return '';
+          const dateObj = date instanceof Date ? date : new Date(date);
+          if (isNaN(dateObj.getTime())) return '';
+          return dateObj.toISOString().split('T')[0];
+        };
+        return <span>{toLocalInputDate(row.original.due_date)}</span>;
+      },
+    },
+    {
+      accessorKey: "start_date",
+      header: "Start Date",
+      enableSorting: true,
+      cell: ({ row }) => {
+        const toLocalInputDate = (date: Date | string | null) => {
+          if (!date) return '';
+          const dateObj = date instanceof Date ? date : new Date(date);
+          if (isNaN(dateObj.getTime())) return '';
+          return dateObj.toISOString().split('T')[0];
+        };
+        return <span>{toLocalInputDate(row.original.start_date)}</span>;
+      },
+    },
+    {
+      accessorKey: "end_date",
+      header: "End Date",
+      enableSorting: true,
+      cell: ({ row }) => {
+        const toLocalInputDate = (date: Date | string | null) => {
+          if (!date) return '';
+          const dateObj = date instanceof Date ? date : new Date(date);
+          if (isNaN(dateObj.getTime())) return '';
+          return dateObj.toISOString().split('T')[0];
+        };
+        return <span>{toLocalInputDate(row.original.end_date)}</span>;
+      },
+    },
   ]
 
 

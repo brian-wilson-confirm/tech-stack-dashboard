@@ -32,6 +32,8 @@ import {
   X as CrossIcon,
   LayoutGrid,
   Filter,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -235,11 +237,10 @@ export function DataTableWidget<T extends Record<string, any>>({
     enableColumnResizing: true,
     enableRowSelection: true,
     onSortingChange: (updaterOrValue) => {
-      const newSorting =
-        typeof updaterOrValue === "function"
-          ? updaterOrValue(sortConfigs ?? [])
-          : updaterOrValue
-      onSortChange?.(newSorting)
+      const newSorting = typeof updaterOrValue === "function" 
+        ? updaterOrValue(sortConfigs ?? [])
+        : updaterOrValue;
+      onSortChange?.(newSorting);
     },
     onPaginationChange: showPagination ? onPaginationChange : undefined,
     onColumnFiltersChange,
@@ -423,19 +424,30 @@ export function DataTableWidget<T extends Record<string, any>>({
                   </TableHead>
                   )}
 
-                  {headerGroup.headers.map((header) =>
-                    header.column.id in visibleColumns && visibleColumns[header.column.id] ? (
-                      <TableHead key={header.id}
-                        style={{
-                          width: `${header.getSize()}px`,
-                          maxWidth: `${header.column.columnDef.maxSize ?? header.getSize()}px`,
-                          minWidth: `${header.column.columnDef.size ?? header.getSize()}px`,
-                        }}
-                      >
-                        {flexRender(header.column.columnDef.header, header.getContext())}
+                  {headerGroup.headers.map((header) => {
+                    return (
+                      <TableHead key={header.id}>
+                        {header.isPlaceholder ? null : (
+                          <div
+                            className={cn(
+                              "flex items-center space-x-2",
+                              header.column.getCanSort() && "cursor-pointer select-none"
+                            )}
+                            onClick={header.column.getToggleSortingHandler()}
+                          >
+                            {flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                            {{
+                              asc: <ArrowUp className="h-4 w-4" />,
+                              desc: <ArrowDown className="h-4 w-4" />,
+                            }[header.column.getIsSorted() as string] ?? null}
+                          </div>
+                        )}
                       </TableHead>
-                    ) : null
-                  )}
+                    );
+                  })}
 
                   {showActions && <TableHead className="w-[100px]">Actions</TableHead>}
               </TableRow> 

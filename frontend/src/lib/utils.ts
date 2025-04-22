@@ -5,7 +5,8 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function capitalizeWords(str: string): string {
+export function capitalizeWords(str?: string): string {
+  if (!str) return "";
   return str
     .split(" ")
     .map(word =>

@@ -42,7 +42,7 @@ import { Textarea } from "@/components/ui/textarea"
 /*******************
   ADD NEW TASK DIALOG
 ********************/
-function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm) => void, disabled?: boolean }) {
+function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskFormSubmit) => Promise<any>, disabled?: boolean }) {
   const [open, setOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -197,21 +197,7 @@ function ShowAddTaskDialog({ onAddTask, disabled }: { onAddTask: (task: TaskForm
     setError(null)
     
     try {
-      const response = await fetch('/api/tasks', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.detail || 'Failed to add task')
-      }
-
-      const newTask = await response.json()
-      onAddTask(newTask)
+      await onAddTask(data)
       setOpen(false)
       form.reset()
     } catch (error) {
@@ -691,7 +677,7 @@ export default function TasksPage() {
       }) as FilterFn<Task>,
       cell: ({ row }) => (
         <Badge variant="secondary" className={`${getStatusColor(row.original.status as StatusEnum)} text-white`}>
-          {capitalizeWords(row.original.status.replace('_', ' '))}
+          {capitalizeWords((row.original.status ?? '').replace('_', ' '))}
         </Badge>
       )
     },
@@ -1440,15 +1426,55 @@ export default function TasksPage() {
   
   
   /*******************
-    ADD NEW TASKSubmit
+    ADD NEW TASKS
   ********************/
-  const handleAddTask = async (newTask: Task) => {  
-    setRows(prevRows => [...prevRows, newTask]);
-    toast({
-      title: "Success",
-      description: "Task added successfully",
-      duration: 3000,
-    })
+  const handleAddTask = async (newTask: TaskFormSubmit) => {
+    console.log('Adding newTask to the table', newTask)
+    try {
+      // First, create the task
+      const response = await fetch('/api/tasks', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newTask),
+      })
+
+      console.log('Response from the server', response)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.detail || 'Failed to add task')
+      }
+
+      // After successful creation, fetch the latest tasks to get the new one
+      const fetchResponse = await fetch('/api/tasks')
+      if (!fetchResponse.ok) {
+        throw new Error('Failed to fetch updated tasks')
+      }
+      
+      const tasks = await fetchResponse.json()
+      console.log('Fetched updated tasks', tasks)
+      
+      // Update the entire rows state with the latest data
+      setRows(tasks)
+      
+      toast({
+        title: "Success",
+        description: "Task added successfully",
+        duration: 3000,
+      })
+      
+      return tasks[tasks.length - 1] // Return the newly added task
+    } catch (error) {
+      console.error('Error adding task:', error)
+      toast({
+        title: "Error",
+        description: "Failed to add task",
+        variant: "destructive",
+      })
+      throw error
+    }
   }
 
 

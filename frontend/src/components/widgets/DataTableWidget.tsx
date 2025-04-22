@@ -100,8 +100,8 @@ type Props<T extends Record<string, any>> = {
   showActions?: boolean;
   showPagination?: boolean;
   tableClassName?: string;
-  AddTaskDialog?: React.ComponentType<{ onAddTask: (task: any) => void, disabled?: boolean }>;
-  onAddTask?: (task: any) => void;
+  AddTaskDialog?: React.ComponentType<{ onAddTask: (task: any) => Promise<any>, disabled?: boolean }>;
+  onAddTask?: (task: any) => Promise<any>;
 }
 
 const FilterDropdown = ({ config, editingRow }: { config: FilterConfig, editingRow: string | null }) => {

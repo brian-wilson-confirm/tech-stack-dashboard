@@ -238,13 +238,13 @@ function ShowAddLessonDialog({ onAddItem, disabled }: { onAddItem: (item: Lesson
               </div>
             </div>
 
-            {/* 2. Status & Metadata */}
+            {/* 2. Course Structure */}
             <div className="space-y-2">
-              <h3 className="text-lg font-semibold">Metadata</h3>
+              <h3 className="text-lg font-semibold">Course Structure</h3>
               <div className="grid grid-cols-2 gap-4">
                 <FormField control={form.control} name="module_id" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="capitalize">Module *</FormLabel>
+                    <FormLabel className="capitalize">Module</FormLabel>
                     <Select
                       value={typeOptions.find((t: { name: string; id: number }) => t.name === field.value || t.id.toString() === field.value?.toString())?.id.toString() ?? "1"}
                       onValueChange={(value) => field.onChange(value)}
@@ -264,7 +264,7 @@ function ShowAddLessonDialog({ onAddItem, disabled }: { onAddItem: (item: Lesson
 
                 <FormField control={form.control} name="course_id" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="capitalize">Course *</FormLabel>
+                    <FormLabel className="capitalize">Course</FormLabel>
                     <Select
                       value={levelOptions.find((l: { name: string; id: number }) => l.name === field.value || l.id.toString() === field.value?.toString())?.id.toString() ?? "1"}
                       onValueChange={(value) => field.onChange(value)}
@@ -285,9 +285,9 @@ function ShowAddLessonDialog({ onAddItem, disabled }: { onAddItem: (item: Lesson
               </div>
             </div>
 
-            {/* 3. Categorization */}
+            {/* 3. Content */}
             <div className="space-y-2">
-              <h3 className="text-lg font-semibold">Categorization</h3>
+              <h3 className="text-lg font-semibold">Content</h3>
               <div className="grid grid-cols-2 gap-4">
                 <FormField control={form.control} name="content" render={({ field }) => (
                   <FormItem>
@@ -339,7 +339,7 @@ function ShowAddLessonDialog({ onAddItem, disabled }: { onAddItem: (item: Lesson
             </div>
 
 
-            {/* 5. Time & Progress */}
+            {/* 4. Time Estimate */}
             <div className="space-y-2">
               <h3 className="text-lg font-semibold">Time & Progress</h3>
               <div className="grid grid-cols-1 gap-4">

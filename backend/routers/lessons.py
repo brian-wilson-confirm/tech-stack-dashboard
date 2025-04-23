@@ -2,7 +2,8 @@ from typing import List
 from fastapi import APIRouter, Depends
 from sqlmodel import Session, select
 from backend.database.connection import get_session
-from backend.database.models.lesson_models import Lesson, Module, Course
+from backend.database.models.lesson_models import Lesson, Module, Course, Resource
+from backend.database.models.task_models import TaskLevel
 from backend.database.views.lesson_schemas import LessonRead
 
 
@@ -34,8 +35,9 @@ def serialize_lesson(lesson: Lesson, session: Session) -> LessonRead:
             ) and (
                 course := session.get(Course, module.course_id)
             ) and course.title,
+            level=(lvl := session.get(TaskLevel, lesson.level_id)) and lvl.name,
+            resource=(res := session.get(Resource, lesson.resource_id)) and res.title,
             content=lesson.content,
-            video_url=lesson.video_url,
             order=lesson.order,
             estimated_duration=lesson.estimated_duration
         )

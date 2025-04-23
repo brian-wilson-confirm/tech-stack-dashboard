@@ -6,7 +6,8 @@ from sqlmodel import Session, select
 from sqlalchemy.orm import selectinload
 from backend.database.connection import get_session
 
-from backend.database.models.task_models import TaskTopicLink, TaskOld, Category, Source, Subcategory, Technology, TaskLevel, TaskPriority, TaskStatus, TaskType, TechnologySubcategory, TechnologyWithSubcatAndCat, Topic
+from backend.database.models.lesson_models import Source
+from backend.database.models.task_models import TaskTopicLink, TaskOld, Category, Subcategory, Technology, TaskLevel, TaskPriority, TaskStatus, TaskType, TechnologySubcategory, TechnologyWithSubcatAndCat, Topic
 from backend.database.views.taskold_schemas import TaskOldCreate, TaskOldRead, TaskOldUpdate
 from backend.database.views.technology_schemas import TechnologyCreate, TechnologyRead
 from sqlalchemy import text

@@ -82,13 +82,11 @@ class Topic(SQLModel, table=True):
 
     tasks: List["TaskOld"] = Relationship(back_populates="topics", link_model=TaskTopicLink)
 
+"""
 class Section(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
-
-class Source(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    name: str
+"""
 
 class TaskLevel(SQLModel, table=True):
     __tablename__ = "task_level"

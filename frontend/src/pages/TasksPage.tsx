@@ -384,11 +384,6 @@ export default function TasksPage() {
   const [priorityOptions, setPriorityOptions] = useState<{ name: string; id: number }[]>([]);
   const [typeOptions, setTypeOptions] = useState<{ name: string; id: number }[]>([]);
   const [statusOptions, setStatusOptions] = useState<{ name: string; id: number }[]>([]);
-  const [sourceOptions, setSourceOptions] = useState<{ name: string; id: number }[]>([]);
-  const [levelOptions, setLevelOptions] = useState<{ name: string; id: number }[]>([]);
-  const [categoryOptions, setCategoryOptions] = useState<{ name: string; id: number }[]>([]);
-  const [subcategoryOptions, setSubcategoryOptions] = useState<{ name: string; id: number }[]>([]);
-  const [technologyOptions, setTechnologyOptions] = useState<{ name: string; id: number }[]>([]);
 
 
 
@@ -603,25 +598,22 @@ export default function TasksPage() {
   // Fetch Options
   const fetchOptions = async () => {
     try {
-      const [statusesRes, prioritiesRes, categoriesRes] = await Promise.all([
+      const [statusesRes, prioritiesRes] = await Promise.all([
         fetch('/api/tasksold/statuses'),
-        fetch('/api/tasksold/priorities'),
-        fetch('/api/tasksold/categories')
+        fetch('/api/tasksold/priorities')
       ]);
 
-      if (!statusesRes.ok || !prioritiesRes.ok || !categoriesRes.ok) {
+      if (!statusesRes.ok || !prioritiesRes.ok) {
         throw new Error('Failed to fetch options');
       }
 
-      const [statuses, priorities, categories] = await Promise.all([
+      const [statuses, priorities] = await Promise.all([
         statusesRes.json(),
-        prioritiesRes.json(),
-        categoriesRes.json()
+        prioritiesRes.json()
       ]);
 
       setStatusOptions(statuses);
       setPriorityOptions(priorities);
-      setCategoryOptions(categories);
     } catch (error) {
       console.error('Error fetching options:', error);
       toast({
@@ -670,46 +662,6 @@ export default function TasksPage() {
   /*******************
     ADDITIONAL FUNCTIONS
   ********************/
-  // Add a function to fetch subcategories for a specific category
-  const fetchSubcategoryOptionsForCategory = async (categoryId: string) => {
-    try {
-      const response = await fetch(`/api/tasksold/subcategories/${categoryId}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch subcategory options');
-      }
-      const data = await response.json();
-      setSubcategoryOptions(data);
-      return data;
-    } catch (error) {
-      console.error('Error fetching subcategories:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load subcategories for the selected category.",
-        variant: "destructive",
-      });
-    }
-  };
-
-
-  // Add a function to fetch technologies for a specific subcategory
-  const fetchTechnologyOptionsForSubcategory = async (subcategoryId: string) => {
-    try {
-      const response = await fetch(`/api/tasksold/technologies/${subcategoryId}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch technologies');
-      }
-      const data = await response.json();
-      setTechnologyOptions(data);
-      return data;
-    } catch (error) {
-      console.error('Error fetching technologies:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load technologies for the selected subcategory.",
-        variant: "destructive",
-      });
-    }
-  };
 
 
 
@@ -784,29 +736,6 @@ export default function TasksPage() {
     setEditForm(prev => prev ? { ...prev, [field]: value } : prev)
   }
 
-  // Update handleEditChange to fetch technologies when subcategory changes
-  const handleEditChange = (field: keyof Task, value: string | number | boolean | string[] | Date | null) => {
-    if (editForm) {
-      let processedValue: any = value;
-      
-      // Handle numeric fields
-      if (['order', 'progress', 'estimated_duration'].includes(field)) {
-        processedValue = Number(value);
-      }
-      
-      // Handle boolean fields
-      if (field === 'done') {
-        processedValue = Boolean(value);
-      }
-
-      // Handle date fields
-      if (['start_date', 'end_date'].includes(field)) {
-        processedValue = value instanceof Date ? value : null;
-      }
-      
-      setEditForm({ ...editForm, [field]: processedValue });
-    }
-  };
 
   // Save Edit
   const onSaveEdit = async () => {

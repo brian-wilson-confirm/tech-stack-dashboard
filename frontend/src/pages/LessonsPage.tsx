@@ -6,15 +6,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { BookOpen, CheckSquare, Clock, Plus } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { capitalizeWords } from "@/lib/utils"
-import { StatusEnum } from "@/types/enums"
-import { PriorityEnum } from "@/types/enums"
 import { Button } from "@/components/ui/button"
-import { TaskSheet } from "@/components/ui/task-sheet"
 import { Input } from "@/components/ui/input"
-import { Progress } from "@/components/ui/progress"
 import { toast } from "@/components/ui/use-toast"
-import { Lesson, Task, TaskForm, taskFormSchema } from "@/components/data/schema"
-import { getStatusColor, getPriorityColor } from "@/styles/style"
+import { Lesson, LessonForm, lessonFormSchema } from "@/components/data/schema"
 import React from "react"
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useForm } from "react-hook-form"
@@ -40,9 +35,9 @@ import { Textarea } from "@/components/ui/textarea"
 
 
 /*******************
-  ADD NEW TASK DIALOG
+  ADD NEW LESSON DIALOG
 ********************/
-function ShowAddLessonDialog({ onAddItem, disabled }: { onAddItem: (item: TaskForm) => Promise<any>, disabled?: boolean }) {
+function ShowAddLessonDialog({ onAddItem, disabled }: { onAddItem: (item: LessonForm) => Promise<any>, disabled?: boolean }) {
   const [open, setOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -55,28 +50,17 @@ function ShowAddLessonDialog({ onAddItem, disabled }: { onAddItem: (item: TaskFo
   const [technologyOptions, setTechnologyOptions] = useState<{ name: string; id: number }[]>([])
   const [sourceOptions, setSourceOptions] = useState<{ name: string; id: number }[]>([])
   
-  const form = useForm<TaskForm>({
-    resolver: zodResolver(taskFormSchema),
+  const form = useForm<LessonForm>({
+    resolver: zodResolver(lessonFormSchema),
     defaultValues: {
-      task: "",
+      title: "",
       description: "",
-      technology_id: "",
-      subcategory_id: "",
-      category_id: "",
+      module_id: "1",
+      course_id: "1",
+      content: "",
+      video_url: "",
       order: 0,
-      status_id: "1",
-      progress: 0,
-      priority_id: "1",
-      type_id: "1",
-      level_id: "1",
-      section: "",
-      topics: [],
-      source_id: "",
-      estimated_duration: 8,
-      actual_duration: null,
-      due_date: null,
-      start_date: null,
-      end_date: null,
+      estimated_duration: 8
     },
   })
 
@@ -192,7 +176,7 @@ function ShowAddLessonDialog({ onAddItem, disabled }: { onAddItem: (item: TaskFo
     }
   }, [form.watch('subcategory_id')])
 
-  const onSubmit = async (data: TaskForm) => {
+  const onSubmit = async (data: LessonForm) => {
     setIsSubmitting(true)
     setError(null)
     
@@ -218,7 +202,7 @@ function ShowAddLessonDialog({ onAddItem, disabled }: { onAddItem: (item: TaskFo
       </DialogTrigger>
       <DialogContent className="sm:max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Add New Task</DialogTitle>
+          <DialogTitle>Add New Lesson</DialogTitle>
           <DialogDescription>
             Fill in the details for the new lesson. All required fields are marked with an asterisk (*).
           </DialogDescription>
@@ -235,9 +219,9 @@ function ShowAddLessonDialog({ onAddItem, disabled }: { onAddItem: (item: TaskFo
             <div className="space-y-2">
               <h3 className="text-lg font-semibold">Basic Details</h3>
               <div className="grid grid-cols-1 gap-4">
-                <FormField control={form.control} name="task" render={({ field }) => (
+                <FormField control={form.control} name="title" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Task Name *</FormLabel>
+                    <FormLabel>Lesson Title *</FormLabel>
                     <FormControl><Input {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
@@ -251,24 +235,16 @@ function ShowAddLessonDialog({ onAddItem, disabled }: { onAddItem: (item: TaskFo
                   </FormItem>
                 )} />
 
-                {/*
-                <FormField control={form.control} name="order" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Order</FormLabel>
-                    <FormControl><Input type="number" {...field} onChange={e => field.onChange(Number(e.target.value))} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />*/}
               </div>
             </div>
 
             {/* 2. Status & Metadata */}
             <div className="space-y-2">
               <h3 className="text-lg font-semibold">Metadata</h3>
-              <div className="grid grid-cols-4 gap-4">
-                <FormField control={form.control} name="type_id" render={({ field }) => (
+              <div className="grid grid-cols-2 gap-4">
+                <FormField control={form.control} name="module_id" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="capitalize">Type *</FormLabel>
+                    <FormLabel className="capitalize">Module *</FormLabel>
                     <Select
                       value={typeOptions.find((t: { name: string; id: number }) => t.name === field.value || t.id.toString() === field.value?.toString())?.id.toString() ?? "1"}
                       onValueChange={(value) => field.onChange(value)}
@@ -286,9 +262,9 @@ function ShowAddLessonDialog({ onAddItem, disabled }: { onAddItem: (item: TaskFo
                   </FormItem>
                 )} />
 
-                <FormField control={form.control} name="level_id" render={({ field }) => (
+                <FormField control={form.control} name="course_id" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="capitalize">Level *</FormLabel>
+                    <FormLabel className="capitalize">Course *</FormLabel>
                     <Select
                       value={levelOptions.find((l: { name: string; id: number }) => l.name === field.value || l.id.toString() === field.value?.toString())?.id.toString() ?? "1"}
                       onValueChange={(value) => field.onChange(value)}
@@ -306,55 +282,16 @@ function ShowAddLessonDialog({ onAddItem, disabled }: { onAddItem: (item: TaskFo
                   </FormItem>
                 )} />
 
-                <FormField control={form.control} name="status_id" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="capitalize">Status *</FormLabel>
-                    <Select
-                      value={statusOptions.find((s: { name: string; id: number }) => s.name === field.value || s.id.toString() === field.value?.toString())?.id.toString() ?? "1"}
-                      onValueChange={(value) => field.onChange(value)}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {statusOptions.map((status: { name: string; id: number }) => (
-                          <SelectItem key={status.id} value={status.id.toString()}>{capitalizeWords(status.name.replace('_', ' '))}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-
-                <FormField control={form.control} name="priority_id" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="capitalize">Priority *</FormLabel>
-                    <Select 
-                      value={statusOptions.find((s: { name: string; id: number }) => s.name === field.value || s.id.toString() === field.value?.toString())?.id.toString() ?? "1"}
-                      onValueChange={(value) => field.onChange(value)}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {priorityOptions.map((status: { name: string; id: number }) => (
-                          <SelectItem key={status.id} value={status.id.toString()}>{capitalizeWords(status.name.replace('_', ' '))}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )} />
               </div>
             </div>
 
             {/* 3. Categorization */}
             <div className="space-y-2">
               <h3 className="text-lg font-semibold">Categorization</h3>
-              <div className="grid grid-cols-3 gap-4">
-                <FormField control={form.control} name="category_id" render={({ field }) => (
+              <div className="grid grid-cols-2 gap-4">
+                <FormField control={form.control} name="content" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="capitalize">Category *</FormLabel>
+                    <FormLabel className="capitalize">Content</FormLabel>
                     <Select
                       value={categoryOptions.find((c: { name: string; id: number }) => c.name === field.value || c.id.toString() === field.value?.toString())?.id.toString() ?? ""}
                       onValueChange={(value) => field.onChange(value)}
@@ -372,9 +309,9 @@ function ShowAddLessonDialog({ onAddItem, disabled }: { onAddItem: (item: TaskFo
                   </FormItem>
                 )} />
 
-                <FormField control={form.control} name="subcategory_id" render={({ field }) => (
+                <FormField control={form.control} name="video_url" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="capitalize">Subcategory *</FormLabel>
+                    <FormLabel className="capitalize">Video URL</FormLabel>
                     <Select
                       value={subcategoryOptions.find((s: { name: string; id: number }) => s.name === field.value || s.id.toString() === field.value?.toString())?.id.toString() ?? ""}
                       onValueChange={(value) => {
@@ -397,82 +334,15 @@ function ShowAddLessonDialog({ onAddItem, disabled }: { onAddItem: (item: TaskFo
                   </FormItem>
                 )} />
 
-                <FormField control={form.control} name="technology_id" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="capitalize">Technology *</FormLabel>
-                    <Select
-                      value={technologyOptions.find((t: { name: string; id: number }) => t.name === field.value || t.id.toString() === field.value?.toString())?.id.toString() ?? ""}
-                      onValueChange={(value) => field.onChange(value)}
-                      disabled={!form.watch('subcategory_id')}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {technologyOptions.map((technology: { name: string; id: number }) => (
-                          <SelectItem key={technology.id} value={technology.id.toString()}>{capitalizeWords(technology.name)}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )} />
+
               </div>
             </div>
 
-            {/* 4. Sources, Section, & Topics */}
-            <div className="space-y-2">
-              <h3 className="text-lg font-semibold">Sources & Topics</h3>
-              <div className="grid grid-cols-3 gap-4">
-                <FormField control={form.control} name="source_id" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Source *</FormLabel>
-                    <Select
-                      value={sourceOptions.find((s: { name: string; id: number }) => s.name === field.value || s.id.toString() === field.value?.toString())?.id.toString() ?? ""}
-                      onValueChange={(value) => field.onChange(value)}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {sourceOptions.map((source: { name: string; id: number }) => (
-                          <SelectItem key={source.id} value={source.id.toString()}>{capitalizeWords(source.name)}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-
-                <FormField control={form.control} name="section" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Section</FormLabel>
-                    <FormControl><Input {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-
-                <FormField control={form.control} name="topics" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Topics</FormLabel>
-                    <FormControl>
-                      <Input 
-                        {...field}
-                        value={field.value.join(', ')}
-                        onChange={(e) => field.onChange(e.target.value.split(',').map(t => t.trim()))}
-                        placeholder="Comma-separated topics"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-        </div>
-        </div>
 
             {/* 5. Time & Progress */}
             <div className="space-y-2">
               <h3 className="text-lg font-semibold">Time & Progress</h3>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-4">
 
                 <FormField control={form.control} name="estimated_duration" render={({ field }) => (
                   <FormItem>
@@ -482,47 +352,7 @@ function ShowAddLessonDialog({ onAddItem, disabled }: { onAddItem: (item: TaskFo
                   </FormItem>
                 )} />
 
-                <FormField control={form.control} name="actual_duration" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Actual Duration (hours)</FormLabel>
-                    <FormControl><Input type="number" {...field} value={field.value || ''} onChange={e => field.onChange(e.target.value ? Number(e.target.value) : null)} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
 
-                <FormField control={form.control} name="due_date" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Due Date</FormLabel>
-                    <FormControl><Input type="date" {...field} value={field.value || ''} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-
-                {/*
-                <FormField control={form.control} name="start_date" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Start Date</FormLabel>
-                    <FormControl><Input type="date" {...field} value={field.value || ''} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-
-                <FormField control={form.control} name="end_date" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>End Date</FormLabel>
-                    <FormControl><Input type="date" {...field} value={field.value || ''} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-
-                
-                <FormField control={form.control} name="progress" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Progress (%)</FormLabel>
-                    <FormControl><Input type="number" min="0" max="100" {...field} onChange={e => field.onChange(Number(e.target.value))} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />*/}
               </div>
             </div>
 
@@ -530,9 +360,9 @@ function ShowAddLessonDialog({ onAddItem, disabled }: { onAddItem: (item: TaskFo
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
-                    <span className="animate-spin mr-2">⏳</span> Adding Task...
+                    <span className="animate-spin mr-2">⏳</span> Adding Lesson...
                   </>
-                ) : 'Add Task'}
+                ) : 'Add Lesson'}
               </Button>
             </DialogFooter>
           </form>
@@ -551,10 +381,11 @@ const initialVisibleColumns = {
   id: false,   
   lesson_id: true,
   title: true,
-  description: true,
+  description: false,
   module: true,
-  content: true,
-  video_url: true,
+  course: true,
+  content: false,
+  video_url: false,
   order: true,
   estimated_duration: true
 }
@@ -628,10 +459,21 @@ export default function LessonsPage() {
     { accessorKey: "title", header: "Title" },
     { accessorKey: "description", header: "Description" },
     { accessorKey: "module", header: "Module" },
+    { accessorKey: "course", header: "Course" },
     { accessorKey: "content", header: "Content" },
     { accessorKey: "video_url", header: "Video URL" },
     { accessorKey: "order", header: "Order" },
-    { accessorKey: "estimated_duration", header: "Est. Duration" }
+    {
+      accessorKey: "estimated_duration",
+      header: "Est. Duration",
+      enableSorting: true,
+      cell: ({ row }) => (
+        <div className="flex items-center gap-1">
+          <Clock className="h-4 w-4" />
+          <span>{row.original.estimated_duration}h</span>
+        </div>
+      ),
+    }
   ]
 
 
@@ -1115,7 +957,7 @@ export default function LessonsPage() {
   /***********************
     ROW INTERACTION
   ***********************/
-  const handleRowClick = useCallback((row: Task) => {
+  const handleRowClick = useCallback((row: Lesson) => {
     if (editingRow) return // Don't open sheet while editing
     setSelectedRow(row)
     setSheetOpen(true)
@@ -1126,7 +968,7 @@ export default function LessonsPage() {
   /*******************
     RENDER CELLS IN EDIT-MODE
   ********************/
-  const editModeRenderers: EditModeRenderer<Task> = {
+  const editModeRenderers: EditModeRenderer<Lesson> = {
     technology: (value, onChange) => (
       <Select
         value={ technologyOptions.find((t) => t.name === value || t.id.toString() === value?.toString())?.id.toString() ?? "" }
@@ -1326,55 +1168,54 @@ export default function LessonsPage() {
   /*******************
     ADD NEW TASKS
   ********************/
-  /*
   const handleAddLesson = async (newLesson: LessonForm) => {
     console.log('Adding newLesson to the table', newLesson)
     try {
       // First, create the lesson
-      const response = await fetch('/api/tasks', {
+      const response = await fetch('/api/lessons', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(newTask),
+        body: JSON.stringify(newLesson),
       })
 
       console.log('Response from the server', response)
       
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.detail || 'Failed to add task')
+        throw new Error(errorData.detail || 'Failed to add lesson')
       }
 
-      // After successful creation, fetch the latest tasks to get the new one
-      const fetchResponse = await fetch('/api/tasks')
+      // After successful creation, fetch the latest lessons to get the new one
+      const fetchResponse = await fetch('/api/lessons')
       if (!fetchResponse.ok) {
-        throw new Error('Failed to fetch updated tasks')
+        throw new Error('Failed to fetch updated lessons')
       }
       
-      const tasks = await fetchResponse.json()
-      console.log('Fetched updated tasks', tasks)
+      const lessons = await fetchResponse.json()
+      console.log('Fetched updated lessons', lessons)
       
       // Update the entire rows state with the latest data
-      setRows(tasks)
+      setRows(lessons)
       
       toast({
         title: "Success",
-        description: "Task added successfully",
+        description: "Lesson added successfully",
         duration: 3000,
       })
       
-      return tasks[tasks.length - 1] // Return the newly added task
+      return lessons[lessons.length - 1] // Return the newly added lesson
     } catch (error) {
-      console.error('Error adding task:', error)
+      console.error('Error adding lesson:', error)
       toast({
         title: "Error",
-        description: "Failed to add task",
+        description: "Failed to add lesson",
         variant: "destructive",
       })
       throw error
     }
-  }*/
+  }
 
 
 
@@ -1416,7 +1257,7 @@ export default function LessonsPage() {
           showCheckboxes={true}
           showActions={true}
           AddItemDialog={ShowAddLessonDialog}
-          onAddItem={undefined}
+          onAddItem={handleAddLesson}
         />
       </div>
 

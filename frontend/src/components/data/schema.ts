@@ -14,7 +14,7 @@ export const taskBaseSchema = z.object({
   actual_duration: z.number().nullable(),
   due_date: z.string().nullable(),
   start_date: z.string().nullable(),
-  end_date: z.string().nullable(),
+  end_date: z.string().nullable()
 })
 
 
@@ -49,7 +49,7 @@ export const taskFormSchema = taskBaseSchema.extend({
   level_id: z.string().min(1, "Level is required"),
   type_id: z.string().min(1, "Type is required"),
   status_id: z.string().min(1, "Status is required"),
-  priority_id: z.string().min(1, "Priority is required"),
+  priority_id: z.string().min(1, "Priority is required")
 })
 export type TaskForm = z.infer<typeof taskFormSchema>
 
@@ -61,7 +61,7 @@ export type TaskForm = z.infer<typeof taskFormSchema>
 export const technologySchema = z.object({
   id: z.string(),
   name: z.string(),
-  description: z.string(),
+  description: z.string()
 })
 export type Technology = z.infer<typeof technologySchema> 
 
@@ -75,7 +75,7 @@ export const techSubCategorySchema = z.object({
   technology: z.string(),
   subcategory: z.string(),
   category: z.string(),
-  description: z.string(),
+  description: z.string()
 })
 export type TechSubCat = z.infer<typeof techSubCategorySchema> 
 
@@ -85,17 +85,32 @@ export type TechSubCat = z.infer<typeof techSubCategorySchema>
   LESSON SCHEMA
 *******************/
 export const lessonSchema = z.object({
+  id: z.string(),
   lesson_id: z.string(),
   title: z.string().min(1, "Title is required"),
   description: z.string(),
   module: z.string(),
+  course: z.string(),
   content: z.string(),
   video_url: z.string(),
   order: z.number().min(0),
-  estimated_duration: z.number().min(0),
+  estimated_duration: z.number().min(0)
 })
 export type Lesson = z.infer<typeof lessonSchema> 
 
 
 
-
+/*******************
+  LESSON FORM SCHEMA  
+*******************/
+export const lessonFormSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string(),
+  module_id: z.string().nullable(),
+  course_id: z.string().nullable(),
+  content: z.string().nullable(),
+  video_url: z.string().nullable(),
+  order: z.number().min(0),
+  estimated_duration: z.number().min(0)
+})
+export type LessonForm = z.infer<typeof lessonFormSchema>

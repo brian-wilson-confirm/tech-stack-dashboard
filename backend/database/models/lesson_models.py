@@ -6,7 +6,7 @@ from typing import List, Optional
     LESSONS
 """
 class Lesson(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int = Field(default=None, primary_key=True)
     lesson_id: str
     title: str
     description: Optional[str]
@@ -21,6 +21,25 @@ class Lesson(SQLModel, table=True):
 """
     TASK DEPENDENCIES
 """
+class Module(SQLModel, table=True):
+    id: int = Field(default=None, primary_key=True)
+    title: str
+    description: Optional[str]
+    course_id: Optional[int] = Field(foreign_key="course.id")
+    order: Optional[int]
+    estimated_duration: Optional[int]
+
+
+class Course(SQLModel, table=True):
+    id: int = Field(default=None, primary_key=True)
+    title: str
+    author: Optional[str]
+    description: Optional[str]
+    technology_id: int = Field(foreign_key="technology.id")
+    subcategory_id: int = Field(foreign_key="subcategory.id")
+    category_id: int = Field(foreign_key="category.id")
+    level_id: Optional[int] = Field(foreign_key="task_level.id")
+    #estimated_duration: Optional[int]
 
 
 

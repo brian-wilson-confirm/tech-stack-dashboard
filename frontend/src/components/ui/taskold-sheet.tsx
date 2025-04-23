@@ -1,4 +1,4 @@
-import { Task } from '@/components/data/schema'
+import { TaskOld } from '@/components/data/schema'
 import {
   Sheet,
   SheetContent,
@@ -12,7 +12,7 @@ import { Separator } from '@/components/ui/separator'
 import { PriorityEnum, StatusEnum } from '@/types/enums'
 
 interface TaskSheetProps {
-  task: Task | null
+  task: TaskOld | null
   open: boolean
   onOpenChange: (open: boolean) => void
 }

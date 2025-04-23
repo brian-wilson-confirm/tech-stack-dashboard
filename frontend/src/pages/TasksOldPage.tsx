@@ -9,11 +9,10 @@ import { capitalizeWords } from "@/lib/utils"
 import { StatusEnum } from "@/types/enums"
 import { PriorityEnum } from "@/types/enums"
 import { Button } from "@/components/ui/button"
-import { TaskSheet } from "@/components/ui/task-sheet"
 import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
 import { toast } from "@/components/ui/use-toast"
-import { Task, TaskForm, taskFormSchema } from "@/components/data/schema"
+import { TaskOld, taskOldFormSchema, TaskOldForm } from "@/components/data/schema"
 import { getStatusColor, getPriorityColor } from "@/styles/style"
 import React from "react"
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -43,7 +42,7 @@ import { TaskOldSheet } from "@/components/ui/taskold-sheet"
 /*******************
   ADD NEW TASK DIALOG
 ********************/
-function ShowAddTaskDialog({ onAddItem, disabled }: { onAddItem: (item: TaskForm) => Promise<any>, disabled?: boolean }) {
+function ShowAddTaskDialog({ onAddItem, disabled }: { onAddItem: (item: TaskOldForm) => Promise<any>, disabled?: boolean }) {
   const [open, setOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -56,8 +55,8 @@ function ShowAddTaskDialog({ onAddItem, disabled }: { onAddItem: (item: TaskForm
   const [technologyOptions, setTechnologyOptions] = useState<{ name: string; id: number }[]>([])
   const [sourceOptions, setSourceOptions] = useState<{ name: string; id: number }[]>([])
   
-  const form = useForm<TaskForm>({
-    resolver: zodResolver(taskFormSchema),
+  const form = useForm<TaskOldForm>({
+    resolver: zodResolver(taskOldFormSchema),
     defaultValues: {
       task: "",
       description: "",
@@ -193,7 +192,7 @@ function ShowAddTaskDialog({ onAddItem, disabled }: { onAddItem: (item: TaskForm
     }
   }, [form.watch('subcategory_id')])
 
-  const onSubmit = async (data: TaskForm) => {
+  const onSubmit = async (data: TaskOldForm) => {
     setIsSubmitting(true)
     setError(null)
     
@@ -499,31 +498,6 @@ function ShowAddTaskDialog({ onAddItem, disabled }: { onAddItem: (item: TaskForm
                   </FormItem>
                 )} />
 
-                {/*
-                <FormField control={form.control} name="start_date" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Start Date</FormLabel>
-                    <FormControl><Input type="date" {...field} value={field.value || ''} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-
-                <FormField control={form.control} name="end_date" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>End Date</FormLabel>
-                    <FormControl><Input type="date" {...field} value={field.value || ''} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-
-                
-                <FormField control={form.control} name="progress" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Progress (%)</FormLabel>
-                    <FormControl><Input type="number" min="0" max="100" {...field} onChange={e => field.onChange(Number(e.target.value))} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />*/}
               </div>
             </div>
 
@@ -582,7 +556,7 @@ export default function TasksPage() {
     STATE VARIABLES
   ********************/
   // Fetching Data
-  const [rows, setRows] = useState<Task[]>([]);
+  const [rows, setRows] = useState<TaskOld[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasFetchedRows, setHasFetchedRows] = useState(false);
 
@@ -603,14 +577,14 @@ export default function TasksPage() {
 
   // Row Selection
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
-  const [selectedRow, setSelectedRow] = useState<Task | null>(null);  
+  const [selectedRow, setSelectedRow] = useState<TaskOld | null>(null);  
 
   // Row Sheet
   const [sheetOpen, setSheetOpen] = useState(false);
 
   // Row Editing
   const [editingRow, setEditingRow] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState<Task | null>(null);
+  const [editForm, setEditForm] = useState<TaskOld | null>(null);
 
   // Fetching Options
   const [hasFetchedOptions, setHasFetchedOptions] = useState(false);
@@ -628,7 +602,7 @@ export default function TasksPage() {
   /*******************
     COLUMN DEFINITIONS
   ********************/
-  const columns: ColumnDef<Task>[] = [
+  const columns: ColumnDef<TaskOld>[] = [
     {
       accessorKey: "task_id",
       header: "Task ID",
@@ -734,7 +708,7 @@ export default function TasksPage() {
       enableSorting: true,
       filterFn: ((row, columnId, filterValue) => {
         return filterValue.includes(row.getValue(columnId));
-      }) as FilterFn<Task>,
+      }) as FilterFn<TaskOld>,
       cell: ({ row }) => (
         <Badge variant="secondary" className={`${getStatusColor(row.original.status as StatusEnum)} text-white`}>
           {capitalizeWords((row.original.status ?? '').replace('_', ' '))}
@@ -747,7 +721,7 @@ export default function TasksPage() {
       enableSorting: true,
       filterFn: ((row, columnId, filterValue) => {
         return filterValue.includes(row.getValue(columnId));
-      }) as FilterFn<Task>,
+      }) as FilterFn<TaskOld>,
       cell: ({ row }) => (
         <Badge variant="secondary" className={`${getPriorityColor(row.original.priority as PriorityEnum)} text-white`}>
           {capitalizeWords(row.original.priority)}
@@ -1018,7 +992,7 @@ export default function TasksPage() {
     ROW EDITING
   ***********************/
   // Start Editing
-  const startEditing = async (task: Task) => {
+  const startEditing = async (task: TaskOld) => {
     try {
       // Fetch all dynamic data in parallel
       const [
@@ -1138,12 +1112,12 @@ export default function TasksPage() {
   }
 
   // Edit Change
-  const onEditChange = (field: keyof Task, value: Task[keyof Task]) => {
+  const onEditChange = (field: keyof TaskOld, value: TaskOld[keyof TaskOld]) => {
     setEditForm(prev => prev ? { ...prev, [field]: value } : prev)
   }
 
   // Update handleEditChange to fetch technologies when subcategory changes
-  const handleEditChange = (field: keyof Task, value: string | number | boolean | string[] | Date | null) => {
+  const handleEditChange = (field: keyof TaskOld, value: string | number | boolean | string[] | Date | null) => {
     if (editForm) {
       let processedValue: any = value;
       
@@ -1206,7 +1180,7 @@ export default function TasksPage() {
   }
 
   // Update Row
-  const handleRowUpdate = async (updatedRow: Task) => {
+  const handleRowUpdate = async (updatedRow: TaskOld) => {
     setIsLoading(true);
 
     // Destructure all dropdown fields out and rename remaining fields
@@ -1295,7 +1269,7 @@ export default function TasksPage() {
   /***********************
     ROW INTERACTION
   ***********************/
-  const handleRowClick = useCallback((row: Task) => {
+  const handleRowClick = useCallback((row: TaskOld) => {
     if (editingRow) return // Don't open sheet while editing
     setSelectedRow(row)
     setSheetOpen(true)
@@ -1306,7 +1280,7 @@ export default function TasksPage() {
   /*******************
     RENDER CELLS IN EDIT-MODE
   ********************/
-  const editModeRenderers: EditModeRenderer<Task> = {
+  const editModeRenderers: EditModeRenderer<TaskOld> = {
     technology: (value, onChange) => (
       <Select
         value={ technologyOptions.find((t) => t.name === value || t.id.toString() === value?.toString())?.id.toString() ?? "" }
@@ -1506,7 +1480,7 @@ export default function TasksPage() {
   /*******************
     ADD NEW TASKS
   ********************/
-  const handleAddTask = async (newTask: TaskForm) => {
+  const handleAddTask = async (newTask: TaskOldForm) => {
     console.log('Adding newTask to the table', newTask)
     try {
       // First, create the task

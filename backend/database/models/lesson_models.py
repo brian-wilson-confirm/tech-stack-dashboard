@@ -35,10 +35,8 @@ class Course(SQLModel, table=True):
     title: str
     author: Optional[str]
     description: Optional[str]
-    technology_id: int = Field(foreign_key="technology.id")
-    subcategory_id: int = Field(foreign_key="subcategory.id")
-    category_id: int = Field(foreign_key="category.id")
     level_id: Optional[int] = Field(foreign_key="task_level.id")
+    source_id: Optional[int] = Field(foreign_key="source.id")
     #estimated_duration: Optional[int]
 
 

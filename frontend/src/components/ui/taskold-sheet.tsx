@@ -17,7 +17,7 @@ interface TaskSheetProps {
   onOpenChange: (open: boolean) => void
 }
 
-export function TaskSheet({ task, open, onOpenChange }: TaskSheetProps) {
+export function TaskOldSheet({ task, open, onOpenChange }: TaskSheetProps) {
   if (!task) return null
 
   //const status = statuses.find((s) => s.value === task.status)
@@ -37,6 +37,13 @@ export function TaskSheet({ task, open, onOpenChange }: TaskSheetProps) {
           <SheetDescription className="text-base">
             {task.task}
           </SheetDescription>
+          <div className="flex flex-wrap gap-2">
+            {task.topics.map((topic, index) => (
+              <Badge key={index} variant="secondary" className="bg-gray-200 text-gray-800">
+                {topic}
+              </Badge>
+            ))}
+          </div>
         </SheetHeader>
         <ScrollArea className="h-[calc(100vh-200px)] pr-4">
           <div className="space-y-6 mt-6">
@@ -45,12 +52,32 @@ export function TaskSheet({ task, open, onOpenChange }: TaskSheetProps) {
               <Separator className="my-4" />
               <div className="grid gap-4">
                 <div className="grid grid-cols-4 items-center">
-                  <span className="text-sm text-muted-foreground">Lesson</span>
-                  <span className="text-sm col-span-3">{task.lesson}</span>
+                  <span className="text-sm text-muted-foreground">Technology</span>
+                  <span className="text-sm col-span-3">{task.technology}</span>
+                </div>
+                <div className="grid grid-cols-4 items-center">
+                  <span className="text-sm text-muted-foreground">Category</span>
+                  <span className="text-sm col-span-3">{task.category}</span>
+                </div>
+                <div className="grid grid-cols-4 items-center">
+                  <span className="text-sm text-muted-foreground">Subcategory</span>
+                  <span className="text-sm col-span-3">{task.subcategory}</span>
+                </div>
+                <div className="grid grid-cols-4 items-center">
+                  <span className="text-sm text-muted-foreground">Section</span>
+                  <span className="text-sm col-span-3">{task.section}</span>
+                </div>
+                <div className="grid grid-cols-4 items-center">
+                  <span className="text-sm text-muted-foreground">Source</span>
+                  <span className="text-sm col-span-3">{task.source}</span>
                 </div>
                 <div className="grid grid-cols-4 items-center">
                   <span className="text-sm text-muted-foreground">Type</span>
                   <span className="text-sm col-span-3">{task.type}</span>
+                </div>
+                <div className="grid grid-cols-4 items-center">
+                  <span className="text-sm text-muted-foreground">Level</span>
+                  <span className="text-sm col-span-3">{task.level}</span>
                 </div>
               </div>
             </div>
@@ -84,13 +111,6 @@ export function TaskSheet({ task, open, onOpenChange }: TaskSheetProps) {
               <h3 className="text-sm font-medium">Dates</h3>
               <Separator className="my-4" />
               <div className="grid gap-4">
-                <div className="grid grid-cols-4 items-center">
-                  <span className="text-sm text-muted-foreground">Due Date</span>
-                  <span className="text-sm col-span-3">
-                    {task.due_date ? new Date(task.due_date).toLocaleDateString() : 'N/A'}
-                  </span>
-                </div>
-
                 <div className="grid grid-cols-4 items-center">
                   <span className="text-sm text-muted-foreground">Start Date</span>
                   <span className="text-sm col-span-3">

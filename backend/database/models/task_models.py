@@ -8,12 +8,30 @@ from typing import List, Optional
 class TaskTopicLink(SQLModel, table=True):
     __tablename__ = "task_topic"
 
-    task_id: Optional[int] = Field(default=None, foreign_key="task.id", primary_key=True)
+    task_id: Optional[int] = Field(default=None, foreign_key="taskold.id", primary_key=True)
     topic_id: Optional[int] = Field(default=None, foreign_key="topic.id", primary_key=True)
 
 
-# Actively using 4/18
 class Task(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    task_id: str
+    task: str
+    description: str
+    lesson_id: int = Field(foreign_key="lesson.id")
+    type_id: int = Field(foreign_key="task_type.id")
+    status_id: int = Field(foreign_key="task_status.id")
+    priority_id: int = Field(foreign_key="task_priority.id")
+    progress: int = 0
+    order: Optional[int]
+    due_date: Optional[date]
+    start_date: Optional[date]
+    end_date: Optional[date]
+    estimated_duration: Optional[int]
+    actual_duration: Optional[int]
+    done: bool = False
+
+
+class TaskOld(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     task_id: str
     task: str
@@ -62,7 +80,7 @@ class Topic(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
 
-    tasks: List["Task"] = Relationship(back_populates="topics", link_model=TaskTopicLink)
+    tasks: List["TaskOld"] = Relationship(back_populates="topics", link_model=TaskTopicLink)
 
 class Section(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)

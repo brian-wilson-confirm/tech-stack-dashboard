@@ -56,6 +56,7 @@ import AssessmentsPage from './pages/AssessmentsPage'
 import { Toaster } from './components/ui/toaster'
 import SettingsPage from './pages/SettingsPage'
 import LessonsPage from './pages/LessonsPage'
+import TasksOldPage from './pages/TasksOldPage'
 
 function App() {
   return (
@@ -115,10 +116,11 @@ function App() {
             <Route path="/monitoring/alerting" element={<AlertingPage />} />
             
             {/* Other routes */}
-            <Route path="/assessments" element={<AssessmentsPage />} />
-            <Route path="/lessons" element={<LessonsPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
             <Route path="/tasks" element={<TasksPage />} />
+            <Route path="/tasksold" element={<TasksOldPage />} />
+            <Route path="/lessons" element={<LessonsPage />} />
+            <Route path="/assessments" element={<AssessmentsPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
           </Routes>
           <Toaster />
         </main>

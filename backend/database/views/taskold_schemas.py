@@ -3,9 +3,11 @@ from datetime import date
 from sqlmodel import SQLModel
 
 
-class TaskBase(SQLModel):
+class TaskOldBase(SQLModel):
     task: str
     description: Optional[str] = None
+    topics: List[str]
+    section: Optional[str] = None
     progress: int
     order: Optional[int]
     due_date: Optional[date]
@@ -16,22 +18,32 @@ class TaskBase(SQLModel):
     done: bool = False
 
 
-class TaskCreate(TaskBase):
-    lesson_id: int
+# Actively using 4/18
+class TaskOldCreate(TaskOldBase):
+    technology_id: int
+    subcategory_id: int
+    category_id: int
+    source_id: int
+    level_id: int
     type_id: int
     status_id: int
     priority_id: int
 
 
-class TaskRead(TaskBase):
+# Actively using 4/21
+class TaskOldRead(TaskOldBase):
     id: int
     task_id: str
-    lesson: str
+    technology: str
+    subcategory: str
+    category: str
+    source: str
+    level: Optional[str] = None
     type: Optional[str] = None
     status: Optional[str] = None
     priority: Optional[str] = None
 
 
-class TaskUpdate(TaskCreate):
+class TaskOldUpdate(TaskOldCreate):
     id: int
     task_id: str

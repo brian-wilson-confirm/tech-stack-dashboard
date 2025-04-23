@@ -6,22 +6,21 @@ from sqlmodel import Session, select
 from sqlalchemy.orm import selectinload
 from backend.database.connection import get_session
 
-from backend.database.models.lesson_models import Lesson
-from backend.database.models.task_models import TaskTopicLink, Task, Category, Source, Subcategory, Technology, TaskLevel, TaskPriority, TaskStatus, TaskType, TechnologySubcategory, TechnologyWithSubcatAndCat, Topic
-from backend.database.views.task_schemas import TaskCreate, TaskRead, TaskUpdate
+from backend.database.models.task_models import TaskTopicLink, TaskOld, Category, Source, Subcategory, Technology, TaskLevel, TaskPriority, TaskStatus, TaskType, TechnologySubcategory, TechnologyWithSubcatAndCat, Topic
+from backend.database.views.taskold_schemas import TaskOldCreate, TaskOldRead, TaskOldUpdate
 from backend.database.views.technology_schemas import TechnologyCreate, TechnologyRead
 from sqlalchemy import text
 
 from backend.routers.topics import get_topic_ids
 
-router = APIRouter(prefix="/tasks")
+router = APIRouter(prefix="/tasksold")
 
 """
     Task: CRUD operations
 """
 
-@router.post("/", response_model=Task)
-async def create_task_with_topics(task_in: TaskCreate, session: Session = Depends(get_session)):
+@router.post("/", response_model=TaskOld)
+async def create_task_with_topics(task_in: TaskOldCreate, session: Session = Depends(get_session)):
     # Get/Create the topic id(s) for the task
     topic_ids = get_topic_ids(task_in.topics, session)
 
@@ -36,17 +35,24 @@ async def create_task_with_topics(task_in: TaskCreate, session: Session = Depend
     return task
 
 
-@router.get("/", response_model=List[TaskRead])
+@router.get("/", response_model=List[TaskOldRead])
 async def get_tasks(session: Session = Depends(get_session)):
-    tasks = session.exec(select(Task)).all()
-    return [serialize_task(task, session) for task in tasks]
+    tasks = session.exec(
+        select(TaskOld).options(selectinload(TaskOld.topics))
+    ).all()
+    
+    result = []
+    for task in tasks:
+        result.append(serialize_task(task, session))
+    
+    return result
 
 
-@router.put("/{id}", response_model=TaskRead)
-async def update_task(id: int, task_update: TaskUpdate, session: Session = Depends(get_session)):
+@router.put("/{id}", response_model=TaskOldRead)
+async def update_task(id: int, task_update: TaskOldUpdate, session: Session = Depends(get_session)):
     print(f"id: {id}")
     task = session.exec(
-        select(Task).where(Task.id == id)
+        select(TaskOld).where(TaskOld.id == id)
     ).first()
     
     if not task:
@@ -112,7 +118,7 @@ async def update_task(id: int, task_update: TaskUpdate, session: Session = Depen
 @router.delete("/{task_id}", status_code=204)
 async def delete_task(task_id: str, session: Session = Depends(get_session)):
     task = session.exec(
-        select(Task).where(Task.task_id == task_id)
+        select(TaskOld).where(TaskOld.task_id == task_id)
     ).first()
     
     if not task:
@@ -334,13 +340,19 @@ async def get_technologies_with_subcategory_and_category(session: Session = Depe
     Helper functions
 """
 
-def serialize_task(task: Task, session: Session) -> TaskRead:
-    return TaskRead(
+def serialize_task(task: TaskOld, session: Session) -> TaskOldRead:
+    return TaskOldRead(
             id=task.id,
             task_id=task.task_id,
             task=task.task,
             description=task.description,
-            lesson=(lesson := session.get(Lesson, task.lesson_id)) and lesson.title,
+            technology=session.get(Technology, task.technology_id).name,
+            subcategory=(sub := session.get(Subcategory, task.subcategory_id)) and sub.name,
+            category=(cat := session.get(Category, task.category_id)) and cat.name,
+            topics=[t.name for t in task.topics],
+            source=(src := session.get(Source, task.source_id)) and src.name,
+            section=task.section,
+            level=(lvl := session.get(TaskLevel, task.level_id)) and lvl.name,
             type=(typ := session.get(TaskType, task.type_id)) and typ.name,
             status=(stat := session.get(TaskStatus, task.status_id)) and stat.name,
             priority=(prio := session.get(TaskPriority, task.priority_id)) and prio.name,
@@ -355,10 +367,10 @@ def serialize_task(task: Task, session: Session) -> TaskRead:
         )
 
 
-def create_task(task_in: TaskCreate, session: Session = Depends(get_session)):
+def create_task(task_in: TaskOldCreate, session: Session = Depends(get_session)):
     task_data = task_in.model_dump(exclude={"topics"})  # ⬅️ This prevents the validation error
     task_data["task_id"] = generate_unique_task_id(session)
-    task = Task(**task_data)  # ✅ Only valid fields passed
+    task = TaskOld(**task_data)  # ✅ Only valid fields passed
     session.add(task)
     session.commit()
     session.refresh(task)
@@ -369,7 +381,7 @@ def generate_unique_task_id(session, prefix="TASK-", digits=4, max_attempts=10):
     for _ in range(max_attempts):
         random_digits = f"{random.randint(0, 10**digits - 1):0{digits}}"
         task_id = f"{prefix}{random_digits}"
-        exists = session.exec(select(Task).where(Task.task_id == task_id)).first()
+        exists = session.exec(select(TaskOld).where(TaskOld.task_id == task_id)).first()
         if not exists:
             return task_id
     raise ValueError("Failed to generate unique task_id after multiple attempts")

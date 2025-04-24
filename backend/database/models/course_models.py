@@ -13,6 +13,18 @@ class Course(SQLModel, table=True):
     #estimated_duration: Optional[int]
 
 
+"""
+    COURSE CATEGORIES
+"""
+class CourseCategory(SQLModel, table=True):
+    __tablename__ = "course_category"
+
+    #id: Optional[int] = Field(default=None, primary_key=True)
+    course_id: int = Field(foreign_key="course.id", primary_key=True)
+    category_id: int = Field(foreign_key="category.id", primary_key=True)
+
+
+
 
 """
     TASK DEPENDENCIES

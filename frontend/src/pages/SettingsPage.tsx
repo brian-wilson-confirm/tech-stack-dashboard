@@ -18,19 +18,25 @@ export default function SettingsPage() {
 
   const analyzeCourseCategories = async () => {
     setIsAnalyzing(true);
+    const analysisResults: CategoryResult[] = [];
+
     try {
-      // 1. Get all courses
-      const coursesResponse = await fetch('/api/courses/');
+      // Fetch all courses
+      const coursesResponse = await fetch('/api/courses');
+      if (!coursesResponse.ok) {
+        throw new Error('Failed to fetch courses');
+      }
       const courses = await coursesResponse.json();
 
-      // 2. Get categories
+      // Fetch categories for analysis
       const categoriesResponse = await fetch('/api/tasks/categories');
-      const categoriesObject = await categoriesResponse.json();
-      const categories = categoriesObject.map((category: any) => category.name);
+      if (!categoriesResponse.ok) {
+        throw new Error('Failed to fetch categories');
+      }
+      const categoriesData = await categoriesResponse.json();
+      const categories = categoriesData.map((cat: { name: string }) => cat.name);
 
-      const analysisResults: CategoryResult[] = [];
-
-      // 3. Get detailed course info and analyze each course
+      // Analyze each course
       for (const course of courses) {
         try {
           // Get detailed course info
@@ -70,6 +76,20 @@ export default function SettingsPage() {
               });
             }
           }
+
+          // Update course categories in the database
+          const updateResponse = await fetch('/api/courses/categories', {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ llm_response: analysisResult }) // Wrap the response in the expected format
+          });
+
+          if (!updateResponse.ok) {
+            throw new Error(`Failed to update course categories: ${updateResponse.status}`);
+          }
+
         } catch (error) {
           console.error(`Error analyzing course ${course.id}:`, error);
           toast.error(`Failed to analyze course ${course.title}`);
@@ -78,6 +98,7 @@ export default function SettingsPage() {
 
       setResults(analysisResults);
       setShowResults(true);
+      toast.success('Course categories have been analyzed and updated successfully');
     } catch (error) {
       console.error('Error in course analysis:', error);
       toast.error('Failed to analyze courses');

@@ -1,15 +1,17 @@
-from typing import List
+from typing import List, Dict
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select, func
 from backend.database.connection import get_session
-from backend.database.models.course_models import Course
+from backend.database.models.course_models import Course, CourseCategory
 from backend.database.models.lesson_models import Resource, Source
 from backend.database.models.resource_type_models import ResourceType
 from backend.database.models.source_type_models import SourceType
-from backend.database.models.task_models import TaskLevel
+from backend.database.models.task_models import TaskLevel, Category
 from backend.database.views.course_schemas import CourseDetailsRead, CourseRead
+from backend.database.views.llm_schemas import LLMResponseModel
 from backend.database.views.resource_schemas import ResourceDetailsRead
 from backend.database.views.source_schemas import SourceRead
+import json
 
 
 router = APIRouter(prefix="/courses")
@@ -43,9 +45,61 @@ async def get_num_courses(session: Session = Depends(get_session)):
     return session.exec(select(func.count()).select_from(Course)).one()
 
 
-
-
-
+@router.put("/categories")
+async def update_course_categories(payload: LLMResponseModel, session: Session = Depends(get_session)):
+    """Update course categories based on LLM analysis results."""
+    try:
+        # Parse the JSON response
+        response_data = json.loads(payload.llm_response)
+        
+        # Process each course in the response
+        for course_data in response_data.get("courses", []):
+            course_title = course_data.get("course")
+            
+            # Find the course in the database
+            course = session.exec(
+                select(Course).where(Course.title == course_title)
+            ).first()
+            
+            if not course:
+                continue  # Skip if course not found
+            
+            # Process each category for the course
+            for category_data in course_data.get("categories", []):
+                category_name = category_data.get("category")
+                
+                # Find the category in the database
+                category = session.exec(
+                    select(Category).where(Category.name == category_name)
+                ).first()
+                
+                if not category:
+                    continue  # Skip if category not found
+                
+                # Check if the course-category relationship already exists
+                existing_relation = session.exec(
+                    select(CourseCategory).where(
+                        CourseCategory.course_id == course.id,
+                        CourseCategory.category_id == category.id
+                    )
+                ).first()
+                
+                # If the relationship doesn't exist, create it
+                if not existing_relation:
+                    new_relation = CourseCategory(
+                        course_id=course.id,
+                        category_id=category.id
+                    )
+                    session.add(new_relation)
+        
+        # Commit all changes
+        session.commit()
+        return {"message": "Course categories updated successfully"}
+        
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, detail="Invalid JSON response")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 """

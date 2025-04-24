@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from sqlmodel import Session, select
 from sqlalchemy.orm import selectinload
+from sqlalchemy import func
 from backend.database.connection import get_session
 
 from backend.database.models.lesson_models import Lesson, Source
@@ -128,7 +129,10 @@ async def delete_task(task_id: str, session: Session = Depends(get_session)):
     session.commit()
 
 
-
+@router.get("/count", response_model=int)
+async def get_num_tasks(session: Session = Depends(get_session)):
+    """Get the total number of tasks in the database."""
+    return session.exec(select(func.count()).select_from(Task)).one()
 
 
 """

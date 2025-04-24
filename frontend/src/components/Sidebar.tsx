@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Link, useLocation } from "react-router-dom"
 import { useState } from "react"
+import { useItemCounts } from "@/hooks/useItemCounts"
+import { Badge } from "@/components/ui/badge"
 import {
   ChevronRight,
   LayoutDashboard,
@@ -14,7 +16,6 @@ import {
   Cloud,
   Shield,
   LineChart,
-  Plane,
   PanelLeftClose,
   PanelLeftOpen,
   CheckSquare,
@@ -40,6 +41,7 @@ export function Sidebar({ className }: React.HTMLAttributes<HTMLDivElement>) {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [expandedGroups, setExpandedGroups] = useState<string[]>(['Platform'])
   const [expandedItems, setExpandedItems] = useState<string[]>([])
+  const { counts, isLoading } = useItemCounts()
 
   const toggleGroup = (group: string) => {
     setExpandedGroups(current =>
@@ -56,6 +58,33 @@ export function Sidebar({ className }: React.HTMLAttributes<HTMLDivElement>) {
         : [...current, item]
     )
   }
+
+  const renderBadge = (label: string) => {
+    if (isLoading) return null;
+    
+    let count = 0;
+    switch (label) {
+      case 'Tasks':
+        count = counts.tasks;
+        break;
+      case 'Lessons':
+        count = counts.lessons;
+        break;
+      case 'Courses':
+        count = counts.courses;
+        break;
+      default:
+        return null;
+    }
+
+    if (count === 0) return null;
+
+    return (
+      <Badge variant="secondary" className="ml-auto">
+        {count}
+      </Badge>
+    );
+  };
 
   const navigationGroups: NavGroup[] = [
     {
@@ -235,6 +264,7 @@ export function Sidebar({ className }: React.HTMLAttributes<HTMLDivElement>) {
                           {!isCollapsed && (
                             <>
                               {item.label}
+                              {renderBadge(item.label)}
                               {item.subItems && (
                                 <ChevronRight
                                   size={16}

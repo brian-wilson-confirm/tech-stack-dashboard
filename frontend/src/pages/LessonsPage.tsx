@@ -3,8 +3,7 @@ import { useState, useEffect, useCallback } from "react"
 import { ColumnDef, SortingState, VisibilityState, FilterFn, ColumnFiltersState, OnChangeFn, PaginationState } from "@tanstack/react-table"
 import { DataTableWidget, EditModeRenderer } from "@/components/widgets/DataTableWidget"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { BookOpen, CheckSquare, Clock, Plus } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
+import { BookOpen, Clock, Plus } from "lucide-react"
 import { capitalizeWords } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -116,65 +115,6 @@ function ShowAddLessonDialog({ onAddItem, disabled }: { onAddItem: (item: Lesson
       fetchOptions()
     }
   }, [open])
-
-  // Fetch subcategories when category changes
-  useEffect(() => {
-    const categoryId = form.watch('category_id')
-    if (categoryId) {
-      const fetchSubcategories = async () => {
-        try {
-          const response = await fetch(`/api/tasks/subcategories/${categoryId}`)
-          if (!response.ok) {
-            throw new Error('Failed to fetch subcategories')
-          }
-          const data = await response.json()
-          setSubcategoryOptions(data)
-          // Reset subcategory and technology when category changes
-          form.setValue('subcategory_id', '')
-          form.setValue('technology_id', '')
-        } catch (error) {
-          console.error('Error fetching subcategories:', error)
-          toast({
-            title: "Error",
-            description: "Failed to load subcategories.",
-            variant: "destructive",
-          })
-        }
-      }
-      fetchSubcategories()
-    } else {
-      setSubcategoryOptions([])
-    }
-  }, [form.watch('category_id')])
-
-  // Fetch technologies when subcategory changes
-  useEffect(() => {
-    const subcategoryId = form.watch('subcategory_id')
-    if (subcategoryId) {
-      const fetchTechnologies = async () => {
-        try {
-          const response = await fetch(`/api/tasks/technologies/${subcategoryId}`)
-          if (!response.ok) {
-            throw new Error('Failed to fetch technologies')
-          }
-          const data = await response.json()
-          setTechnologyOptions(data)
-          // Reset technology when subcategory changes
-          form.setValue('technology_id', '')
-        } catch (error) {
-          console.error('Error fetching technologies:', error)
-          toast({
-            title: "Error",
-            description: "Failed to load technologies.",
-            variant: "destructive",
-          })
-        }
-      }
-      fetchTechnologies()
-    } else {
-      setTechnologyOptions([])
-    }
-  }, [form.watch('subcategory_id')])
 
   const onSubmit = async (data: LessonForm) => {
     setIsSubmitting(true)

@@ -3,6 +3,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
@@ -24,6 +25,9 @@ export function CategoryResultsDialog({ open, onOpenChange, results }: Props) {
       <DialogContent className="max-w-[800px] max-h-[80vh]">
         <DialogHeader>
           <DialogTitle>Course Category Analysis Results</DialogTitle>
+          <DialogDescription>
+            Analysis results showing suggested categories for each course and the reasoning behind the suggestions.
+          </DialogDescription>
         </DialogHeader>
         <ScrollArea className="h-[60vh]">
           <div className="space-y-4">

@@ -56,11 +56,20 @@ export default function SettingsPage() {
           const analysisResult = await analysisResponse.json();
           const parsedResult = JSON.parse(analysisResult);
 
-          analysisResults.push({
-            course: courseDetails.title,
-            category: parsedResult.category,
-            reasoning: parsedResult.reasoning
-          });
+          // Handle the new response format
+          if (parsedResult.courses && parsedResult.courses.length > 0) {
+            const courseAnalysis = parsedResult.courses[0];
+            if (courseAnalysis.categories && courseAnalysis.categories.length > 0) {
+              // Add each category analysis as a separate result
+              courseAnalysis.categories.forEach((categoryAnalysis: any) => {
+                analysisResults.push({
+                  course: courseDetails.title,
+                  category: categoryAnalysis.category,
+                  reasoning: categoryAnalysis.reasoning
+                });
+              });
+            }
+          }
         } catch (error) {
           console.error(`Error analyzing course ${course.id}:`, error);
           toast.error(`Failed to analyze course ${course.title}`);

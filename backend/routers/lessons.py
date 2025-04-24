@@ -1,5 +1,6 @@
 from typing import List
 from fastapi import APIRouter, Depends
+from sqlalchemy import func
 from sqlmodel import Session, select
 from backend.database.connection import get_session
 from backend.database.models.course_models import Course
@@ -18,6 +19,12 @@ router = APIRouter(prefix="/lessons")
 async def get_lessons(session: Session = Depends(get_session)):
     lessons = session.exec(select(Lesson)).all()
     return [serialize_lesson(lesson, session) for lesson in lessons]
+
+
+@router.get("/count", response_model=int)
+async def get_num_lessons(session: Session = Depends(get_session)):
+    """Get the total number of lessons in the database."""
+    return session.exec(select(func.count()).select_from(Lesson)).one()
 
 
 

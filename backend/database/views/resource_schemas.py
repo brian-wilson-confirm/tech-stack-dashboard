@@ -16,6 +16,7 @@ from backend.database.views.source_schemas import SourceRead
 class ResourceDetailsRead(BaseModel):
     id: int
     title: str
+    description: Optional[str]
     url: Optional[str]
     resource_type: Optional[str]
     source: Optional[SourceRead]

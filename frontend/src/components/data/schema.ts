@@ -159,3 +159,27 @@ export const lessonFormSchema = z.object({
   estimated_duration: z.number().min(0)
 })
 export type LessonForm = z.infer<typeof lessonFormSchema>
+
+
+/*******************
+  COURSE SCHEMA
+*******************/
+export const courseSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  description: z.string(),
+  level: z.string(),
+  resource: z.string(),
+})
+export type Course = z.infer<typeof courseSchema> 
+
+
+
+/*******************
+  COURSE FORM SCHEMA  
+*******************/
+export const courseFormSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string(),
+})
+export type CourseForm = z.infer<typeof courseFormSchema>

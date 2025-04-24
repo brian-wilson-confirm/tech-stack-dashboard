@@ -1,6 +1,6 @@
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException
-from sqlmodel import Session, select
+from sqlmodel import Session, select, func
 from backend.database.connection import get_session
 from backend.database.models.course_models import Course
 from backend.database.models.lesson_models import Resource, Source
@@ -37,6 +37,16 @@ async def get_course_details(course_id: int, session: Session = Depends(get_sess
     return serialize_course_details(course, level, resource, source, session)
 
 
+@router.get("/count", response_model=int)
+async def get_num_courses(session: Session = Depends(get_session)):
+    """Get the total number of courses in the database."""
+    return session.exec(select(func.count()).select_from(Course)).one()
+
+
+
+
+
+
 
 """
     Helper functions
@@ -60,6 +70,7 @@ def serialize_course_details(course: Course, level: TaskLevel, resource: Resourc
         resource=ResourceDetailsRead(
             id=resource.id,
             title=resource.title,
+            description=resource.description,
             url=resource.url,
             resource_type=(rt := session.get(ResourceType, resource.resource_type_id)) and rt.name,
             source=SourceRead(
@@ -70,8 +81,6 @@ def serialize_course_details(course: Course, level: TaskLevel, resource: Resourc
             ) if source else None
         ) if resource else None
     )
-
-
 
 
 def create_course(course_name: str, session: Session = Depends(get_session)):

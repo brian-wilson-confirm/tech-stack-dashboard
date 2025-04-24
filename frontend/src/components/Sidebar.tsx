@@ -169,6 +169,11 @@ export function Sidebar({ className }: React.HTMLAttributes<HTMLDivElement>) {
           href: "/lessons"
         },
         {
+          label: "Courses",
+          icon: BookOpen,
+          href: "/courses"
+        },
+        {
           label: "Assessments",
           icon: ClipboardCheck,
           href: "/assessments"

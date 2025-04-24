@@ -57,6 +57,7 @@ import { Toaster } from './components/ui/toaster'
 import SettingsPage from './pages/SettingsPage'
 import LessonsPage from './pages/LessonsPage'
 import TasksOldPage from './pages/TasksOldPage'
+import CoursesPage from './pages/CoursesPage'
 
 function App() {
   return (
@@ -119,6 +120,7 @@ function App() {
             <Route path="/tasks" element={<TasksPage />} />
             <Route path="/tasksold" element={<TasksOldPage />} />
             <Route path="/lessons" element={<LessonsPage />} />
+            <Route path="/courses" element={<CoursesPage />} />
             <Route path="/assessments" element={<AssessmentsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Routes>

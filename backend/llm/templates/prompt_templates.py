@@ -24,6 +24,7 @@ def build_prompt(course_title, course_description, resource_title, resource_desc
             Return your answer in this JSON format:
             {
                 [{
+                    "course": "<CourseTitle>",
                     "category": "<CategoryName>",
                     "reasoning": "<One sentence explanation>"
                 }]

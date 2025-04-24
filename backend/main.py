@@ -5,6 +5,7 @@ from sqlmodel import SQLModel
 
 from backend.routers import other, tasks, tasksold, topics, lessons, courses
 from backend.database.connection import engine
+from backend.routers import openai
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -18,6 +19,7 @@ app.include_router(topics.router, prefix="/api", tags=["topics"])
 app.include_router(lessons.router, prefix="/api", tags=["lessons"])
 app.include_router(courses.router, prefix="/api", tags=["courses"])
 app.include_router(other.router, prefix="/api", tags=["other"])
+app.include_router(openai.router, prefix="/api", tags=["openai"])
 
 
 # Configure CORS

@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import SQLModel
 
-from backend.routers import other, tasks, tasksold, topics, lessons
+from backend.routers import other, tasks, tasksold, topics, lessons, courses
 from backend.database.connection import engine
 
 @asynccontextmanager
@@ -16,6 +16,7 @@ app.include_router(tasksold.router, prefix="/api", tags=["tasksold"])
 app.include_router(tasks.router, prefix="/api", tags=["tasks"])
 app.include_router(topics.router, prefix="/api", tags=["topics"])
 app.include_router(lessons.router, prefix="/api", tags=["lessons"])
+app.include_router(courses.router, prefix="/api", tags=["courses"])
 app.include_router(other.router, prefix="/api", tags=["other"])
 
 

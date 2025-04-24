@@ -1,4 +1,4 @@
-import { Settings, MapPin, Calendar } from "lucide-react"
+import { Settings, MapPin, Calendar, BookOpen } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { AddTechnologyWidget } from "@/components/widgets/AddTechnologyWidget"
 
@@ -24,37 +24,32 @@ export default function SettingsPage() {
 
         {/* Widget #3 */}
         <div className="border rounded-lg p-6">
-          <h2 className="text-xl font-semibold mb-4">Upcoming Trips</h2>
+          <h2 className="text-xl font-semibold mb-4">Auto-Discover Resource Classification</h2>
           <div className="space-y-4">
             {[
               {
-                destination: 'New York',
-                date: 'Mar 15 - Mar 20',
-                status: 'Confirmed'
+                destination: 'Course'
               },
               {
-                destination: 'San Francisco',
-                date: 'Apr 1 - Apr 5',
-                status: 'Pending'
+                destination: 'Module'
               },
               {
-                destination: 'London',
-                date: 'Apr 15 - Apr 22',
-                status: 'Planning'
+                destination: 'Lesson'
+              },
+              {
+                destination: 'Resource'
               }
-            ].map((trip) => (
-              <div key={trip.destination} className="flex items-center justify-between p-4 bg-secondary/50 rounded-lg">
+            ].map((obj) => (
+              <div key={obj.destination} className="flex items-center justify-between p-4 bg-secondary/50 rounded-lg">
                 <div className="flex items-center gap-3">
-                  <MapPin className="h-5 w-5 text-primary" />
+                  <BookOpen className="h-5 w-5 text-primary" />
                   <div>
-                    <p className="font-medium">{trip.destination}</p>
-                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                      <Calendar className="h-4 w-4" />
-                      <span>{trip.date}</span>
-                    </div>
+                    <p className="font-medium">{obj.destination}</p>
                   </div>
                 </div>
-                <Button variant="outline" size="sm">{trip.status}</Button>
+                <Button variant="outline" size="sm">Category</Button>
+                <Button variant="outline" size="sm">Subcategory</Button>
+                <Button variant="outline" size="sm">Lesson</Button>
               </div>
             ))}
           </div>

@@ -2,7 +2,8 @@ from typing import List
 from fastapi import APIRouter, Depends
 from sqlmodel import Session, select
 from backend.database.connection import get_session
-from backend.database.models.lesson_models import Lesson, Module, Course, Resource
+from backend.database.models.course_models import Course
+from backend.database.models.lesson_models import Lesson, Module, Resource
 from backend.database.models.task_models import TaskLevel
 from backend.database.views.lesson_schemas import LessonRead
 

@@ -24,6 +24,7 @@ import { SelectTrigger } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
 import { TaskSheet } from '@/components/ui/task-sheet'
 import { usePageTitle } from '@/hooks/usePageTitle'
+import { QuickAddTaskWidget } from '@/components/widgets/QuickAddTaskWidget'
 
 
 
@@ -843,7 +844,7 @@ export default function Dashboard() {
 
 
   return (
-    <div className="p-8">
+    <div className="p-8">   
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold">Tech Stack Dashboard</h1>
         <Button 
@@ -855,6 +856,7 @@ export default function Dashboard() {
         </Button>
       </div>
 
+      {/* Category Widgets: Language, Backend, Data Storage, and DevOps */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {categories.map((category) => (
           <CategoryWidget
@@ -867,6 +869,12 @@ export default function Dashboard() {
         ))}
       </div>
 
+      {/* Quick Add Task Widget */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <QuickAddTaskWidget />
+      </div>
+
+      {/* Today's Tasks */}
       <div className="grid grid-cols-1 gap-6 mb-8">
         <DataTableWidget
           title="Today's Tasks"
@@ -910,6 +918,7 @@ export default function Dashboard() {
       />
       </div>
 
+      {/* Coverage Widget */}
       <div className="grid grid-cols-1 gap-6 mb-8">
         <CoverageWidget 
           items={coverage.items}
@@ -917,6 +926,7 @@ export default function Dashboard() {
         />
       </div>
 
+      {/* Security and System Widget */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <SecurityWidget 
           alerts={securityAlerts} 
@@ -926,6 +936,7 @@ export default function Dashboard() {
         />
       </div>
 
+      {/* Task Distribution Bar Chart (by category) */}
       <div className="grid grid-cols-1 gap-6 mb-8">
         Task Distribution Bar Chart (by category)
         Task Distribution Bar/Pie Chart (by priority)

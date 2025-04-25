@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from sqlmodel import SQLModel
 from typing import Optional
 
-from backend.database.views.resource_schemas import ResourceDetailsRead
+from backend.database.views.resource_schemas import ResourceRead
 
 
 """
@@ -36,4 +36,4 @@ class CourseDetailsRead(BaseModel):
     title: str
     description: Optional[str]
     level: Optional[str]
-    resource: Optional[ResourceDetailsRead]
+    resource: Optional[ResourceRead]

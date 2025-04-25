@@ -4,12 +4,12 @@ from sqlmodel import Session, select, func
 from backend.database.connection import get_session
 from backend.database.models.course_models import Course, CourseCategory
 from backend.database.models.lesson_models import Resource, Source
-from backend.database.models.resource_type_models import ResourceType
-from backend.database.models.source_type_models import SourceType
+from backend.database.models.resourcetype_models import ResourceType
+from backend.database.models.sourcetype_models import SourceType
 from backend.database.models.task_models import TaskLevel, Category
 from backend.database.views.course_schemas import CourseDetailsRead, CourseRead
 from backend.database.views.llm_schemas import LLMResponseModel
-from backend.database.views.resource_schemas import ResourceDetailsRead
+from backend.database.views.resource_schemas import ResourceRead
 from backend.database.views.source_schemas import SourceRead
 import json
 
@@ -121,7 +121,7 @@ def serialize_course_details(course: Course, level: TaskLevel, resource: Resourc
         title=course.title,
         description=course.description,
         level=level.name if level else None,
-        resource=ResourceDetailsRead(
+        resource=ResourceRead(
             id=resource.id,
             title=resource.title,
             description=resource.description,

@@ -4,13 +4,13 @@ from typing import Optional
 """
     SOURCES
 """
-class SourceRead(BaseModel):
+class SourceBase(BaseModel):
     id: int
     name: str
     source_type: Optional[str]
     website: Optional[str]
 
 
-"""
-    SOURCE DETAILS
-"""
+class SourceRead(SourceBase):
+    pass
+

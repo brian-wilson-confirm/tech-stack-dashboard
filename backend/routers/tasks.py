@@ -13,6 +13,7 @@ from backend.database.views.task_schemas import QuickAddTaskRequest, TaskCreate,
 from backend.database.views.technology_schemas import TechnologyCreate, TechnologyRead
 from sqlalchemy import text
 
+from backend.routers.people import get_person_ids
 from backend.routers.topics import get_topic_ids
 from backend.utils.web_scraper import extract_article_metadata
 
@@ -60,7 +61,12 @@ async def create_task_from_url(request: QuickAddTaskRequest, session: Session = 
 
     # Scrape the HTML at the URL
     url_metadata = extract_article_metadata(request.url)
-    print(f"url_metadata: {url_metadata}")
+    print(f"url_metadata: {url_metadata}\n\n")
+
+    # Get/Create the topic id(s) for the task
+    person_ids = get_person_ids(url_metadata["authors"], session)
+    print(f"person_ids: {person_ids}\n\n")
+
     return TaskResponse(
         title=url_metadata["title"],
         url=request.url,

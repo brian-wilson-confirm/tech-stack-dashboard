@@ -1,11 +1,10 @@
 from sqlmodel import Field, SQLModel
-from typing import List, Optional
 
 """
-    SOURCE TYPES
+    RESOURCE TYPES
 """
-class SourceType(SQLModel, table=True):
-    __tablename__ = "source_type"
+class ResourceType(SQLModel, table=True):
+    __tablename__ = "resourcetype"
 
     id: int = Field(default=None, primary_key=True)
     name: str

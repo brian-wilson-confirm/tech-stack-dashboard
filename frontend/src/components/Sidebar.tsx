@@ -6,7 +6,6 @@ import { useState } from "react"
 import { useItemCounts } from "@/hooks/useItemCounts"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import brianImage from "@/assets/images/brian.jpg"
 import {
   ChevronRight,
   LayoutDashboard,

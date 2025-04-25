@@ -22,6 +22,8 @@ import {
   ClipboardCheck,
   Settings,
   BookOpen,
+  Calendar,
+  User,
 } from "lucide-react"
 
 interface NavItem {
@@ -88,13 +90,48 @@ export function Sidebar({ className }: React.HTMLAttributes<HTMLDivElement>) {
 
   const navigationGroups: NavGroup[] = [
     {
-      label: "System Architecture",
+      label: "Analytics",
       items: [
         {
           label: "Dashboard",
           icon: LayoutDashboard,
           href: "/"
         },
+        {
+          label: "Tasks",
+          icon: CheckSquare,
+          href: "/tasks"
+        },
+        {
+          label: "Lessons",
+          icon: BookOpen,
+          href: "/lessons"
+        },
+        {
+          label: "Courses",
+          icon: BookOpen,
+          href: "/courses"
+        },
+        {
+          label: "Resources",
+          icon: BookOpen,
+          href: "/resources"
+        },
+        {
+          label: "Assessments",
+          icon: ClipboardCheck,
+          href: "/assessments"
+        },
+        {
+          label: "Calendar",
+          icon: Calendar,
+          href: "/calendar"
+        }
+      ]
+    },
+    {
+      label: "System Design",
+      items: [
         {
           label: "Frontend",
           icon: Code,
@@ -188,24 +225,9 @@ export function Sidebar({ className }: React.HTMLAttributes<HTMLDivElement>) {
       label: "Administration",
       items: [
         {
-          label: "Tasks",
-          icon: CheckSquare,
-          href: "/tasks",
-        },
-        {
-          label: "Lessons",
-          icon: BookOpen,
-          href: "/lessons"
-        },
-        {
-          label: "Courses",
-          icon: BookOpen,
-          href: "/courses"
-        },
-        {
-          label: "Assessments",
-          icon: ClipboardCheck,
-          href: "/assessments"
+          label: "Profile",
+          icon: User,
+          href: "/profile"
         },
         {
           label: "Settings",

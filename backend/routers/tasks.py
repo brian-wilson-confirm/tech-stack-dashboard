@@ -9,18 +9,35 @@ from backend.database.connection import get_session
 
 from backend.database.models.lesson_models import Lesson, Source
 from backend.database.models.task_models import TaskTopicLink, Task, Category, Subcategory, Technology, TaskLevel, TaskPriority, TaskStatus, TaskType, TechnologySubcategory, TechnologyWithSubcatAndCat, Topic
-from backend.database.views.task_schemas import TaskCreate, TaskRead, TaskUpdate
+from backend.database.views.task_schemas import QuickAddTaskRequest, TaskCreate, TaskRead, TaskResponse, TaskUpdate
 from backend.database.views.technology_schemas import TechnologyCreate, TechnologyRead
 from sqlalchemy import text
 
 from backend.routers.topics import get_topic_ids
+from backend.utils.web_scraper import extract_article_metadata
 
 router = APIRouter(prefix="/tasks")
 
 """
-    Task: CRUD operations
+    GET Operations
 """
+@router.get("/", response_model=List[TaskRead])
+async def get_tasks(session: Session = Depends(get_session)):
+    tasks = session.exec(select(Task)).all()
+    return [serialize_task(task, session) for task in tasks]
 
+
+@router.get("/count", response_model=int)
+async def get_num_tasks(session: Session = Depends(get_session)):
+    """Get the total number of tasks in the database."""
+    return session.exec(select(func.count()).select_from(Task)).one()
+
+
+
+
+"""
+    POST Operations
+"""
 @router.post("/", response_model=Task)
 async def create_task_with_topics(task_in: TaskCreate, session: Session = Depends(get_session)):
     # Get/Create the topic id(s) for the task
@@ -37,12 +54,39 @@ async def create_task_with_topics(task_in: TaskCreate, session: Session = Depend
     return task
 
 
-@router.get("/", response_model=List[TaskRead])
-async def get_tasks(session: Session = Depends(get_session)):
-    tasks = session.exec(select(Task)).all()
-    return [serialize_task(task, session) for task in tasks]
+@router.post("/from-url", response_model=TaskResponse)
+async def create_task_from_url(request: QuickAddTaskRequest, session: Session = Depends(get_session)):
+    """Quick Add Task: Create a task from a URL (Source -> Resource -> Lesson -> Task)"""
+
+    # Scrape the HTML at the URL
+    url_metadata = extract_article_metadata(request.url)
+    print(f"url_metadata: {url_metadata}")
+    return TaskResponse(
+        title=url_metadata["title"],
+        url=request.url,
+        notes=request.notes
+    )
+
+    # Get the source from the URL
+    #source = get_source_from_url(url, session)
+
+    # Get the resource from the URL
+    #resource = get_resource_from_url(url, session)
+
+    # Create the task
+    #task = create_task(resource, session)
+
+    # Link the task to the topic(s)
+    #for topic_id in topic_ids:
+    #    session.add(TaskTopicLink(task_id=task.id, topic_id=topic_id))
+    
+    #session.commit()
+    #return task
 
 
+"""
+    PUT Operations
+"""
 @router.put("/{id}", response_model=TaskRead)
 async def update_task(id: int, task_update: TaskUpdate, session: Session = Depends(get_session)):
     print(f"id: {id}")
@@ -110,6 +154,11 @@ async def update_task(id: int, task_update: TaskUpdate, session: Session = Depen
     return serialize_task(task, session)
 
 
+
+
+"""
+    DELETE Operations
+"""
 @router.delete("/{task_id}", status_code=204)
 async def delete_task(task_id: str, session: Session = Depends(get_session)):
     task = session.exec(
@@ -129,10 +178,11 @@ async def delete_task(task_id: str, session: Session = Depends(get_session)):
     session.commit()
 
 
-@router.get("/count", response_model=int)
-async def get_num_tasks(session: Session = Depends(get_session)):
-    """Get the total number of tasks in the database."""
-    return session.exec(select(func.count()).select_from(Task)).one()
+
+
+
+
+
 
 
 """

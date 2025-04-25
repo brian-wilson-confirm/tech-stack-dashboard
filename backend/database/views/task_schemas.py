@@ -1,9 +1,12 @@
 from typing import List, Optional
 from datetime import date
-from sqlmodel import SQLModel
+from pydantic import BaseModel
 
 
-class TaskBase(SQLModel):
+"""
+    TASK
+"""
+class TaskBase(BaseModel):
     task: str
     description: Optional[str] = None
     progress: int
@@ -35,3 +38,17 @@ class TaskRead(TaskBase):
 class TaskUpdate(TaskCreate):
     id: int
     task_id: str
+
+
+"""
+    QUICK ADD TASK
+"""
+class QuickAddTaskRequest(BaseModel):
+    url: str
+    notes: str
+
+
+class TaskResponse(BaseModel):
+    title: str
+    notes: Optional[str] = None
+    url: str

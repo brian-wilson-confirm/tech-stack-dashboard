@@ -3,20 +3,47 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { toast } from "sonner"
+import { useState } from "react"
 
 interface QuickAddTaskWidgetProps {
   onClose?: () => void
-  onSubmit?: (data: { resourceUrl: string; notes: string }) => void
 }
 
-export function QuickAddTaskWidget({ onClose, onSubmit }: QuickAddTaskWidgetProps) {
-  const handleSubmit = (e: React.FormEvent) => {
+export function QuickAddTaskWidget({ onClose }: QuickAddTaskWidgetProps) {
+  const [isLoading, setIsLoading] = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const form = e.target as HTMLFormElement
     const resourceUrl = (form.elements.namedItem('resourceUrl') as HTMLInputElement).value
     const notes = (form.elements.namedItem('notes') as HTMLTextAreaElement).value
-    onSubmit?.({ resourceUrl, notes })
-    form.reset()
+
+    setIsLoading(true)
+    try {
+      const response = await fetch('/api/tasks/from-url', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          url: resourceUrl,
+          notes: notes 
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to create task')
+      }
+
+      toast.success('Task created successfully')
+      form.reset()
+    } catch (error) {
+      console.error('Error creating task:', error)
+      toast.error('Failed to create task')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -77,8 +104,12 @@ export function QuickAddTaskWidget({ onClose, onSubmit }: QuickAddTaskWidgetProp
               {/* Advanced options can be added here */}
             </div>
           </div>
-          <Button type="submit" className="w-full text-lg">
-            Add Task
+          <Button 
+            type="submit" 
+            className="w-full text-lg"
+            disabled={isLoading}
+          >
+            {isLoading ? 'Adding Task...' : 'Add Task'}
           </Button>
         </form>
       </CardContent>

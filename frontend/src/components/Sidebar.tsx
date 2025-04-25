@@ -5,6 +5,8 @@ import { Link, useLocation } from "react-router-dom"
 import { useState } from "react"
 import { useItemCounts } from "@/hooks/useItemCounts"
 import { Badge } from "@/components/ui/badge"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import brianImage from "@/assets/images/brian.jpg"
 import {
   ChevronRight,
   LayoutDashboard,
@@ -45,13 +47,6 @@ export function Sidebar({ className }: React.HTMLAttributes<HTMLDivElement>) {
   const [expandedItems, setExpandedItems] = useState<string[]>([])
   const { counts, isLoading } = useItemCounts()
 
-  const toggleGroup = (group: string) => {
-    setExpandedGroups(current =>
-      current.includes(group)
-        ? current.filter(item => item !== group)
-        : [...current, group]
-    )
-  }
 
   const toggleItem = (item: string) => {
     setExpandedItems(current =>
@@ -239,8 +234,8 @@ export function Sidebar({ className }: React.HTMLAttributes<HTMLDivElement>) {
   ]
 
   return (
-    <div className={cn("relative flex flex-col bg-[#232e43] text-gray-300", isCollapsed ? "w-16" : "w-64", className)}>
-      <div className="flex h-14 items-center justify-between px-4 border-b border-gray-700">
+    <div className={cn("relative flex flex-col bg-[#232e43]", isCollapsed ? "w-16" : "w-64", className)}>
+      <div className="flex h-14 items-center justify-between px-4 border-b border-gray-700 bg-[#1c2536]">
         {!isCollapsed && <span className="font-medium text-gray-200">Tech Dashboard</span>}
         <Button
           variant="ghost"
@@ -252,85 +247,88 @@ export function Sidebar({ className }: React.HTMLAttributes<HTMLDivElement>) {
         </Button>
       </div>
 
-      <ScrollArea className="flex-1">
-        <div className="space-y-4 py-4">
-          {navigationGroups.map((group) => (
-            <div key={group.label} className="px-3 py-2">
-              <div className="px-4 mb-2">
-                {!isCollapsed && (
-                  <span className="text-xs font-medium uppercase tracking-wider text-gray-500">
-                    {group.label}
-                  </span>
-                )}
-              </div>
-              <div className="space-y-1">
-                {(!isCollapsed || expandedGroups.includes(group.label)) &&
-                  group.items.map((item) => (
-                    <div key={item.href}>
-                      <Link to={item.href}>
-                        <Button
-                          variant={location.pathname === item.href ? "secondary" : "ghost"}
-                          className={cn(
-                            "w-full justify-start text-gray-300 font-light hover:bg-gray-700/50 hover:text-gray-100",
-                            isCollapsed && "justify-center px-2",
-                            item.subItems && expandedItems.includes(item.label) && "bg-gray-700/30",
-                            location.pathname === item.href && "bg-gray-700/50 text-gray-100"
-                          )}
-                          onClick={(e) => {
-                            if (item.subItems) {
-                              e.preventDefault()
-                              toggleItem(item.label)
-                            }
-                          }}
-                        >
-                          {item.icon && <item.icon className={cn("h-4 w-4 text-gray-400", !isCollapsed && "mr-2")} />}
-                          {!isCollapsed && (
-                            <>
-                              {/* Every catergory menu item  */}
-                              {item.label}
-                              {renderBadge(item.label)}
-                              {item.subItems && (
-                                <ChevronRight
-                                  size={16}
-                                  className={cn(
-                                    "ml-auto transition-transform text-gray-400",
-                                    expandedItems.includes(item.label) && "rotate-90"
-                                  )}
-                                />
-                              )}
-                            </>
-                          )}
-                        </Button>
-                      </Link>
-                      {!isCollapsed && item.subItems && expandedItems.includes(item.label) && (
-                        <div className="pl-6 mt-1 space-y-1">
-                          {item.subItems.map((subItem) => (
-                            // Each subcategory menu item
-                            <Link key={subItem.href} to={subItem.href}>
-                              <Button
-                                variant={location.pathname === subItem.href ? "secondary" : "ghost"}
-                                className={cn(
-                                  "w-full justify-start text-sm font-light text-gray-400 hover:bg-gray-700/50 hover:text-gray-200",
-                                  location.pathname === subItem.href && "bg-gray-700/50 text-gray-200"
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <ScrollArea className="flex-1" style={{ height: 'calc(100vh - 8rem)' }}>
+          <div className="space-y-4 py-4">
+            {navigationGroups.map((group) => (
+              <div key={group.label} className="px-3 py-2">
+                <div className="px-4 mb-2">
+                  {!isCollapsed && (
+                    <span className="text-xs font-medium uppercase tracking-wider text-gray-500">
+                      {group.label}
+                    </span>
+                  )}
+                </div>
+                <div className="space-y-1">
+                  {(!isCollapsed || expandedGroups.includes(group.label)) &&
+                    group.items.map((item) => (
+                      <div key={item.href}>
+                        <Link to={item.href}>
+                          <Button
+                            variant={location.pathname === item.href ? "secondary" : "ghost"}
+                            className={cn(
+                              "w-full justify-start text-gray-300 font-light hover:bg-gray-700/50 hover:text-gray-100",
+                              isCollapsed && "justify-center px-2",
+                              item.subItems && expandedItems.includes(item.label) && "bg-gray-700/30",
+                              location.pathname === item.href && "bg-gray-700/50 text-gray-100"
+                            )}
+                            onClick={(e) => {
+                              if (item.subItems) {
+                                e.preventDefault()
+                                toggleItem(item.label)
+                              }
+                            }}
+                          >
+                            {item.icon && <item.icon className={cn("h-4 w-4 text-gray-400", !isCollapsed && "mr-2")} />}
+                            {!isCollapsed && (
+                              <>
+                                {item.label}
+                                {renderBadge(item.label)}
+                                {item.subItems && (
+                                  <ChevronRight
+                                    size={16}
+                                    className={cn(
+                                      "ml-auto transition-transform text-gray-400",
+                                      expandedItems.includes(item.label) && "rotate-90"
+                                    )}
+                                  />
                                 )}
-                              >
-                                {subItem.label}
-                              </Button>
-                            </Link>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                              </>
+                            )}
+                          </Button>
+                        </Link>
+                        {!isCollapsed && item.subItems && expandedItems.includes(item.label) && (
+                          <div className="pl-6 mt-1 space-y-1">
+                            {item.subItems.map((subItem) => (
+                              <Link key={subItem.href} to={subItem.href}>
+                                <Button
+                                  variant={location.pathname === subItem.href ? "secondary" : "ghost"}
+                                  className={cn(
+                                    "w-full justify-start text-sm font-light text-gray-400 hover:bg-gray-700/50 hover:text-gray-200",
+                                    location.pathname === subItem.href && "bg-gray-700/50 text-gray-200"
+                                  )}
+                                >
+                                  {subItem.label}
+                                </Button>
+                              </Link>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      </ScrollArea>
+            ))}
+          </div>
+        </ScrollArea>
+      </div>
 
-      <div className="mt-auto border-t border-gray-700 p-4">
+      <div className="shrink-0 border-t border-gray-700 p-4 bg-[#1c2536]">
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-full bg-gray-700" />
+          <Avatar className="h-8 w-8">
+            <AvatarImage src="/assets/brian.jpg" alt="Brian Wilson" />
+            <AvatarFallback>BW</AvatarFallback>
+          </Avatar>
           {!isCollapsed && (
             <div className="space-y-1">
               <p className="text-sm font-medium text-gray-200">Brian Wilson</p>

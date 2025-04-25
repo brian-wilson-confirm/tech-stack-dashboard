@@ -217,14 +217,14 @@ export function Sidebar({ className }: React.HTMLAttributes<HTMLDivElement>) {
   ]
 
   return (
-    <div className={cn("relative flex flex-col border-r", isCollapsed ? "w-16" : "w-64", className)}>
-      <div className="flex h-14 items-center justify-between px-4 border-b">
-        {!isCollapsed && <span className="font-semibold">Tech Dashboard</span>}
+    <div className={cn("relative flex flex-col bg-[#232e43] text-gray-300", isCollapsed ? "w-16" : "w-64", className)}>
+      <div className="flex h-14 items-center justify-between px-4 border-b border-gray-700">
+        {!isCollapsed && <span className="font-medium text-gray-200">Tech Dashboard</span>}
         <Button
           variant="ghost"
           size="icon"
           onClick={() => setIsCollapsed(x => !x)}
-          className="ml-auto"
+          className="ml-auto text-gray-400 hover:text-gray-200 hover:bg-gray-700/50"
         >
           {isCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
         </Button>
@@ -236,7 +236,7 @@ export function Sidebar({ className }: React.HTMLAttributes<HTMLDivElement>) {
             <div key={group.label} className="px-3 py-2">
               <div className="px-4 mb-2">
                 {!isCollapsed && (
-                  <span className="text-sm font-medium text-muted-foreground">
+                  <span className="text-xs font-medium uppercase tracking-wider text-gray-500">
                     {group.label}
                   </span>
                 )}
@@ -249,9 +249,10 @@ export function Sidebar({ className }: React.HTMLAttributes<HTMLDivElement>) {
                         <Button
                           variant={location.pathname === item.href ? "secondary" : "ghost"}
                           className={cn(
-                            "w-full justify-start",
+                            "w-full justify-start text-gray-300 font-light hover:bg-gray-700/50 hover:text-gray-100",
                             isCollapsed && "justify-center px-2",
-                            item.subItems && expandedItems.includes(item.label) && "bg-secondary/50"
+                            item.subItems && expandedItems.includes(item.label) && "bg-gray-700/30",
+                            location.pathname === item.href && "bg-gray-700/50 text-gray-100"
                           )}
                           onClick={(e) => {
                             if (item.subItems) {
@@ -260,16 +261,17 @@ export function Sidebar({ className }: React.HTMLAttributes<HTMLDivElement>) {
                             }
                           }}
                         >
-                          {item.icon && <item.icon className={cn("h-4 w-4", !isCollapsed && "mr-2")} />}
+                          {item.icon && <item.icon className={cn("h-4 w-4 text-gray-400", !isCollapsed && "mr-2")} />}
                           {!isCollapsed && (
                             <>
+                              {/* Every catergory menu item  */}
                               {item.label}
                               {renderBadge(item.label)}
                               {item.subItems && (
                                 <ChevronRight
                                   size={16}
                                   className={cn(
-                                    "ml-auto transition-transform",
+                                    "ml-auto transition-transform text-gray-400",
                                     expandedItems.includes(item.label) && "rotate-90"
                                   )}
                                 />
@@ -281,10 +283,14 @@ export function Sidebar({ className }: React.HTMLAttributes<HTMLDivElement>) {
                       {!isCollapsed && item.subItems && expandedItems.includes(item.label) && (
                         <div className="pl-6 mt-1 space-y-1">
                           {item.subItems.map((subItem) => (
+                            // Each subcategory menu item
                             <Link key={subItem.href} to={subItem.href}>
                               <Button
                                 variant={location.pathname === subItem.href ? "secondary" : "ghost"}
-                                className="w-full justify-start text-sm"
+                                className={cn(
+                                  "w-full justify-start text-sm font-light text-gray-400 hover:bg-gray-700/50 hover:text-gray-200",
+                                  location.pathname === subItem.href && "bg-gray-700/50 text-gray-200"
+                                )}
                               >
                                 {subItem.label}
                               </Button>
@@ -300,13 +306,13 @@ export function Sidebar({ className }: React.HTMLAttributes<HTMLDivElement>) {
         </div>
       </ScrollArea>
 
-      <div className="mt-auto border-t p-4">
+      <div className="mt-auto border-t border-gray-700 p-4">
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-full bg-muted" />
+          <div className="h-8 w-8 rounded-full bg-gray-700" />
           {!isCollapsed && (
             <div className="space-y-1">
-              <p className="text-sm font-medium">Brian Wilson</p>
-              <p className="text-xs text-muted-foreground">bwil0007@gmail.com</p>
+              <p className="text-sm font-medium text-gray-200">Brian Wilson</p>
+              <p className="text-xs text-gray-500">bwil0007@gmail.com</p>
             </div>
           )}
         </div>

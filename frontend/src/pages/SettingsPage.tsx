@@ -128,6 +128,7 @@ export default function SettingsPage() {
 
         {/* Widget #3 */}
         <div className="border rounded-lg p-6">
+        <h2 className="text-xl font-semibold mb-4">Auto-Discover Resource Categorization</h2>
           {[
             {
               destination: 'Course'

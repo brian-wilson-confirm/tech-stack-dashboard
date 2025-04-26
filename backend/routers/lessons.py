@@ -20,7 +20,7 @@ from backend.llm.templates.prompt_templates import build_lesson_prompt
 from backend.routers.categories import get_category_id
 from backend.routers.openai import submit_prompt
 from backend.routers.subcategories import get_subcategory_id
-from backend.routers.technologies import get_technology_id
+from backend.routers.technologies import create_technology_subcategories, get_technology_id
 
 
 router = APIRouter(prefix="/lessons")
@@ -122,7 +122,7 @@ def categorize_lesson(lesson_id: int, session: Session):
         create_lesson_subcategories(lesson_id, subcategory_ids, session)
     print(f"\n\nlesson_subcategories created\n\n")
 
-    # Update the technology table
+    # Get/Create the Technology(ies)
     technology_ids = [get_technology_id(technology_data["technology"], session) for technology_data in technologies]
     print(f"\n\ntechnology_ids: {technology_ids}\n\n")
 
@@ -130,13 +130,12 @@ def categorize_lesson(lesson_id: int, session: Session):
     create_lesson_technologies(lesson_id, technology_ids, session)
     print(f"\n\nlesson_technologies created\n\n")
 
-
-    # Update the lesson_technology relationships
-    #for technology_data in technologies:
-    #    technologies = technology_data["technologies"]
-    #    technology_ids = [get_technology_id(technology_data["technology"], session) for technology_data in technologies]
-    #    create_lesson_technologies(lesson_id, technology_ids, session)
-    #    print(f"\n\nlesson_technologies created\n\n")
+    # Update the technology_subcategory relationships
+    for technology_data in technologies:
+        technology_id = get_technology_id(technology_data["technology"], session)
+        subcategory_ids = [get_subcategory_id(subcategory_data["subcategory"], session) for subcategory_data in technology_data["subcategories"]]
+        create_technology_subcategories(technology_id, subcategory_ids, session)
+    print(f"\n\ntechnology_subcategories created\n\n")
 
     return response
 

@@ -5,8 +5,6 @@ from typing import Optional
     SOURCES
 """
 class Source(SQLModel, table=True):
-    __table_args__ = {"extend_existing": True}
-
     id: int = Field(default=None, primary_key=True)
     name: str
     sourcetype_id: Optional[int] = Field(foreign_key="sourcetype.id")

@@ -6,8 +6,8 @@ from sqlmodel import Session, select
 from sqlalchemy.orm import selectinload
 from backend.database.connection import get_session
 
-from backend.database.models.lesson_models import Source
 from backend.database.models.level_models import Level
+from backend.database.models.source_models import Source
 from backend.database.models.task_models import TaskTopicLink, TaskOld, Category, Subcategory, Technology, TaskPriority, TaskStatus, TaskType, TechnologySubcategory, TechnologyWithSubcatAndCat, Topic
 from backend.database.views.taskold_schemas import TaskOldCreate, TaskOldRead, TaskOldUpdate
 from backend.database.views.technology_schemas import TechnologyCreate, TechnologyRead
@@ -202,7 +202,6 @@ async def get_task_sources(session: Session = Depends(get_session)):
 """
     Task Category: CRUD operations
 """
-
 @router.get("/categories", response_model=List[Category])
 async def get_task_categories(session: Session = Depends(get_session)):
     return session.exec(select(Category)).all()
@@ -214,7 +213,6 @@ async def get_task_categories(session: Session = Depends(get_session)):
 """
     Task Subcategory: CRUD operations
 """
-
 @router.get("/subcategories/{category_id}", response_model=List[Subcategory])
 async def get_task_subcategories_by_category(category_id: int, session: Session = Depends(get_session)):
     return session.exec(select(Subcategory).where(Subcategory.category_id == category_id)).all()
@@ -226,7 +224,6 @@ async def get_task_subcategories_by_category(category_id: int, session: Session 
 """
     Task Technology: CRUD operations
 """
-
 @router.post("/technologies", response_model=Technology)
 async def create_technology(technology: TechnologyCreate, session: Session = Depends(get_session)):
     print(f"technology: {technology.name}, subcategory_id: {technology.subcategory_id}")

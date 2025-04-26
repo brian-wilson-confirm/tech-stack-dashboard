@@ -6,14 +6,15 @@ from sqlmodel import Session, select
 from sqlalchemy import func
 from backend.database.connection import get_session
 
-from backend.database.models.lesson_models import Lesson, Source
+from backend.database.models.lesson_models import Lesson
+from backend.database.models.source_models import Source
 from backend.database.models.level_models import Level
 from backend.database.models.task_models import TaskTopicLink, Task, Category, Subcategory, Technology, TaskPriority, TaskStatus, TaskType, TechnologySubcategory, TechnologyWithSubcatAndCat, Topic
 from backend.database.views.task_schemas import QuickAddTaskRequest, TaskCreate, TaskRead, TaskResponse, TaskUpdate
 from backend.database.views.technology_schemas import TechnologyCreate, TechnologyRead
 from sqlalchemy import text
 
-from backend.routers.lessons import get_lesson_id
+from backend.routers.lessons import categorize_lesson, get_lesson_id
 from backend.routers.levels import get_level_id
 from backend.routers.people import get_person_ids
 from backend.routers.resources import get_resource_id, get_resourcetype_id
@@ -100,17 +101,17 @@ async def create_task_from_url(request: QuickAddTaskRequest, session: Session = 
     lesson_id = get_lesson_id(url_metadata["lessontitle"], url_metadata["lessondescription"], url_metadata["content"], level_id, resource_id, session)
     print(f"\n\nlesson_id: {lesson_id}\n\n")
 
+    # Categorize the Lesson
+    response = categorize_lesson(lesson_id, session)
+    print(f"\n\nresponse: {response}\n\n")
+
+
     return TaskResponse(
         title=url_metadata["title"],
         url=request.url,
         notes=request.notes
     )
 
-    # Get the source from the URL
-    #source = get_source_from_url(url, session)
-
-    # Get the resource from the URL
-    #resource = get_resource_from_url(url, session)
 
     # Create the task
     #task = create_task(resource, session)

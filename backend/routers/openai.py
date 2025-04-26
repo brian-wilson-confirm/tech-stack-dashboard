@@ -18,6 +18,27 @@ if not api_key:
 client = OpenAI(api_key=api_key)
 
 
+def submit_prompt(prompt: str) -> str:
+    try:
+        #prompt = build_prompt(course_data, categories)
+        
+        completion = client.chat.completions.create(
+            messages=[{"role": "user", "content": prompt}],
+            model="gpt-3.5-turbo",
+            temperature=0.7,
+            max_tokens=500,
+        )
+
+        # Response from OpenAI
+        response = completion.choices[0].message.content
+
+        # Parse the response into a JSON object
+        return response
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)) 
+
+
+
 @router.post("/analyze-course-category")
 async def analyze_course_category(course_data: Dict[str, Any], categories: List[str]):
     try:

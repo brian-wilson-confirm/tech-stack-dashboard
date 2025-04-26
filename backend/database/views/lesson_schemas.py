@@ -1,7 +1,12 @@
-from sqlmodel import SQLModel
+from pydantic import BaseModel
 from typing import Optional
 
-class LessonBase(SQLModel):
+from backend.database.views.resource_schemas import ResourceRequest
+
+"""
+    LESSONS
+"""
+class LessonBase(BaseModel):
     title: str
     description: Optional[str]
     content: Optional[str]
@@ -28,3 +33,13 @@ class LessonRead(LessonBase):
 class LessonUpdate(LessonCreate):
     id: int
     lesson_id: str
+
+
+
+"""
+    LESSON REQUEST
+"""
+class LessonRequest(BaseModel):
+    title: str
+    description: Optional[str]
+    resource: ResourceRequest

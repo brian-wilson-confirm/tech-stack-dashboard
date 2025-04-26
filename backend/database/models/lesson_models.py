@@ -33,13 +33,6 @@ class Module(SQLModel, table=True):
     resource_id: Optional[int] = Field(foreign_key="resource.id")
 
 
-class Source(SQLModel, table=True):
-    id: int = Field(default=None, primary_key=True)
-    name: str
-    sourcetype_id: Optional[int] = Field(foreign_key="sourcetype.id")
-    website: Optional[str]
-
-
 class Resource(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
     title: str

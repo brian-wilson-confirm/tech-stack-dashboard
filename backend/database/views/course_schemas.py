@@ -1,5 +1,4 @@
 from pydantic import BaseModel
-from sqlmodel import SQLModel
 from typing import Optional
 
 from backend.database.views.resource_schemas import ResourceRead
@@ -8,7 +7,7 @@ from backend.database.views.resource_schemas import ResourceRead
 """
     COURSES
 """
-class CourseBase(SQLModel):
+class CourseBase(BaseModel):
     title: str
     description: Optional[str]
 

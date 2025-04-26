@@ -3,7 +3,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select, func
 from backend.database.connection import get_session
 from backend.database.models.course_models import Course, CourseCategory
-from backend.database.models.lesson_models import Resource, Source
+from backend.database.models.lesson_models import Resource
+from backend.database.models.source_models import Source
 from backend.database.models.resourcetype_models import ResourceType
 from backend.database.models.sourcetype_models import SourceType
 from backend.database.models.task_models import Category

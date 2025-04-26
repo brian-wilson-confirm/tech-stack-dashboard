@@ -17,3 +17,21 @@ class SourceCreate(SourceBase):
 class SourceRead(SourceBase):
     id: int
 
+
+
+"""
+    SOURCE TYPE REQUEST
+"""
+class SourceTypeRequest(BaseModel):
+    name: str
+    
+
+
+"""
+    SOURCE REQUEST
+"""
+class SourceRequest(BaseModel):
+    name: str
+    website: Optional[str] = None
+    sourcetype: SourceTypeRequest
+

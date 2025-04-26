@@ -8,7 +8,10 @@ from backend.database.connection import get_session
 
 from backend.database.models.level_models import Level
 from backend.database.models.source_models import Source
-from backend.database.models.task_models import TaskTopicLink, TaskOld, Category, Subcategory, Technology, TaskPriority, TaskStatus, TaskType, TechnologySubcategory, TechnologyWithSubcatAndCat, Topic
+from backend.database.models.category_models import Category
+from backend.database.models.subcategory_models import Subcategory
+from backend.database.models.technology_models import Technology
+from backend.database.models.task_models import TaskTopicLink, TaskOld, TaskPriority, TaskStatus, TaskType, TechnologySubcategory, TechnologyWithSubcatAndCat, Topic
 from backend.database.views.taskold_schemas import TaskOldCreate, TaskOldRead, TaskOldUpdate
 from backend.database.views.technology_schemas import TechnologyCreate, TechnologyRead
 from sqlalchemy import text

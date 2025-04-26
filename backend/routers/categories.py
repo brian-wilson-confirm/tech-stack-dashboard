@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func
 from sqlmodel import Session, select
 from backend.database.connection import get_session
-from backend.database.models.task_models import Category
+from backend.database.models.category_models import Category
 
 router = APIRouter(prefix="/categories")
 

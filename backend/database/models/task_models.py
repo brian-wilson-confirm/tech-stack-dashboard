@@ -58,24 +58,9 @@ class TaskOld(SQLModel, table=True):
 
 
 
-
 """
     TASK DEPENDENCIES
-"""
-class Technology(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    name: str
-    description: Optional[str] = None
-    
-class Subcategory(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    name: str
-    category_id: int
-
-class Category(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    name: str
-
+""" 
 class Topic(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
@@ -87,13 +72,7 @@ class Section(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
 """
-"""
-class Level(SQLModel, table=True):
-    __tablename__ = "level"
-    
-    id: Optional[int] = Field(default=None, primary_key=True)
-    name: str
-"""
+
 
 class TaskType(SQLModel, table=True):
     __tablename__ = "task_type"

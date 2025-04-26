@@ -7,7 +7,7 @@ from backend.database.models.lesson_models import Resource
 from backend.database.models.source_models import Source
 from backend.database.models.resourcetype_models import ResourceType
 from backend.database.models.sourcetype_models import SourceType
-from backend.database.models.task_models import Category
+from backend.database.models.category_models import Category
 from backend.database.models.level_models import Level
 from backend.database.views.course_schemas import CourseDetailsRead, CourseRead
 from backend.database.views.llm_schemas import LLMResponseModel

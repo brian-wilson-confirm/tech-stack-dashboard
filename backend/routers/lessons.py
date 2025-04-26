@@ -6,7 +6,7 @@ from sqlalchemy import func
 from sqlmodel import Session, select
 from backend.database.connection import get_session
 from backend.database.models.course_models import Course
-from backend.database.models.lesson_models import Lesson, LessonCategory, LessonSubcategory, LessonTechnology, Module, Resource
+from backend.database.models.lesson_models import Lesson, LessonCategory, LessonSubcategory, LessonTechnology, LessonTopic, Module, Resource
 from backend.database.models.level_models import Level
 from backend.database.models.resourcetype_models import ResourceType
 from backend.database.models.source_models import Source
@@ -21,6 +21,7 @@ from backend.routers.categories import get_category_id
 from backend.routers.openai import submit_prompt
 from backend.routers.subcategories import get_subcategory_id
 from backend.routers.technologies import create_technology_subcategories, get_technology_id
+from backend.routers.topics import get_topic_id
 
 
 router = APIRouter(prefix="/lessons")
@@ -109,6 +110,7 @@ def categorize_lesson(lesson_id: int, session: Session):
     # Extract the category, subcategory, and technology
     categories = response_json["categories"]
     technologies = response_json["technologies"]
+    topics = response_json["topics"]
 
     # Update the lesson_category relationships
     category_ids = [get_category_id(category_data["category"], session) for category_data in categories]
@@ -136,6 +138,11 @@ def categorize_lesson(lesson_id: int, session: Session):
         subcategory_ids = [get_subcategory_id(subcategory_data["subcategory"], session) for subcategory_data in technology_data["subcategories"]]
         create_technology_subcategories(technology_id, subcategory_ids, session)
     print(f"\n\ntechnology_subcategories created\n\n")
+
+    # Update the lesson_topic relationships
+    topic_ids = [get_topic_id(topic_data["topic"], session) for topic_data in topics]
+    create_lesson_topics(lesson_id, topic_ids, session)
+    print(f"\n\nlesson_topics created\n\n")
 
     return response
 
@@ -256,3 +263,26 @@ def create_lesson_technology(lesson_id: int, technology_id: int, session: Sessio
     session.commit()
     session.refresh(lesson_technology)
     return lesson_technology
+
+
+def create_lesson_topics(lesson_id: int, topic_ids: List[int], session: Session):
+    for topic_id in topic_ids:
+        # Check if the lesson_topic relationship already exists
+        existing_relation = session.exec(
+            select(LessonTopic).where(
+                LessonTopic.lesson_id == lesson_id,
+                LessonTopic.topic_id == topic_id
+            )
+        ).first()
+        
+        # If the relationship doesn't exist, create it
+        if not existing_relation:
+            create_lesson_topic(lesson_id, topic_id, session)
+
+
+def create_lesson_topic(lesson_id: int, topic_id: int, session: Session):
+    lesson_topic = LessonTopic(lesson_id=lesson_id, topic_id=topic_id)
+    session.add(lesson_topic)
+    session.commit()
+    session.refresh(lesson_topic)
+    return lesson_topic

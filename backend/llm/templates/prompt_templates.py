@@ -8,11 +8,16 @@ load_dotenv()
 
 def build_lesson_prompt(lesson: LessonRequest, categorization: dict) -> str:
     return f"""
-            You are a smart system design assistant responsible for classifying a Lesson into specific categories, subcategories, and technologies.
-            A **Lesson** is the smallest structured unit of learning content within the platform I am building. 
+            You are a smart system design assistant responsible for classifying a Lesson into specific Categories, Subcategories, Technologies, and Topics.
+
+            A **Lesson** is the smallest structured unit of learning content within the platform I am building.
             It delivers a focused concept or skill, often as part of a broader Module and Course, but can also be standalone.
-            A **Technology** is a practical, real-world tool or framework that I can learn to design, develop, build, manage, deploy, or secure systems.
-            
+
+            A **Technology** is a practical, real-world tool, framework, or service that helps design, develop, build, manage, deploy, or secure systems.
+
+            A **Topic** is a focused, reusable concept, skill, best practice, or architectural pattern (such as "Authentication", "Unit Testing", or "Caching") that a Lesson covers or applies. 
+            Topics are more granular than subcategories and may be relevant across multiple categories, subcategories, or technologies.
+                        
             ---
 
             ### 📘 Lesson Details
@@ -32,11 +37,17 @@ def build_lesson_prompt(lesson: LessonRequest, categorization: dict) -> str:
             Use the following predefined taxonomy when making your selections.
             Each taxonomy entry includes a **Category** and one or more associated **Subcategories**.
             You must only select from this list — do not invent new ones:
+            
             {categorization}
 
+            ---
+       
+            ### 🛠 Available Technologies (Examples)
+
             Each technology has a **Category** and **Subcategory** associated with it. 
-            There is no strict list of technologies, but every technology you identify must map to 1 or more subcategories. 
-            Examples of technologies include:
+            There is no strict list of technologies, but every technology must map to 1 or more subcategories.
+            Identify technologies relevant to the lesson if appropriate.
+            Some examples of technologies include:
             - Python
             - JavaScript
             - React
@@ -53,6 +64,14 @@ def build_lesson_prompt(lesson: LessonRequest, categorization: dict) -> str:
 
             ---
 
+            ### 📚 Available Topics
+
+            Suggest a topic or topics if you believe it is highly relevant and applicable to the lesson. There is no strict list of topics.
+
+            Examples of topics include but are not limited to: Authentication, Unit Testing, State Management, Error Handling, CI/CD, Container Orchestration, etc.
+
+            ---
+
             ### 🎯 Task
 
             Analyze the provided information and classify the lesson appropriately.
@@ -64,6 +83,16 @@ def build_lesson_prompt(lesson: LessonRequest, categorization: dict) -> str:
             - Only include the most relevant categories (1–3 max). Avoid generic or overly broad reasoning.
             - If applicable, suggest one or more technologies associated with the lesson.
             - For each technology, list which subcategories it is associated with, and provide a one-sentence justification.
+
+            **Instructions:**
+            - You may assign multiple subcategories to a single category if relevant.
+            - Only choose categories and subcategories from the predefined taxonomy.
+            - For each subcategory you assign, provide a one-sentence reasoning explaining why the lesson fits.
+            - Only include the most relevant categories (1–3 max). Avoid generic or overly broad reasoning.
+            - If applicable, suggest one or more technologies associated with the lesson.
+            - For each technology, list which subcategories it is associated with, and provide a one-sentence justification.
+            - If applicable, suggest one or more topics associated with the lesson.
+            - For each topic, provide a one-sentence justification explaining its relevance.
 
             ---
 
@@ -97,6 +126,13 @@ def build_lesson_prompt(lesson: LessonRequest, categorization: dict) -> str:
                             ...
                         ],
                         "reasoning": "<One-sentence explanation for why this lesson is related to this technology>"
+                    }},
+                    ...
+                ],
+                "topics": [
+                    {{
+                        "topic": "<Selected Topic>",
+                        "reasoning": "<One-sentence explanation for why this topic is relevant to this lesson>"
                     }},
                     ...
                 ]

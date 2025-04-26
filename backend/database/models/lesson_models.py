@@ -52,6 +52,16 @@ class LessonTechnology(SQLModel, table=True):
 
 
 
+"""
+    LESSON TOPICS
+"""
+class LessonTopic(SQLModel, table=True):
+    __tablename__ = "lesson_topic"
+
+    lesson_id: int = Field(foreign_key="lesson.id", primary_key=True)
+    topic_id: int = Field(foreign_key="topic.id", primary_key=True)
+
+
 
 """
     TASK DEPENDENCIES

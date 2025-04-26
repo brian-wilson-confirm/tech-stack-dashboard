@@ -6,7 +6,7 @@ from sqlalchemy import func
 from sqlmodel import Session, select
 from backend.database.connection import get_session
 from backend.database.models.course_models import Course
-from backend.database.models.lesson_models import Lesson, LessonCategory, LessonSubcategory, Module, Resource
+from backend.database.models.lesson_models import Lesson, LessonCategory, LessonSubcategory, LessonTechnology, Module, Resource
 from backend.database.models.level_models import Level
 from backend.database.models.resourcetype_models import ResourceType
 from backend.database.models.source_models import Source
@@ -127,8 +127,8 @@ def categorize_lesson(lesson_id: int, session: Session):
     print(f"\n\ntechnology_ids: {technology_ids}\n\n")
 
     # Update the lesson_technology relationships
-    #create_lesson_technologies(lesson_id, technology_ids, session)
-    #print(f"\n\nlesson_technologies created\n\n")
+    create_lesson_technologies(lesson_id, technology_ids, session)
+    print(f"\n\nlesson_technologies created\n\n")
 
 
     # Update the lesson_technology relationships
@@ -234,3 +234,26 @@ def create_lesson_subcategory(lesson_id: int, subcategory_id: int, session: Sess
     session.commit()
     session.refresh(lesson_subcategory)
     return lesson_subcategory
+
+
+def create_lesson_technologies(lesson_id: int, technology_ids: List[int], session: Session):
+    for technology_id in technology_ids:
+        # Check if the lesson_technology relationship already exists
+        existing_relation = session.exec(
+            select(LessonTechnology).where(
+                LessonTechnology.lesson_id == lesson_id,
+                LessonTechnology.technology_id == technology_id
+            )
+        ).first()
+        
+        # If the relationship doesn't exist, create it
+        if not existing_relation:
+            create_lesson_technology(lesson_id, technology_id, session)
+
+
+def create_lesson_technology(lesson_id: int, technology_id: int, session: Session):
+    lesson_technology = LessonTechnology(lesson_id=lesson_id, technology_id=technology_id)
+    session.add(lesson_technology)
+    session.commit()
+    session.refresh(lesson_technology)
+    return lesson_technology

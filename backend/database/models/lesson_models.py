@@ -42,6 +42,18 @@ class LessonSubcategory(SQLModel, table=True):
 
 
 """
+    LESSON TECHNOLOGIES
+"""
+class LessonTechnology(SQLModel, table=True):
+    __tablename__ = "lesson_technology"
+
+    lesson_id: int = Field(foreign_key="lesson.id", primary_key=True)
+    technology_id: int = Field(foreign_key="technology.id", primary_key=True)
+
+
+
+
+"""
     TASK DEPENDENCIES
 """
 class Module(SQLModel, table=True):

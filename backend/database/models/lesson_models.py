@@ -20,6 +20,18 @@ class Lesson(SQLModel, table=True):
 
 
 """
+    LESSON CATEGORIES
+"""
+class LessonCategory(SQLModel, table=True):
+    __tablename__ = "lesson_category"
+
+    lesson_id: int = Field(foreign_key="lesson.id", primary_key=True)
+    category_id: int = Field(foreign_key="category.id", primary_key=True)
+
+
+
+
+"""
     TASK DEPENDENCIES
 """
 class Module(SQLModel, table=True):

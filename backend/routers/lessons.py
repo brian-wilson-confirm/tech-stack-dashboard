@@ -1,3 +1,4 @@
+import json
 import random
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException
@@ -5,7 +6,7 @@ from sqlalchemy import func
 from sqlmodel import Session, select
 from backend.database.connection import get_session
 from backend.database.models.course_models import Course
-from backend.database.models.lesson_models import Lesson, Module, Resource
+from backend.database.models.lesson_models import Lesson, LessonCategory, Module, Resource
 from backend.database.models.level_models import Level
 from backend.database.models.resourcetype_models import ResourceType
 from backend.database.models.source_models import Source
@@ -15,6 +16,7 @@ from backend.database.views.lesson_schemas import LessonRead, LessonRequest
 from backend.database.views.resource_schemas import ResourceRequest, ResourceTypeRequest
 from backend.database.views.source_schemas import SourceRequest, SourceTypeRequest
 from backend.llm.templates.prompt_templates import build_lesson_prompt
+from backend.routers.categories import get_category_id
 from backend.routers.openai import submit_prompt
 
 
@@ -95,6 +97,22 @@ def categorize_lesson(lesson_id: int, session: Session):
     prompt = build_lesson_prompt(lesson_details, category_subcategory_map)
     response = submit_prompt(prompt)
 
+    if not response:
+        raise ValueError("No response returned from categorize_lesson()")
+
+    # Parse the response
+    response_json = json.loads(response)
+
+    # Extract the category, subcategory, and technology
+    categories = response_json["categories"]
+    technologies = response_json["technologies"]
+
+    # Update the lesson relationships
+    category_ids = [get_category_id(category_data["category"], session) for category_data in categories]
+    create_lesson_categories(lesson_id, category_ids, session)
+    print(f"\n\nlesson_categories created?\n\n")
+    
+
     return response
 
 def get_category_subcategory_map(session: Session):
@@ -146,3 +164,25 @@ def serialize_lesson_details(lesson, resource, resourcetype, source, sourcetype)
         )
     )
 
+
+def create_lesson_categories(lesson_id: int, category_ids: List[int], session: Session):
+    for category_id in category_ids:
+        # Check if the course_category relationship already exists
+        existing_relation = session.exec(
+            select(LessonCategory).where(
+                LessonCategory.lesson_id == lesson_id,
+                LessonCategory.category_id == category_id
+            )
+        ).first()
+        
+        # If the relationship doesn't exist, create it
+        if not existing_relation:
+            create_lesson_category(lesson_id, category_id, session)
+
+
+def create_lesson_category(lesson_id: int, category_id: int, session: Session):
+    lesson_category = LessonCategory(lesson_id=lesson_id, category_id=category_id)
+    session.add(lesson_category)
+    session.commit()
+    session.refresh(lesson_category)
+    return lesson_category

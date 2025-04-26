@@ -8,10 +8,11 @@ load_dotenv()
 
 def build_lesson_prompt(lesson: LessonRequest, categorization: dict) -> str:
     return f"""
-            You are a smart system design assistant responsible for classifying a lesson into specific categories and subcategories.
+            You are a smart system design assistant responsible for classifying a Lesson into specific categories, subcategories, and technologies.
             A **Lesson** is the smallest structured unit of learning content within the platform I am building. 
             It delivers a focused concept or skill, often as part of a broader Module and Course, but can also be standalone.
-
+            A **Technology** is a practical, real-world tool or framework that I can learn to design, develop, build, manage, deploy, or secure systems.
+            
             ---
 
             ### 📘 Lesson Details
@@ -33,6 +34,23 @@ def build_lesson_prompt(lesson: LessonRequest, categorization: dict) -> str:
             You must only select from this list — do not invent new ones:
             {categorization}
 
+            Each technology has a **Category** and **Subcategory** associated with it. 
+            There is no strict list of technologies, but every technology you identify must map to 1 or more subcategories. 
+            Examples of technologies include:
+            - Python
+            - JavaScript
+            - React
+            - Node.js
+            - Express
+            - MongoDB
+            - PostgreSQL
+            - Docker
+            - Kubernetes
+            - Terraform
+            - Ansible
+            - Cloudflare
+            - Apache Kafka
+
             ---
 
             ### 🎯 Task
@@ -42,16 +60,16 @@ def build_lesson_prompt(lesson: LessonRequest, categorization: dict) -> str:
             **Instructions:**
             - You may assign multiple subcategories to a single category if relevant.
             - Only choose categories and subcategories from the predefined list/taxonomy.
-            - For each subcategory you assign, provide a brief one-sentence reasoning explaining why it fits.
+            - For each subcategory you assign, provide a brief one-sentence reasoning explaining why the lesson fits.
             - Only include the most relevant categories (1–3 max). Avoid generic or overly broad reasoning.
+            - If applicable, suggest one or more technologies associated with the lesson.
+            - For each technology, list which subcategories it is associated with, and provide a one-sentence justification.
 
             ---
 
             ### 📤 Output Format (JSON)
 
             Return your response strictly in the following JSON format:
-
-            ```json
             {{
                 "lesson": "<Lesson Title>",
                 "categories": [
@@ -60,15 +78,29 @@ def build_lesson_prompt(lesson: LessonRequest, categorization: dict) -> str:
                         "subcategories": [
                             {{
                                 "subcategory": "<Selected Subcategory>",
-                                "reasoning": "<One-sentence explanation specific to this selection>"
+                                "reasoning": "<One-sentence explanation for why this lesson belongs to this subcategory>"
                             }},
                             ...
-                        ]
+                        ],
+                        "reasoning": "<One-sentence explanation for why this lesson belongs to this category>"
+                    }},
+                    ...
+                ],
+                "technologies": [
+                    {{
+                        "technology": "<Selected Technology>",
+                        "subcategories": [
+                           {{
+                                "subcategory": "<Selected Subcategory>",
+                                "reasoning": "<One-sentence explanation for why this technology is relevant to this subcategory>"
+                            }},
+                            ...
+                        ],
+                        "reasoning": "<One-sentence explanation for why this lesson is related to this technology>"
                     }},
                     ...
                 ]
             }}
-            ```
         """
 
 

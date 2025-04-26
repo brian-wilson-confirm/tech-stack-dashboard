@@ -101,7 +101,7 @@ async def create_task_from_url(request: QuickAddTaskRequest, session: Session = 
     lesson_id = get_lesson_id(url_metadata["lessontitle"], url_metadata["lessondescription"], url_metadata["content"], level_id, resource_id, session)
     print(f"\n\nlesson_id: {lesson_id}\n\n")
 
-    # Categorize the Lesson
+    # Categorize the Lesson: Technology, Subcategory, Category
     response = categorize_lesson(lesson_id, session)
     print(f"\n\nresponse: {response}\n\n")
 
@@ -286,9 +286,8 @@ async def get_task_sources(session: Session = Depends(get_session)):
 
 
 """
-    Task Category: CRUD operations
+    Task Category: CRUD operations: CAN BE DELETED, SEE CATEGORIES ROUTER
 """
-
 @router.get("/categories", response_model=List[Category])
 async def get_task_categories(session: Session = Depends(get_session)):
     return session.exec(select(Category)).all()

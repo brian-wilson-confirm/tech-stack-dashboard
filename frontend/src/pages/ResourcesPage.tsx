@@ -9,10 +9,10 @@ interface Resource {
   title: string
   description: string
   url: string
-  resource_type: string
+  resourcetype: string
   source: {
     name: string
-    source_type: string
+    sourcetype: string
   }
 }
 
@@ -31,7 +31,7 @@ export default function ResourcesPage() {
       header: "Description",
     },
     {
-      accessorKey: "resource_type",
+      accessorKey: "resourcetype",
       header: "Type",
     },
     {
@@ -39,7 +39,7 @@ export default function ResourcesPage() {
       header: "Source",
     },
     {
-      accessorKey: "source.source_type",
+      accessorKey: "source.sourcetype",
       header: "Source Type",
     },
   ]

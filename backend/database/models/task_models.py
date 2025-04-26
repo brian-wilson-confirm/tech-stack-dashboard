@@ -42,7 +42,7 @@ class TaskOld(SQLModel, table=True):
     section: str
     source_id: int = Field(foreign_key="source.id")
     topics: List["Topic"] = Relationship(back_populates="tasks", link_model=TaskTopicLink)
-    level_id: int = Field(foreign_key="task_level.id")
+    level_id: int = Field(foreign_key="level.id")
     type_id: int = Field(foreign_key="task_type.id")
     status_id: int = Field(foreign_key="task_status.id")
     progress: int = 0
@@ -87,12 +87,13 @@ class Section(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
 """
-
-class TaskLevel(SQLModel, table=True):
-    __tablename__ = "task_level"
+"""
+class Level(SQLModel, table=True):
+    __tablename__ = "level"
     
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
+"""
 
 class TaskType(SQLModel, table=True):
     __tablename__ = "task_type"

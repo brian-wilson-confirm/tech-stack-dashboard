@@ -5,7 +5,7 @@ load_dotenv()
 
 
 # Generate prompt to classify resource
-def build_prompt(course_title, course_description, resource_title, resource_description, resource_type, source_name, source_type, object_type, options):
+def build_prompt(course_title, course_description, resource_title, resource_description, resourcetype, source_name, sourcetype, object_type, options):
     return f"""
             You are an assistant that classifies resources into 1 or more of the following predefined tech learning {object_type}.
 
@@ -17,9 +17,9 @@ def build_prompt(course_title, course_description, resource_title, resource_desc
             Course Description: {course_description}
             Resource Title: {resource_title}
             Resource Description: {resource_description}
-            Resource Type: {resource_type}
+            Resource Type: {resourcetype}
             Source Name: {source_name}
-            Source Type: {source_type}
+            Source Type: {sourcetype}
 
             Return your answer in this JSON format:
             {

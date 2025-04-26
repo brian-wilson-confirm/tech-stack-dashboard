@@ -3,18 +3,22 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 
 from sqlmodel import Session, select
-from sqlalchemy.orm import selectinload
 from sqlalchemy import func
 from backend.database.connection import get_session
 
 from backend.database.models.lesson_models import Lesson, Source
-from backend.database.models.task_models import TaskTopicLink, Task, Category, Subcategory, Technology, TaskLevel, TaskPriority, TaskStatus, TaskType, TechnologySubcategory, TechnologyWithSubcatAndCat, Topic
+from backend.database.models.level_models import Level
+from backend.database.models.task_models import TaskTopicLink, Task, Category, Subcategory, Technology, TaskPriority, TaskStatus, TaskType, TechnologySubcategory, TechnologyWithSubcatAndCat, Topic
 from backend.database.views.task_schemas import QuickAddTaskRequest, TaskCreate, TaskRead, TaskResponse, TaskUpdate
 from backend.database.views.technology_schemas import TechnologyCreate, TechnologyRead
 from sqlalchemy import text
 
+from backend.routers.lessons import get_lesson_id
+from backend.routers.levels import get_level_id
 from backend.routers.people import get_person_ids
+from backend.routers.resources import get_resource_id, get_resourcetype_id
 from backend.routers.topics import get_topic_ids
+from backend.routers.sources import create_source_authors, get_source_id, get_sourcetype_id
 from backend.utils.web_scraper import extract_article_metadata
 
 router = APIRouter(prefix="/tasks")
@@ -63,9 +67,38 @@ async def create_task_from_url(request: QuickAddTaskRequest, session: Session = 
     url_metadata = extract_article_metadata(request.url)
     print(f"url_metadata: {url_metadata}\n\n")
 
-    # Get/Create the topic id(s) for the task
+    # Get/Create the Person id(s)
     person_ids = get_person_ids(url_metadata["authors"], session)
-    print(f"person_ids: {person_ids}\n\n")
+    print(f"\n\nperson_ids: {person_ids}\n\n")
+
+    # Get/Create the Source id
+    sourcetype_id = get_sourcetype_id(url_metadata["sourcetype"], session)
+    print(f"\n\nsourcetype_id: {sourcetype_id}\n\n")
+
+    # Get/Create the Source
+    source_id = get_source_id(url_metadata["source"], session)
+    print(f"\n\nsource_id: {source_id}\n\n")
+
+    # Create the source_author relationship(s) if it doesn't already exist
+    print(f"\n\ncreate_source_authors: source_id - {source_id}, person_ids - {person_ids}\n\n")
+    create_source_authors(source_id, person_ids, session)
+    print(f"\n\nsource_authors created\n\n")
+
+    # Get/Create the ResourceType id
+    resourcetype_id = get_resourcetype_id(url_metadata["resourcetype"], session)
+    print(f"\n\nresourcetype_id: {resourcetype_id}\n\n")
+
+    # Get/Create the Resource
+    resource_id = get_resource_id(resourcetype_id, source_id, url_metadata["resourcetitle"], url_metadata["resourcedescription"], url_metadata["resourceurl"], session)
+    print(f"\n\nresource_id: {resource_id}\n\n")
+
+    # Get the Level
+    level_id = get_level_id(url_metadata["lessonlevel"], session)
+    print(f"\n\nlevel_id: {level_id}\n\n")
+
+    # Get/Create the Lesson
+    lesson_id = get_lesson_id(url_metadata["lessontitle"], url_metadata["lessondescription"], url_metadata["content"], level_id, resource_id, session)
+    print(f"\n\nlesson_id: {lesson_id}\n\n")
 
     return TaskResponse(
         title=url_metadata["title"],
@@ -108,7 +141,7 @@ async def update_task(id: int, task_update: TaskUpdate, session: Session = Depen
         "priority": (TaskPriority, "priority_id"),
         "status": (TaskStatus, "status_id"),
         "type": (TaskType, "type_id"),
-        "level": (TaskLevel, "level_id"),
+        "level": (Level, "level_id"),
         "technology": (Technology, "technology_id"),
         "category": (Category, "category_id"),
         "subcategory": (Subcategory, "subcategory_id"),
@@ -231,9 +264,9 @@ async def get_task_types(session: Session = Depends(get_session)):
     Task Level: CRUD operations
 """
 
-@router.get("/levels", response_model=List[TaskLevel])
-async def get_task_levels(session: Session = Depends(get_session)):
-    return session.exec(select(TaskLevel)).all()
+@router.get("/levels", response_model=List[Level])
+async def get_levels(session: Session = Depends(get_session)):
+    return session.exec(select(Level)).all()
 
 
 

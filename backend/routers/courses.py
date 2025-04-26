@@ -6,7 +6,8 @@ from backend.database.models.course_models import Course, CourseCategory
 from backend.database.models.lesson_models import Resource, Source
 from backend.database.models.resourcetype_models import ResourceType
 from backend.database.models.sourcetype_models import SourceType
-from backend.database.models.task_models import TaskLevel, Category
+from backend.database.models.task_models import Category
+from backend.database.models.level_models import Level
 from backend.database.views.course_schemas import CourseDetailsRead, CourseRead
 from backend.database.views.llm_schemas import LLMResponseModel
 from backend.database.views.resource_schemas import ResourceRead
@@ -32,7 +33,7 @@ async def get_course_details(course_id: int, session: Session = Depends(get_sess
         raise HTTPException(status_code=404, detail="Course not found")
     
     # Load related models
-    level = session.get(TaskLevel, course.level_id) if course.level_id else None
+    level = session.get(Level, course.level_id) if course.level_id else None
     resource = session.get(Resource, course.resource_id) if course.resource_id else None
     source = session.get(Source, resource.source_id) if resource and resource.source_id else None
 
@@ -76,7 +77,7 @@ async def update_course_categories(payload: LLMResponseModel, session: Session =
                 if not category:
                     continue  # Skip if category not found
                 
-                # Check if the course-category relationship already exists
+                # Check if the course_category relationship already exists
                 existing_relation = session.exec(
                     select(CourseCategory).where(
                         CourseCategory.course_id == course.id,
@@ -110,12 +111,12 @@ def serialize_course(course: Course, session: Session) -> CourseRead:
             id=course.id,
             title=course.title,
             description=course.description,
-            level=(lvl := session.get(TaskLevel, course.level_id)) and lvl.name,
+            level=(lvl := session.get(Level, course.level_id)) and lvl.name,
             resource=(res := session.get(Resource, course.resource_id)) and res.title
         )
 
 
-def serialize_course_details(course: Course, level: TaskLevel, resource: Resource, source: Source, session: Session) -> CourseDetailsRead:
+def serialize_course_details(course: Course, level: Level, resource: Resource, source: Source, session: Session) -> CourseDetailsRead:
     return CourseDetailsRead(
         id=course.id,
         title=course.title,
@@ -126,12 +127,12 @@ def serialize_course_details(course: Course, level: TaskLevel, resource: Resourc
             title=resource.title,
             description=resource.description,
             url=resource.url,
-            resource_type=(rt := session.get(ResourceType, resource.resource_type_id)) and rt.name,
+            resourcetype=(rt := session.get(ResourceType, resource.resourcetype_id)) and rt.name,
             source=SourceRead(
                 id=source.id,
                 name=source.name,
                 website=source.website,
-                source_type=(st := session.get(SourceType, source.source_type_id)) and st.name
+                sourcetype=(st := session.get(SourceType, source.sourcetype_id)) and st.name
             ) if source else None
         ) if resource else None
     )

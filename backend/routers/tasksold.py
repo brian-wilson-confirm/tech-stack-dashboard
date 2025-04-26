@@ -7,7 +7,8 @@ from sqlalchemy.orm import selectinload
 from backend.database.connection import get_session
 
 from backend.database.models.lesson_models import Source
-from backend.database.models.task_models import TaskTopicLink, TaskOld, Category, Subcategory, Technology, TaskLevel, TaskPriority, TaskStatus, TaskType, TechnologySubcategory, TechnologyWithSubcatAndCat, Topic
+from backend.database.models.level_models import Level
+from backend.database.models.task_models import TaskTopicLink, TaskOld, Category, Subcategory, Technology, TaskPriority, TaskStatus, TaskType, TechnologySubcategory, TechnologyWithSubcatAndCat, Topic
 from backend.database.views.taskold_schemas import TaskOldCreate, TaskOldRead, TaskOldUpdate
 from backend.database.views.technology_schemas import TechnologyCreate, TechnologyRead
 from sqlalchemy import text
@@ -64,7 +65,7 @@ async def update_task(id: int, task_update: TaskOldUpdate, session: Session = De
         "priority": (TaskPriority, "priority_id"),
         "status": (TaskStatus, "status_id"),
         "type": (TaskType, "type_id"),
-        "level": (TaskLevel, "level_id"),
+        "level": (Level, "level_id"),
         "technology": (Technology, "technology_id"),
         "category": (Category, "category_id"),
         "subcategory": (Subcategory, "subcategory_id"),
@@ -178,9 +179,9 @@ async def get_task_types(session: Session = Depends(get_session)):
     Task Level: CRUD operations
 """
 
-@router.get("/levels", response_model=List[TaskLevel])
-async def get_task_levels(session: Session = Depends(get_session)):
-    return session.exec(select(TaskLevel)).all()
+@router.get("/levels", response_model=List[Level])
+async def get_levels(session: Session = Depends(get_session)):
+    return session.exec(select(Level)).all()
 
 
 
@@ -353,7 +354,7 @@ def serialize_task(task: TaskOld, session: Session) -> TaskOldRead:
             topics=[t.name for t in task.topics],
             source=(src := session.get(Source, task.source_id)) and src.name,
             section=task.section,
-            level=(lvl := session.get(TaskLevel, task.level_id)) and lvl.name,
+            level=(lvl := session.get(Level, task.level_id)) and lvl.name,
             type=(typ := session.get(TaskType, task.type_id)) and typ.name,
             status=(stat := session.get(TaskStatus, task.status_id)) and stat.name,
             priority=(prio := session.get(TaskPriority, task.priority_id)) and prio.name,

@@ -5,6 +5,8 @@ from typing import Optional
     RESOURCES
 """
 class Resource(SQLModel, table=True):
+    __table_args__ = {"extend_existing": True}
+
     id: int = Field(default=None, primary_key=True)
     title: str
     description: Optional[str]

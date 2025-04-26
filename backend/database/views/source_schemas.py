@@ -5,12 +5,15 @@ from typing import Optional
     SOURCES
 """
 class SourceBase(BaseModel):
-    id: int
     name: str
-    source_type: Optional[str]
+    sourcetype: Optional[str]
     website: Optional[str]
 
 
-class SourceRead(SourceBase):
+class SourceCreate(SourceBase):
     pass
+
+
+class SourceRead(SourceBase):
+    id: int
 

@@ -53,10 +53,10 @@ def build_prompt(course_data: Dict[str, Any], categories: List[str]) -> str:
                 Course Description: {course_data.get('description')}
                 Resource Title: {course_data.get('resource').get('title')}
                 Resource Description: {course_data.get('resource').get('description')}
-                Resource Type: {course_data.get('resource').get('resource_type')}
+                Resource Type: {course_data.get('resource').get('resourcetype')}
                 Resource URL: {course_data.get('resource').get('url')}
                 Source Name: {course_data.get('resource').get('source').get('name')}
-                Source Type: {course_data.get('resource').get('source').get('source_type')}
+                Source Type: {course_data.get('resource').get('source').get('sourcetype')}
 
             Please analyze this course and suggest the most appropriate category from the predefined list of valid categories.
 

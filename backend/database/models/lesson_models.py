@@ -14,7 +14,7 @@ class Lesson(SQLModel, table=True):
     estimated_duration: Optional[int]
     module_id: Optional[int] = Field(foreign_key="module.id")
     course_id: Optional[int] = Field(foreign_key="course.id")
-    level_id: Optional[int] = Field(foreign_key="task_level.id")
+    level_id: Optional[int] = Field(foreign_key="level.id")
     resource_id: Optional[int] = Field(foreign_key="source.id")
 
 
@@ -29,14 +29,14 @@ class Module(SQLModel, table=True):
     order: Optional[int]
     estimated_duration: Optional[int]
     course_id: Optional[int] = Field(foreign_key="course.id")
-    level_id: Optional[int] = Field(foreign_key="task_level.id")
+    level_id: Optional[int] = Field(foreign_key="level.id")
     resource_id: Optional[int] = Field(foreign_key="resource.id")
 
 
 class Source(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
     name: str
-    source_type_id: Optional[int] = Field(foreign_key="source_type.id")
+    sourcetype_id: Optional[int] = Field(foreign_key="sourcetype.id")
     website: Optional[str]
 
 
@@ -45,7 +45,7 @@ class Resource(SQLModel, table=True):
     title: str
     description: Optional[str]
     url: Optional[str]
-    resource_type_id: Optional[int] = Field(foreign_key="resource_type.id")
+    resourcetype_id: Optional[int] = Field(foreign_key="resourcetype.id")
     source_id: Optional[int] = Field(foreign_key="source.id")
 
 

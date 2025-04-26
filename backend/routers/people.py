@@ -3,10 +3,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import func
 from sqlmodel import Session, select
 from backend.database.connection import get_session
-from backend.database.models.course_models import Course
-from backend.database.models.lesson_models import Lesson, Module, Resource
 from backend.database.models.person_models import Person
-from backend.database.models.task_models import TaskLevel
 from backend.database.views.person_schemas import PersonCreate, PersonRead
 
 router = APIRouter(prefix="/people")
@@ -32,9 +29,7 @@ async def get_num_people(session: Session = Depends(get_session)):
 """
 @router.post("/", response_model=Person)
 async def create_person(person: PersonCreate, session: Session = Depends(get_session)):
-    # Get/Create the topic id(s) for the task
-    person_ids = get_person_ids(person.name, session)
-
+    # Get/Create the topic id(s) for the task:: NOT USED YET
     return create_person(person.name, session)
 
 

@@ -8,7 +8,7 @@ class Course(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
     title: str
     description: Optional[str]
-    level_id: Optional[int] = Field(foreign_key="task_level.id")
+    level_id: Optional[int] = Field(foreign_key="level.id")
     resource_id: Optional[int] = Field(foreign_key="resource.id")
     #estimated_duration: Optional[int]
 

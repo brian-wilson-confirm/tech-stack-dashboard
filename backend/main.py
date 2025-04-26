@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import SQLModel
 
-from backend.routers import other, tasks, tasksold, topics, lessons, courses, people
+from backend.routers import other, tasks, tasksold, topics, lessons, courses, people, sources, resources, levels
 from backend.database.connection import engine
 from backend.routers import openai
 
@@ -19,6 +19,9 @@ app.include_router(topics.router, prefix="/api", tags=["topics"])
 app.include_router(lessons.router, prefix="/api", tags=["lessons"])
 app.include_router(courses.router, prefix="/api", tags=["courses"])
 app.include_router(people.router, prefix="/api", tags=["people"])
+app.include_router(sources.router, prefix="/api", tags=["sources"])
+app.include_router(resources.router, prefix="/api", tags=["resources"])
+app.include_router(levels.router, prefix="/api", tags=["levels"])
 app.include_router(other.router, prefix="/api", tags=["other"])
 app.include_router(openai.router, prefix="/api", tags=["openai"])
 

@@ -8,14 +8,17 @@ from backend.database.views.source_schemas import SourceRead
     RESOURCES
 """
 class ResourceBase(BaseModel):
-    id: int
     title: str
     description: Optional[str]
     url: Optional[str]
-    resource_type: Optional[str]
+    resourcetype: Optional[str]
     source: Optional[SourceRead]
 
 
-class ResourceRead(ResourceBase):
+class ResourceCreate(ResourceBase):
     pass
+
+
+class ResourceRead(ResourceBase):
+    id: int
 

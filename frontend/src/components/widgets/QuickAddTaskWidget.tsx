@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { toast } from "sonner"
+import { toast } from "@/components/ui/use-toast"
 import { useState } from "react"
 
 interface QuickAddTaskWidgetProps {
@@ -36,11 +36,20 @@ export function QuickAddTaskWidget({ onClose }: QuickAddTaskWidgetProps) {
         throw new Error('Failed to create task')
       }
 
-      toast.success('Task created successfully')
+      toast({
+        title: "Task Created",
+        description: "The task has been successfully created.",
+        duration: 3000,
+        variant: "default",
+      });
       form.reset()
     } catch (error) {
       console.error('Error creating task:', error)
-      toast.error('Failed to create task')
+      toast({
+        title: "Error",
+        description: "Failed to create task",
+        variant: "destructive",
+      })
     } finally {
       setIsLoading(false)
     }

@@ -91,7 +91,7 @@ def build_lesson_prompt(lesson: LessonRequest, categorization: dict) -> str:
             -- If an explicit read time is mentioned (e.g., "7 min read"), use it.
             -- If no time is mentioned, estimate based on the content description.
             -- Assume an average reading speed of 150–200 words per minute for technical material.
-            -- Return the estimate as an integer number of hours, unless it's less than 1 hour in which case return the number of minutes.
+            -- Return the estimated duration in **ISO 8601 Duration format** (e.g., "PT30M" for 30 minutes, "PT2H" for 2 hours).
 
             ---
 
@@ -100,7 +100,7 @@ def build_lesson_prompt(lesson: LessonRequest, categorization: dict) -> str:
             Return your response strictly in the following JSON format:
             {{
                 "lesson": "<Lesson Title>",
-                "estimated_duration": "<Estimated number of hours or minutes>",
+                "estimated_duration": "<ISO8601 Duration String>",
                 "categories": [
                     {{
                         "category": "<Selected Category>",
@@ -132,6 +132,17 @@ def build_lesson_prompt(lesson: LessonRequest, categorization: dict) -> str:
                     }}
                 ]
             }}
+
+
+            ---
+
+            ### ⚡ Additional Output Rules
+
+            - Return **only** the JSON object above — no explanations, no commentary.
+            - **All keys and strings must be enclosed in double quotes (`"`).**
+            - **Do not** include any comments (`//` or `#`) inside the JSON.
+            - Ensure the output can be parsed successfully using `json.loads()`.
+            - If you are unsure, prioritize strict JSON syntax correctness.
         """
 
 

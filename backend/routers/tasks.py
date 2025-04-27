@@ -24,7 +24,7 @@ from backend.routers.people import get_person_ids
 from backend.routers.resources import get_resource_id, get_resourcetype_id
 from backend.routers.topics import get_topic_ids
 from backend.routers.sources import create_source_authors, get_source_id, get_sourcetype_id
-from backend.utils.web_scraper import extract_article_metadata
+from backend.utils.web_scraper_util import extract_article_metadata
 
 router = APIRouter(prefix="/tasks")
 

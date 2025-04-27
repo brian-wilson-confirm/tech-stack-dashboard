@@ -22,6 +22,7 @@ from backend.database.views.technology_schemas import TechnologyRead
 from backend.database.views.topic_schemas import TopicRead
 from backend.llm.templates.prompt_templates import build_lesson_prompt
 from backend.routers.categories import get_category_id
+from backend.routers.levels import get_level_id
 from backend.routers.openai import submit_prompt
 from backend.routers.subcategories import get_subcategory_id
 from backend.routers.technologies import create_technology_subcategories, get_technology_id
@@ -195,13 +196,19 @@ def enrich_lesson(lesson_id: int, session: Session):
         raise ValueError("No response returned from categorize_lesson()")
 
     # Parse the response
+    print(f"\n\nresponse: {response}\n\n")
     response_json = safe_json_loads(response)
 
     # Extract the category, subcategory, and technology
+    level = response_json["level"]
     estimated_duration = response_json["estimated_duration"]
     categories = response_json["categories"]
     technologies = response_json["technologies"]
     topics = response_json["topics"]
+
+    # Update the lesson_level
+    level_id = get_level_id(level, session)
+    update_lesson_level(lesson_id, level_id, session)
 
     # Update the lesson_duration
     update_lesson_duration(lesson_id, estimated_duration, session)
@@ -360,5 +367,12 @@ def create_lesson_topic(lesson_id: int, topic_id: int, session: Session):
 def update_lesson_duration(lesson_id: int, estimated_duration: str, session: Session):
     lesson = session.get(Lesson, lesson_id)
     lesson.estimated_duration = estimated_duration
+    session.commit()
+    session.refresh(lesson)
+
+
+def update_lesson_level(lesson_id: int, level_id: int, session: Session):
+    lesson = session.get(Lesson, lesson_id)
+    lesson.level_id = level_id
     session.commit()
     session.refresh(lesson)

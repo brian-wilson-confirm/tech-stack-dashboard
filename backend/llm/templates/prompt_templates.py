@@ -72,6 +72,12 @@ def build_lesson_prompt(lesson: LessonRequest, categorization: dict) -> str:
 
             ---
 
+            ### 📚 Available Levels
+
+            Choose only from the allowed list: beginner, intermediate, advanced, expert, unknown.
+
+            ---
+
             ### 🎯 Task
 
             **Instructions:**
@@ -86,6 +92,11 @@ def build_lesson_prompt(lesson: LessonRequest, categorization: dict) -> str:
             
             - If applicable, suggest one or more topics associated with the lesson:
             -- For each topic, provide a one-sentence justification explaining its relevance.
+
+            - Assign the correct **Level** to the lesson based on its expected difficulty:
+            -- Choose only from the allowed list: beginner, intermediate, advanced, expert, unknown.
+            -- Use the lesson description and resource details to infer the level.
+            -- If the difficulty is unclear, select "unknown".
             
             - Estimate how long it would take to read or complete the lesson:
             -- If an explicit read time is mentioned (e.g., "7 min read"), use it.
@@ -100,6 +111,7 @@ def build_lesson_prompt(lesson: LessonRequest, categorization: dict) -> str:
             Return your response strictly in the following JSON format:
             {{
                 "lesson": "<Lesson Title>",
+                "level": "<Selected Level>",
                 "estimated_duration": "<ISO8601 Duration String>",
                 "categories": [
                     {{

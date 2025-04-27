@@ -49,7 +49,7 @@ async def get_num_tasks(session: Session = Depends(get_session)):
     POST Operations
 """
 @router.post("/from-lesson", response_model=Task)
-async def create_task_from_lesson(lesson_id: int, lesson_title: str, resourcetype: str, session: Session = Depends(get_session)):
+async def testing_create_task_from_lesson(lesson_id: int, lesson_title: str, resourcetype: str, session: Session = Depends(get_session)):
     """Create a task from a lesson"""
     print(f"lesson_id: {lesson_id}, lesson_title: {lesson_title}, resourcetype: {resourcetype}")
     task = create_task(lesson_id, lesson_title, resourcetype, session)
@@ -77,38 +77,38 @@ async def create_task_from_url(request: QuickAddTaskRequest, session: Session = 
     """Quick Add Task: Create a task from a URL (Source -> Resource -> Lesson -> Task)"""
 
     # Scrape the HTML at the URL
-    url_metadata = extract_article_metadata(request.url)
+    metadata = extract_article_metadata(request.url)
 
     # Get/Create the Person id(s)
-    person_ids = get_person_ids(url_metadata["authors"], session)
+    person_ids = get_person_ids(metadata.resource.source.authors, session)
 
     # Get/Create the Source id
-    sourcetype_id = get_sourcetype_id(url_metadata["sourcetype"], session)
+    sourcetype_id = get_sourcetype_id(metadata.resource.source.sourcetype, session)
 
     # Get/Create the Source
-    source_id = get_source_id(url_metadata["source"], session)
+    source_id = get_source_id(metadata.resource.source.name, session)
 
     # Create the source_author relationship(s) if it doesn't already exist
     create_source_authors(source_id, person_ids, session)
 
     # Get/Create the ResourceType id
-    resourcetype_id = get_resourcetype_id(url_metadata["resourcetype"], session)
+    resourcetype_id = get_resourcetype_id(metadata.resource.resourcetype, session)
 
     # Get/Create the Resource
-    resource_id = get_resource_id(resourcetype_id, source_id, url_metadata["resourcetitle"], url_metadata["resourcedescription"], url_metadata["resourceurl"], session)
+    resource_id = get_resource_id(resourcetype_id, source_id, metadata.resource.title, metadata.resource.description, metadata.resource.url, session)
 
     # Get the Level
-    level_id = get_level_id(url_metadata["lessonlevel"], session)
+    level_id = get_level_id(metadata.lesson.level, session)
 
     # Get/Create the Lesson
-    lesson_id = get_lesson_id(url_metadata["lessontitle"], url_metadata["lessondescription"], url_metadata["content"], level_id, resource_id, session)
+    lesson_id = get_lesson_id(metadata.lesson.title, metadata.lesson.description, metadata.lesson.content, level_id, resource_id, session)
 
     # Categorize the Lesson: Technology, Subcategory, Category
     response = enrich_lesson(lesson_id, session)
     print(f"\n\nresponse: {response}\n\n")
 
     # Create the Task
-    task = create_task(lesson_id, url_metadata["lessontitle"], url_metadata["resourcetype"], session)
+    task = create_task(lesson_id, metadata.lesson.title, metadata.resource.resourcetype, session)
 
     return task
 

@@ -49,10 +49,10 @@ async def get_num_tasks(session: Session = Depends(get_session)):
     POST Operations
 """
 @router.post("/from-lesson", response_model=Task)
-async def create_task_from_lesson(lesson_id: int, lesson_title: str, resource_type: str, session: Session = Depends(get_session)):
+async def create_task_from_lesson(lesson_id: int, lesson_title: str, resourcetype: str, session: Session = Depends(get_session)):
     """Create a task from a lesson"""
-    print(f"lesson_id: {lesson_id}, lesson_title: {lesson_title}, resource_type: {resource_type}")
-    task = create_task(lesson_id, lesson_title, resource_type, session)
+    print(f"lesson_id: {lesson_id}, lesson_title: {lesson_title}, resourcetype: {resourcetype}")
+    task = create_task(lesson_id, lesson_title, resourcetype, session)
     return task
 
 
@@ -72,7 +72,7 @@ async def create_task_with_topics(task_in: TaskCreate, session: Session = Depend
     return task
 
 
-@router.post("/from-url", response_model=TaskResponse)
+@router.post("/from-url", response_model=Task)
 async def create_task_from_url(request: QuickAddTaskRequest, session: Session = Depends(get_session)):
     """Quick Add Task: Create a task from a URL (Source -> Resource -> Lesson -> Task)"""
 
@@ -84,6 +84,7 @@ async def create_task_from_url(request: QuickAddTaskRequest, session: Session = 
 
     # Get/Create the Source id
     sourcetype_id = get_sourcetype_id(url_metadata["sourcetype"], session)
+
     # Get/Create the Source
     source_id = get_source_id(url_metadata["source"], session)
 
@@ -107,14 +108,9 @@ async def create_task_from_url(request: QuickAddTaskRequest, session: Session = 
     print(f"\n\nresponse: {response}\n\n")
 
     # Create the Task
-    task = create_task(lesson_id, lesson_title, resource_type, session)
+    task = create_task(lesson_id, url_metadata["lessontitle"], url_metadata["resourcetype"], session)
 
-
-    return TaskResponse(
-        title=url_metadata["title"],
-        url=request.url,
-        notes=request.notes
-    )
+    return task
 
 
 """
@@ -451,10 +447,10 @@ def create_task(task_in: TaskCreate, session: Session = Depends(get_session)):
     return task
 
 
-def create_task(lesson_id: int, lesson_title: str, resource_type: str, session: Session):
+def create_task(lesson_id: int, lesson_title: str, resourcetype: str, session: Session):
     task = Task(
         task_id=generate_unique_task_id(session),
-        task=generate_task_name(lesson_title, resource_type),
+        task=generate_task_name(lesson_title, resourcetype),
         description="No description provided",
         lesson_id=lesson_id,
         type_id=1,  # Default type_id for tasks

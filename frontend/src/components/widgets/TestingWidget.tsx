@@ -30,7 +30,7 @@ export function TestingWidget() {
       const params = new URLSearchParams({
             lesson_id: lessonId,
             lesson_title: lessonTitle,
-            resource_type: resourceType,
+            resourcetype: resourceType,
           }).toString();
 
       const response = await fetch(`/api/tasks/from-lesson?${params}`, {

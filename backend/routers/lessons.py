@@ -45,7 +45,7 @@ async def get_lessons(session: Session = Depends(get_session)):
 async def get_lessons_enriched(session: Session = Depends(get_session)):
     # Step 1: Fetch ALL lessons with their relationships preloaded
     lessons = session.exec(
-        select(Lesson)
+        select(Lesson).order_by(desc(Lesson.created_at))
         .options(
             selectinload(Lesson.lesson_technologies).selectinload(LessonTechnology.technology),
             selectinload(Lesson.lesson_subcategories).selectinload(LessonSubcategory.subcategory),
@@ -196,7 +196,6 @@ def enrich_lesson(lesson_id: int, session: Session):
 
     # Parse the response
     response_json = safe_json_loads(response)
-    print(f"\n\nresponse_json: {response_json}\n\n")
 
     # Extract the category, subcategory, and technology
     estimated_duration = response_json["estimated_duration"]

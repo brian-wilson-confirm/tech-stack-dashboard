@@ -48,6 +48,14 @@ async def get_num_tasks(session: Session = Depends(get_session)):
 """
     POST Operations
 """
+@router.post("/from-lesson", response_model=Task)
+async def create_task_from_lesson(lesson_id: int, lesson_title: str, resource_type: str, session: Session = Depends(get_session)):
+    """Create a task from a lesson"""
+    print(f"lesson_id: {lesson_id}, lesson_title: {lesson_title}, resource_type: {resource_type}")
+    task = create_task(lesson_id, lesson_title, resource_type, session)
+    return task
+
+
 @router.post("/", response_model=Task)
 async def create_task_with_topics(task_in: TaskCreate, session: Session = Depends(get_session)):
     # Get/Create the topic id(s) for the task
@@ -95,7 +103,11 @@ async def create_task_from_url(request: QuickAddTaskRequest, session: Session = 
     lesson_id = get_lesson_id(url_metadata["lessontitle"], url_metadata["lessondescription"], url_metadata["content"], level_id, resource_id, session)
 
     # Categorize the Lesson: Technology, Subcategory, Category
-    enrich_lesson(lesson_id, session)
+    response = enrich_lesson(lesson_id, session)
+    print(f"\n\nresponse: {response}\n\n")
+
+    # Create the Task
+    task = create_task(lesson_id, lesson_title, resource_type, session)
 
 
     return TaskResponse(
@@ -439,6 +451,30 @@ def create_task(task_in: TaskCreate, session: Session = Depends(get_session)):
     return task
 
 
+def create_task(lesson_id: int, lesson_title: str, resource_type: str, session: Session):
+    task = Task(
+        task_id=generate_unique_task_id(session),
+        task=generate_task_name(lesson_title, resource_type),
+        description="No description provided",
+        lesson_id=lesson_id,
+        type_id=1,  # Default type_id for tasks
+        status_id=1,  # Default status_id for tasks
+        priority_id=1,  # Default priority_id for tasks
+        progress=0,
+        order=0,
+        due_date=None,
+        start_date=None,
+        end_date=None,
+        estimated_duration=None, # TODO: Remove estimated_duration
+        actual_duration=None,
+        done=False
+    )
+    session.add(task)
+    session.commit()
+    session.refresh(task)
+    return task
+
+
 def generate_unique_task_id(session, prefix="TASK-", digits=4, max_attempts=10):
     for _ in range(max_attempts):
         random_digits = f"{random.randint(0, 10**digits - 1):0{digits}}"
@@ -447,3 +483,21 @@ def generate_unique_task_id(session, prefix="TASK-", digits=4, max_attempts=10):
         if not exists:
             return task_id
     raise ValueError("Failed to generate unique task_id after multiple attempts")
+
+
+def generate_task_name(lesson_title: str, resource_type: str) -> str:
+    action_map = {
+        "article": "Read",
+        "blog": "Read",
+        "documentation": "Read",
+        "video": "Watch",
+        "webinar": "Watch",
+        "repository": "Code",
+        "tutorial": "Build",
+        "research paper": "Research",
+        "course": "Complete",
+        "quiz": "Take"
+    }
+    resource_type = resource_type.lower()
+    action = action_map.get(resource_type, "Read")  # fallback to "Read" if unknown
+    return f"{action} \"{lesson_title}\""

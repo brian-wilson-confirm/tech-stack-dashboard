@@ -74,25 +74,24 @@ def build_lesson_prompt(lesson: LessonRequest, categorization: dict) -> str:
 
             ### 🎯 Task
 
-            Analyze the provided information and classify the lesson appropriately.
-
             **Instructions:**
-            - You may assign multiple subcategories to a single category if relevant.
-            - Only choose categories and subcategories from the predefined list/taxonomy.
-            - For each subcategory you assign, provide a brief one-sentence reasoning explaining why the lesson fits.
-            - Only include the most relevant categories (1–3 max). Avoid generic or overly broad reasoning.
-            - If applicable, suggest one or more technologies associated with the lesson.
-            - For each technology, list which subcategories it is associated with, and provide a one-sentence justification.
+            - Analyze the provided information and classify the lesson appropriately:
+            -- You may assign multiple subcategories to a single category if relevant.
+            -- Only choose categories and subcategories from the predefined list/taxonomy.
+            -- For each subcategory you assign, provide a brief one-sentence reasoning explaining why the lesson fits.
+            -- Only include the most relevant categories (1–3 max). Avoid generic or overly broad reasoning.
 
-            **Instructions:**
-            - You may assign multiple subcategories to a single category if relevant.
-            - Only choose categories and subcategories from the predefined taxonomy.
-            - For each subcategory you assign, provide a one-sentence reasoning explaining why the lesson fits.
-            - Only include the most relevant categories (1–3 max). Avoid generic or overly broad reasoning.
-            - If applicable, suggest one or more technologies associated with the lesson.
-            - For each technology, list which subcategories it is associated with, and provide a one-sentence justification.
-            - If applicable, suggest one or more topics associated with the lesson.
-            - For each topic, provide a one-sentence justification explaining its relevance.
+            - If applicable, suggest one or more technologies associated with the lesson:
+            -- For each technology, list which subcategories it is associated with, and provide a one-sentence justification.
+            
+            - If applicable, suggest one or more topics associated with the lesson:
+            -- For each topic, provide a one-sentence justification explaining its relevance.
+            
+            - Estimate how long it would take to read or complete the lesson:
+            -- If an explicit read time is mentioned (e.g., "7 min read"), use it.
+            -- If no time is mentioned, estimate based on the content description.
+            -- Assume an average reading speed of 150–200 words per minute for technical material.
+            -- Return the estimate as an integer number of hours, unless it's less than 1 hour in which case return the number of minutes.
 
             ---
 
@@ -101,6 +100,7 @@ def build_lesson_prompt(lesson: LessonRequest, categorization: dict) -> str:
             Return your response strictly in the following JSON format:
             {{
                 "lesson": "<Lesson Title>",
+                "estimated_duration": "<Estimated number of hours or minutes>",
                 "categories": [
                     {{
                         "category": "<Selected Category>",
@@ -108,12 +108,10 @@ def build_lesson_prompt(lesson: LessonRequest, categorization: dict) -> str:
                             {{
                                 "subcategory": "<Selected Subcategory>",
                                 "reasoning": "<One-sentence explanation for why this lesson belongs to this subcategory>"
-                            }},
-                            ...
+                            }}
                         ],
                         "reasoning": "<One-sentence explanation for why this lesson belongs to this category>"
-                    }},
-                    ...
+                    }}
                 ],
                 "technologies": [
                     {{
@@ -122,19 +120,16 @@ def build_lesson_prompt(lesson: LessonRequest, categorization: dict) -> str:
                            {{
                                 "subcategory": "<Selected Subcategory>",
                                 "reasoning": "<One-sentence explanation for why this technology is relevant to this subcategory>"
-                            }},
-                            ...
+                            }}
                         ],
                         "reasoning": "<One-sentence explanation for why this lesson is related to this technology>"
-                    }},
-                    ...
+                    }}
                 ],
                 "topics": [
                     {{
                         "topic": "<Selected Topic>",
                         "reasoning": "<One-sentence explanation for why this topic is relevant to this lesson>"
-                    }},
-                    ...
+                    }}
                 ]
             }}
         """

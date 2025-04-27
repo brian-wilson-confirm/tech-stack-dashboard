@@ -235,6 +235,7 @@ def categorize_lesson(lesson_id: int, session: Session):
 
     return response
 
+
 def get_category_subcategory_map(session: Session):
     # Get list of categories
     categories = session.exec(select(Category)).all()

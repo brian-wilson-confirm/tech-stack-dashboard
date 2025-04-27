@@ -152,10 +152,33 @@ export const lessonTableSchema = z.object({
   lesson_id: z.string(),
   title: z.string().min(1, "Title is required"),
   description: z.string(),
-  technologies: z.string(),
-  subcategories: z.string(),
-  categories: z.string(),
-  topics: z.string(),
+  technologies: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      description: z.string().nullable()
+    })
+  ),
+  subcategories: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      category: z.string(),
+      description: z.string().nullable()
+    })
+  ),
+  categories: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string()
+    })
+  ),
+  topics: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string()
+    })
+  ),
   module: z.string(),
   course: z.string(),
   content: z.string(),

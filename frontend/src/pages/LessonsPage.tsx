@@ -4,6 +4,7 @@ import { ColumnDef, SortingState, VisibilityState, FilterFn, ColumnFiltersState,
 import { DataTableWidget, EditModeRenderer } from "@/components/widgets/DataTableWidget"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { BookOpen, Clock, Plus } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
 import { capitalizeWords } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -352,7 +353,7 @@ export default function LessonsPage() {
   const [visibleColumns, setVisibleColumns] = useState<VisibilityState>(initialVisibleColumns);
 
   // Table Pagination
-  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 15 });
 
   // Row Filter
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -403,10 +404,56 @@ export default function LessonsPage() {
     )},
     { accessorKey: "title", header: "Title" },
     { accessorKey: "description", header: "Description" },
-    { accessorKey: "technologies", header: "Technologies" },
-    { accessorKey: "subcategories", header: "Subcategories" },
-    { accessorKey: "categories", header: "Categories" },
-    { accessorKey: "topics", header: "Topics" },
+    { accessorKey: "technologies", header: "Technologies", 
+      cell: ({ row }) => {
+        const technologies = row.original.technologies;
+        if (!Array.isArray(technologies) || technologies.length === 0) return <span>--</span>;
+
+        const names = technologies.map(tech => tech.name).join(", ");
+
+        return <div>{names}</div>
+      }
+    },
+    { accessorKey: "subcategories", header: "Subcategories",
+      cell: ({ row }) => {
+        const subcategories = row.original.subcategories;
+        if (!Array.isArray(subcategories)) return null;
+
+        const names = subcategories.map(sub => sub.name).join(", ");
+
+        return <div>{names}</div>
+      }
+    },
+    { accessorKey: "categories", header: "Categories",
+      cell: ({ row }) => {
+        const categories = row.original.categories;
+        if (!Array.isArray(categories)) return null;
+
+        const names = categories.map(cat => cat.name).join(", ");
+
+        return <div>{names}</div>
+      }
+    },
+    { accessorKey: "topics", header: "Topics", 
+      cell: ({ row }) => {
+        const topics = row.original.topics;
+        if (!Array.isArray(topics)) return null;
+      
+        return (
+          <div className="flex flex-wrap gap-2">
+            {topics.map((topic, index) => (
+              <Badge
+                key={index}
+                variant="secondary"
+                className="bg-gray-200 text-gray-800"
+              >
+                {topic.name}
+              </Badge>
+            ))}
+          </div>
+        );
+      }
+    },
     { accessorKey: "module", header: "Module" },
     { accessorKey: "course", header: "Course" },
     { accessorKey: "content", header: "Content" },
@@ -546,7 +593,7 @@ export default function LessonsPage() {
   const fetchRows = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/lessons');
+      const response = await fetch('/api/lessons/enriched');
       if (!response.ok) {
         throw new Error('Failed to fetch lessons');
       }
@@ -1194,7 +1241,7 @@ export default function LessonsPage() {
           onRowSelectionChange={setRowSelection}
           editForm={editForm}
           editModeRenderers={editModeRenderers}
-          nonEditableColumns={['lesson_id', 'technologies', 'subcategories', 'categories', 'topics']}
+          nonEditableColumns={['lesson_id', 'title', 'description', 'technologies', 'subcategories', 'categories', 'topics', 'estimated_duration']}
           onStartEdit={startEditing}
           onEditChange={onEditChange}
           editingRow={editingRow}

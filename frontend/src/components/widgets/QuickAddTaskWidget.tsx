@@ -5,6 +5,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "@/components/ui/use-toast"
 import { useState } from "react"
+import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { Progress } from "@/components/ui/progress"
 
 interface QuickAddTaskWidgetProps {
   onClose?: () => void
@@ -56,72 +58,81 @@ export function QuickAddTaskWidget({ onClose }: QuickAddTaskWidgetProps) {
   }
 
   return (
-    <Card className="w-[400px]">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-2xl font-bold">Quick Add Task</CardTitle>
-        {onClose && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 p-0"
-            onClick={onClose}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        )}
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <label htmlFor="resourceUrl" className="text-lg font-medium">
-              Resource URL
-            </label>
-            <Input
-              id="resourceUrl"
-              name="resourceUrl"
-              type="url"
-              placeholder="https://..."
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <label htmlFor="notes" className="text-lg font-medium">
-              Notes
-            </label>
-            <Textarea
-              id="notes"
-              name="notes"
-              placeholder="Add any notes or comments..."
-              className="min-h-[100px]"
-            />
-          </div>
-          <div className="space-y-2">
+    <>
+      {/* Loading Dialog */}
+      <Dialog open={isLoading}>
+        <DialogContent className="flex flex-col items-center justify-center gap-4 max-w-xs [&>button[data-dialog-close]]:hidden">
+          <div className="text-lg font-semibold">Creating Task...</div>
+          <Progress value={33} className="w-[60%]" />
+        </DialogContent>
+      </Dialog>
+      <Card className="w-[400px]">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-2xl font-bold">Quick Add Task</CardTitle>
+          {onClose && (
             <Button
-              type="button"
-              variant="outline"
-              className="w-full text-lg font-medium"
-              onClick={() => {
-                const advancedSection = document.getElementById('advancedSection')
-                if (advancedSection) {
-                  advancedSection.classList.toggle('hidden')
-                }
-              }}
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 p-0"
+              onClick={onClose}
             >
-              Advanced
+              <X className="h-4 w-4" />
             </Button>
-            <div id="advancedSection" className="hidden space-y-4">
-              {/* Advanced options can be added here */}
+          )}
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="resourceUrl" className="text-lg font-medium">
+                Resource URL
+              </label>
+              <Input
+                id="resourceUrl"
+                name="resourceUrl"
+                type="url"
+                placeholder="https://..."
+                required
+              />
             </div>
-          </div>
-          <Button 
-            type="submit" 
-            className="w-full text-lg"
-            disabled={isLoading}
-          >
-            {isLoading ? 'Adding Task...' : 'Add Task'}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+            <div className="space-y-2">
+              <label htmlFor="notes" className="text-lg font-medium">
+                Notes
+              </label>
+              <Textarea
+                id="notes"
+                name="notes"
+                placeholder="Add any notes or comments..."
+                className="min-h-[100px]"
+              />
+            </div>
+            <div className="space-y-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full text-lg font-medium"
+                onClick={() => {
+                  const advancedSection = document.getElementById('advancedSection')
+                  if (advancedSection) {
+                    advancedSection.classList.toggle('hidden')
+                  }
+                }}
+              >
+                Advanced
+              </Button>
+              <div id="advancedSection" className="hidden space-y-4">
+                {/* Advanced options can be added here */}
+              </div>
+            </div>
+            <Button 
+              type="submit" 
+              className="w-full text-lg"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Adding Task...' : 'Add Task'}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </>
   )
 } 

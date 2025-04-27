@@ -183,7 +183,7 @@ def generate_unique_lesson_id(session, prefix="LESSON-", digits=4, max_attempts=
     raise ValueError("Failed to generate unique lesson_id after multiple attempts")
 
 
-def categorize_lesson(lesson_id: int, session: Session):
+def enrich_lesson(lesson_id: int, session: Session):
     category_subcategory_map = get_category_subcategory_map(session)
     lesson_details = get_lesson_details(lesson_id, session)
 
@@ -196,6 +196,7 @@ def categorize_lesson(lesson_id: int, session: Session):
 
     # Parse the response
     response_json = safe_json_loads(response)
+    print(f"\n\nresponse_json: {response_json}\n\n")
 
     # Extract the category, subcategory, and technology
     estimated_duration = response_json["estimated_duration"]
@@ -209,34 +210,28 @@ def categorize_lesson(lesson_id: int, session: Session):
     # Update the lesson_category relationships
     category_ids = [get_category_id(category_data["category"], session) for category_data in categories]
     create_lesson_categories(lesson_id, category_ids, session)
-    print(f"\n\nlesson_categories created\n\n")
 
     # Update the lesson_subcategory relationships
     for category_data in categories:
         subcategories = category_data["subcategories"]
         subcategory_ids = [get_subcategory_id(subcategory_data["subcategory"], session) for subcategory_data in subcategories]
         create_lesson_subcategories(lesson_id, subcategory_ids, session)
-    print(f"\n\nlesson_subcategories created\n\n")
 
     # Get/Create the Technology(ies)
     technology_ids = [get_technology_id(technology_data["technology"], session) for technology_data in technologies]
-    print(f"\n\ntechnology_ids: {technology_ids}\n\n")
 
     # Update the lesson_technology relationships
     create_lesson_technologies(lesson_id, technology_ids, session)
-    print(f"\n\nlesson_technologies created\n\n")
 
     # Update the technology_subcategory relationships
     for technology_data in technologies:
         technology_id = get_technology_id(technology_data["technology"], session)
         subcategory_ids = [get_subcategory_id(subcategory_data["subcategory"], session) for subcategory_data in technology_data["subcategories"]]
         create_technology_subcategories(technology_id, subcategory_ids, session)
-    print(f"\n\ntechnology_subcategories created\n\n")
 
     # Update the lesson_topic relationships
     topic_ids = [get_topic_id(topic_data["topic"], session) for topic_data in topics]
     create_lesson_topics(lesson_id, topic_ids, session)
-    print(f"\n\nlesson_topics created\n\n")
 
     return response
 

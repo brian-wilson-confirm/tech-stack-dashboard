@@ -18,7 +18,7 @@ from backend.database.views.task_schemas import QuickAddTaskRequest, TaskCreate,
 from backend.database.views.technology_schemas import TechnologyCreate, TechnologyRead
 from sqlalchemy import text
 
-from backend.routers.lessons import categorize_lesson, get_lesson_id
+from backend.routers.lessons import enrich_lesson, get_lesson_id
 from backend.routers.levels import get_level_id
 from backend.routers.people import get_person_ids
 from backend.routers.resources import get_resource_id, get_resourcetype_id
@@ -70,44 +70,32 @@ async def create_task_from_url(request: QuickAddTaskRequest, session: Session = 
 
     # Scrape the HTML at the URL
     url_metadata = extract_article_metadata(request.url)
-    print(f"url_metadata: {url_metadata}\n\n")
 
     # Get/Create the Person id(s)
     person_ids = get_person_ids(url_metadata["authors"], session)
-    print(f"\n\nperson_ids: {person_ids}\n\n")
 
     # Get/Create the Source id
     sourcetype_id = get_sourcetype_id(url_metadata["sourcetype"], session)
-    print(f"\n\nsourcetype_id: {sourcetype_id}\n\n")
-
     # Get/Create the Source
     source_id = get_source_id(url_metadata["source"], session)
-    print(f"\n\nsource_id: {source_id}\n\n")
 
     # Create the source_author relationship(s) if it doesn't already exist
-    print(f"\n\ncreate_source_authors: source_id - {source_id}, person_ids - {person_ids}\n\n")
     create_source_authors(source_id, person_ids, session)
-    print(f"\n\nsource_authors created\n\n")
 
     # Get/Create the ResourceType id
     resourcetype_id = get_resourcetype_id(url_metadata["resourcetype"], session)
-    print(f"\n\nresourcetype_id: {resourcetype_id}\n\n")
 
     # Get/Create the Resource
     resource_id = get_resource_id(resourcetype_id, source_id, url_metadata["resourcetitle"], url_metadata["resourcedescription"], url_metadata["resourceurl"], session)
-    print(f"\n\nresource_id: {resource_id}\n\n")
 
     # Get the Level
     level_id = get_level_id(url_metadata["lessonlevel"], session)
-    print(f"\n\nlevel_id: {level_id}\n\n")
 
     # Get/Create the Lesson
     lesson_id = get_lesson_id(url_metadata["lessontitle"], url_metadata["lessondescription"], url_metadata["content"], level_id, resource_id, session)
-    print(f"\n\nlesson_id: {lesson_id}\n\n")
 
     # Categorize the Lesson: Technology, Subcategory, Category
-    response = categorize_lesson(lesson_id, session)
-    print(f"\n\nresponse: {response}\n\n")
+    enrich_lesson(lesson_id, session)
 
 
     return TaskResponse(
@@ -115,17 +103,6 @@ async def create_task_from_url(request: QuickAddTaskRequest, session: Session = 
         url=request.url,
         notes=request.notes
     )
-
-
-    # Create the task
-    #task = create_task(resource, session)
-
-    # Link the task to the topic(s)
-    #for topic_id in topic_ids:
-    #    session.add(TaskTopicLink(task_id=task.id, topic_id=topic_id))
-    
-    #session.commit()
-    #return task
 
 
 """

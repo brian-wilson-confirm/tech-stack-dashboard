@@ -8,7 +8,7 @@ import { capitalizeWords } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { toast } from "@/components/ui/use-toast"
-import { Lesson, LessonForm, lessonFormSchema } from "@/components/data/schema"
+import { Lesson, LessonForm, lessonFormSchema, LessonTable } from "@/components/data/schema"
 import React from "react"
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useForm } from "react-hook-form"
@@ -322,11 +322,15 @@ const initialVisibleColumns = {
   lesson_id: true,
   title: true,
   description: false,
-  module: true,
-  course: true,
+  technologies: true,
+  subcategories: true,
+  categories: true,
+  topics: true,
+  module: false,
+  course: false,
   content: false,
   video_url: false,
-  order: true,
+  order: false,
   estimated_duration: true
 }
 
@@ -386,8 +390,9 @@ export default function LessonsPage() {
   /*******************
     COLUMN DEFINITIONS
   ********************/
-  const columns: ColumnDef<Lesson>[] = [
-    { accessorKey: "lesson_id", header: "Lesson ID", cell: ({ row }) => (
+  const columns: ColumnDef<LessonTable>[] = [
+    { accessorKey: "lesson_id", header: "Lesson ID", 
+      cell: ({ row }) => (
         <Button
           variant="link"
           className="p-0 h-auto font-normal"
@@ -398,14 +403,16 @@ export default function LessonsPage() {
     )},
     { accessorKey: "title", header: "Title" },
     { accessorKey: "description", header: "Description" },
+    { accessorKey: "technologies", header: "Technologies" },
+    { accessorKey: "subcategories", header: "Subcategories" },
+    { accessorKey: "categories", header: "Categories" },
+    { accessorKey: "topics", header: "Topics" },
     { accessorKey: "module", header: "Module" },
     { accessorKey: "course", header: "Course" },
     { accessorKey: "content", header: "Content" },
     { accessorKey: "video_url", header: "Video URL" },
     { accessorKey: "order", header: "Order" },
-    {
-      accessorKey: "estimated_duration",
-      header: "Est. Duration",
+    { accessorKey: "estimated_duration", header: "Est. Duration",
       enableSorting: true,
       cell: ({ row }) => (
         <div className="flex items-center gap-1">
@@ -1187,7 +1194,7 @@ export default function LessonsPage() {
           onRowSelectionChange={setRowSelection}
           editForm={editForm}
           editModeRenderers={editModeRenderers}
-          nonEditableColumns={['lesson_id']}
+          nonEditableColumns={['lesson_id', 'technologies', 'subcategories', 'categories', 'topics']}
           onStartEdit={startEditing}
           onEditChange={onEditChange}
           editingRow={editingRow}

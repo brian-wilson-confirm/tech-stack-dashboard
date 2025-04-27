@@ -1,5 +1,6 @@
-from sqlmodel import SQLModel, Field
-from typing import Optional
+from sqlmodel import SQLModel, Field, Relationship
+from typing import Optional, List
+from backend.database.models.lesson_models import LessonTechnology
 
 """
     TECHNOLOGIES
@@ -9,7 +10,7 @@ class Technology(SQLModel, table=True):
     name: str
     description: Optional[str] = None
 
-
+    lesson_technologies: List[LessonTechnology] = Relationship(back_populates="technology")
 
 """
     DEPENDENCY RELATIONSHIPS

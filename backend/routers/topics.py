@@ -2,7 +2,7 @@ from typing import List
 from fastapi import APIRouter, Depends
 from sqlmodel import Session, select
 from backend.database.connection import get_session
-from backend.database.models.task_models import Topic
+from backend.database.models.topic_models import Topic
 
 router = APIRouter(prefix="/topics")
 

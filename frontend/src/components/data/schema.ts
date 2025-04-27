@@ -144,6 +144,28 @@ export const lessonSchema = z.object({
 export type Lesson = z.infer<typeof lessonSchema> 
 
 
+/*******************
+  LESSON TABLE SCHEMA
+*******************/
+export const lessonTableSchema = z.object({
+  id: z.string(),
+  lesson_id: z.string(),
+  title: z.string().min(1, "Title is required"),
+  description: z.string(),
+  technologies: z.string(),
+  subcategories: z.string(),
+  categories: z.string(),
+  topics: z.string(),
+  module: z.string(),
+  course: z.string(),
+  content: z.string(),
+  video_url: z.string(),
+  order: z.number().min(0),
+  estimated_duration: z.number().min(0)
+})
+export type LessonTable = z.infer<typeof lessonTableSchema> 
+
+
 
 /*******************
   LESSON FORM SCHEMA  

@@ -61,11 +61,6 @@ class TaskOld(SQLModel, table=True):
 """
     TASK DEPENDENCIES
 """ 
-class Topic(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    name: str
-
-    tasks: List["TaskOld"] = Relationship(back_populates="topics", link_model=TaskTopicLink)
 
 """
 class Section(SQLModel, table=True):

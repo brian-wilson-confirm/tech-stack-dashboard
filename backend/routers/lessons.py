@@ -2,7 +2,7 @@ import json
 import random
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import func
+from sqlalchemy import desc, func
 from sqlmodel import Session, select
 from backend.database.connection import get_session
 from backend.database.models.course_models import Course
@@ -13,16 +13,21 @@ from backend.database.models.source_models import Source
 from backend.database.models.sourcetype_models import SourceType
 from backend.database.models.category_models import Category
 from backend.database.models.subcategory_models import Subcategory
-from backend.database.views.lesson_schemas import LessonRead, LessonRequest
+from backend.database.views.category_schemas import CategoryRead
+from backend.database.views.lesson_schemas import LessonRead, LessonRequest, LessonDetailsRead
 from backend.database.views.resource_schemas import ResourceRequest, ResourceTypeRequest
 from backend.database.views.source_schemas import SourceRequest, SourceTypeRequest
+from backend.database.views.subcategory_schemas import SubcategoryRead
+from backend.database.views.technology_schemas import TechnologyRead
+from backend.database.views.topic_schemas import TopicRead
 from backend.llm.templates.prompt_templates import build_lesson_prompt
 from backend.routers.categories import get_category_id
 from backend.routers.openai import submit_prompt
 from backend.routers.subcategories import get_subcategory_id
 from backend.routers.technologies import create_technology_subcategories, get_technology_id
 from backend.routers.topics import get_topic_id
-
+from sqlmodel import select
+from sqlalchemy.orm import selectinload
 
 router = APIRouter(prefix="/lessons")
 
@@ -31,8 +36,29 @@ router = APIRouter(prefix="/lessons")
 """
 @router.get("/", response_model=List[LessonRead])
 async def get_lessons(session: Session = Depends(get_session)):
-    lessons = session.exec(select(Lesson)).all()
+    lessons = session.exec(select(Lesson).order_by(desc(Lesson.created_at))).all()
     return [serialize_lesson(lesson, session) for lesson in lessons]
+
+
+@router.get("/enriched", response_model=List[LessonDetailsRead])
+async def get_lessons_enriched(session: Session = Depends(get_session)):
+    # Step 1: Fetch ALL lessons with their relationships preloaded
+    lessons = session.exec(
+        select(Lesson)
+        .options(
+            selectinload(Lesson.lesson_technologies).selectinload(LessonTechnology.technology),
+            selectinload(Lesson.lesson_subcategories).selectinload(LessonSubcategory.subcategory),
+            selectinload(Lesson.lesson_categories).selectinload(LessonCategory.category),
+            selectinload(Lesson.lesson_topics).selectinload(LessonTopic.topic),
+            #selectinload(Lesson.module),
+            #selectinload(Lesson.course),
+            #selectinload(Lesson.level),
+            #selectinload(Lesson.resource)
+        )
+    ).all()
+
+    # Step 2: Serialize each lesson individually
+    return [serialize_lesson_for_table(lesson) for lesson in lessons]
 
 
 @router.get("/count", response_model=int)
@@ -62,6 +88,69 @@ def serialize_lesson(lesson: Lesson, session: Session) -> LessonRead:
             content=lesson.content,
             order=lesson.order,
             estimated_duration=lesson.estimated_duration
+        )
+
+
+def serialize_lesson_details(lesson, resource, resourcetype, source, sourcetype) -> LessonRequest:
+    return LessonRequest(
+        title=lesson.title,
+        description=lesson.description,
+        resource=ResourceRequest(
+            title=resource.title,
+            description=resource.description,
+            url=resource.url,
+            resourcetype=ResourceTypeRequest(
+                name=resourcetype.name),
+            source=SourceRequest(
+                name=source.name, 
+                sourcetype=SourceTypeRequest(
+                    name=sourcetype.name
+                )
+            )
+        )
+    )
+
+
+def serialize_lesson_for_table(lesson) -> LessonDetailsRead:
+    return LessonDetailsRead(
+            id=lesson.id,
+            lesson_id=lesson.lesson_id,
+            title=lesson.title,
+            description=lesson.description,
+            content=lesson.content,
+            order=lesson.order,
+            estimated_duration=lesson.estimated_duration,
+            technologies=[
+                TechnologyRead(
+                    id=lt.technology.id,
+                    name=lt.technology.name,
+                    description=lt.technology.description
+                ) for lt in (lesson.lesson_technologies or [])
+            ],
+            subcategories=[
+                SubcategoryRead(
+                    id=lsc.subcategory.id,
+                    name=lsc.subcategory.name,
+                    category=lsc.subcategory.category.name,
+                    description=lsc.subcategory.description
+                ) for lsc in (lesson.lesson_subcategories or [])
+            ],
+            categories=[
+                CategoryRead(
+                    id=lc.category.id,
+                    name=lc.category.name
+                ) for lc in (lesson.lesson_categories or [])
+            ],
+            topics=[
+                TopicRead(
+                    id=lt.topic.id,
+                    name=lt.topic.name
+                ) for lt in (lesson.lesson_topics or [])
+            ],
+            #module=lesson.module.title if lesson.module else None,
+            #course=lesson.course.title if lesson.course else None,
+            #level=lesson.level.name if lesson.level else None,
+            #resource=lesson.resource.title if lesson.resource else None
         )
 
 
@@ -174,26 +263,6 @@ def get_lesson_details(lesson_id: int, session: Session):
     #authors = session.get(SourceAuthor, source.id) if source and source.name == "Author" else None
 
     return serialize_lesson_details(lesson, resource, resourcetype, source, sourcetype)
-
-
-def serialize_lesson_details(lesson, resource, resourcetype, source, sourcetype) -> LessonRequest:
-    return LessonRequest(
-        title=lesson.title,
-        description=lesson.description,
-        resource=ResourceRequest(
-            title=resource.title,
-            description=resource.description,
-            url=resource.url,
-            resourcetype=ResourceTypeRequest(
-                name=resourcetype.name),
-            source=SourceRequest(
-                name=source.name, 
-                sourcetype=SourceTypeRequest(
-                    name=sourcetype.name
-                )
-            )
-        )
-    )
 
 
 def create_lesson_categories(lesson_id: int, category_ids: List[int], session: Session):

@@ -139,7 +139,7 @@ export const lessonSchema = z.object({
   content: z.string(),
   video_url: z.string(),
   order: z.number().min(0),
-  estimated_duration: z.number().min(0)
+  estimated_duration: z.string()
 })
 export type Lesson = z.infer<typeof lessonSchema> 
 
@@ -184,7 +184,7 @@ export const lessonTableSchema = z.object({
   content: z.string(),
   video_url: z.string(),
   order: z.number().min(0),
-  estimated_duration: z.number().min(0)
+  estimated_duration: z.string()
 })
 export type LessonTable = z.infer<typeof lessonTableSchema> 
 
@@ -201,7 +201,7 @@ export const lessonFormSchema = z.object({
   content: z.string().nullable(),
   video_url: z.string().nullable(),
   order: z.number().min(0),
-  estimated_duration: z.number().min(0)
+  estimated_duration: z.string()
 })
 export type LessonForm = z.infer<typeof lessonFormSchema>
 

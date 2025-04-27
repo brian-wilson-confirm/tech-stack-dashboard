@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import List, Optional
+from datetime import timedelta
 
 from backend.database.views.resource_schemas import ResourceRequest
 from backend.database.views.technology_schemas import TechnologyRead
@@ -15,7 +16,7 @@ class LessonBase(BaseModel):
     description: Optional[str]
     content: Optional[str]
     order: Optional[int]
-    estimated_duration: Optional[int]
+    estimated_duration: Optional[timedelta]
 
 
 class LessonCreate(LessonBase):
@@ -63,7 +64,7 @@ class LessonDetailsRead(BaseModel):
     topics: Optional[List[TopicRead]]
     content: Optional[str]
     order: Optional[int]
-    estimated_duration: Optional[int]
+    estimated_duration: Optional[timedelta]
     module: Optional[str] = None
     course: Optional[str] = None
     level: Optional[str] = None

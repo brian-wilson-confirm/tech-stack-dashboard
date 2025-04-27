@@ -461,12 +461,28 @@ export default function LessonsPage() {
     { accessorKey: "order", header: "Order" },
     { accessorKey: "estimated_duration", header: "Est. Duration",
       enableSorting: true,
-      cell: ({ row }) => (
-        <div className="flex items-center gap-1">
-          <Clock className="h-4 w-4" />
-          <span>{row.original.estimated_duration}h</span>
-        </div>
-      ),
+      cell: ({ row }) => {
+        const duration = row.original.estimated_duration; // example: "PT2H30M"
+        if (!duration) return null;
+    
+        const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?/);
+    
+        if (!match) return null;
+    
+        const hours = match[1] ? parseInt(match[1], 10) : 0;
+        const minutes = match[2] ? parseInt(match[2], 10) : 0;
+    
+        let display = "";
+        if (hours > 0) display += `${hours} h `;
+        if (minutes > 0) display += `${minutes} m`;
+    
+        return (
+          <div className="flex items-center gap-1">
+            <Clock className="h-4 w-4" />
+            <span>{display.trim() || "0 m"}</span>
+          </div>
+        );
+      }
     }
   ]
 

@@ -23,7 +23,7 @@ from backend.database.views.topic_schemas import TopicRead
 from backend.llm.templates.prompt_templates import build_lesson_prompt
 from backend.routers.categories import get_category_id
 from backend.routers.levels import get_level_id
-from backend.routers.openai import submit_prompt
+from backend.routers.openai import isValidResponse, submit_prompt
 from backend.routers.subcategories import get_subcategory_id
 from backend.routers.technologies import create_technology_subcategories, get_technology_id
 from backend.routers.topics import get_topic_id
@@ -52,9 +52,9 @@ async def get_lessons_enriched(session: Session = Depends(get_session)):
             selectinload(Lesson.lesson_subcategories).selectinload(LessonSubcategory.subcategory),
             selectinload(Lesson.lesson_categories).selectinload(LessonCategory.category),
             selectinload(Lesson.lesson_topics).selectinload(LessonTopic.topic),
+            selectinload(Lesson.level),
             #selectinload(Lesson.module),
             #selectinload(Lesson.course),
-            #selectinload(Lesson.level),
             #selectinload(Lesson.resource)
         )
     ).all()
@@ -151,7 +151,7 @@ def serialize_lesson_for_table(lesson) -> LessonDetailsRead:
             ],
             #module=lesson.module.title if lesson.module else None,
             #course=lesson.course.title if lesson.course else None,
-            #level=lesson.level.name if lesson.level else None,
+            level=lesson.level.name if lesson.level else None,
             #resource=lesson.resource.title if lesson.resource else None
         )
 
@@ -193,11 +193,20 @@ def enrich_lesson(lesson_id: int, session: Session):
     response = submit_prompt(prompt)
 
     if not response:
-        raise ValueError("No response returned from categorize_lesson()")
+        raise HTTPException(
+            status_code=400,
+            detail="No response returned from ChatGPT"
+        )
 
     # Parse the response
     print(f"\n\nresponse: {response}\n\n")
     response_json = safe_json_loads(response)
+
+    if not isValidResponse(response_json, category_subcategory_map):
+        raise HTTPException(
+            status_code=400,  # or 422, depending on your use case
+            detail="Invalid classification returned from ChatGPT"
+        )
 
     # Extract the category, subcategory, and technology
     level = response_json["level"]
@@ -239,7 +248,7 @@ def enrich_lesson(lesson_id: int, session: Session):
     topic_ids = [get_topic_id(topic_data["topic"], session) for topic_data in topics]
     create_lesson_topics(lesson_id, topic_ids, session)
 
-    return response
+    return response_json
 
 
 def get_category_subcategory_map(session: Session):

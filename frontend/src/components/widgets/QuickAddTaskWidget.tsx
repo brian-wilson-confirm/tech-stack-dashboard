@@ -45,11 +45,11 @@ export function QuickAddTaskWidget({ onClose }: QuickAddTaskWidgetProps) {
         variant: "default",
       });
       form.reset()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating task:', error)
       toast({
         title: "Error",
-        description: "Failed to create task",
+        description: error.response.data.detail || "Failed to create task",
         variant: "destructive",
       })
     } finally {

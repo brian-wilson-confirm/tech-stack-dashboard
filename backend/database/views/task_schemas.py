@@ -1,6 +1,7 @@
 from typing import List, Optional
 from datetime import date
 from pydantic import BaseModel
+from datetime import timedelta
 
 
 """
@@ -14,7 +15,7 @@ class TaskBase(BaseModel):
     due_date: Optional[date]
     start_date: Optional[date]
     end_date: Optional[date]
-    estimated_duration: Optional[int]
+    estimated_duration: Optional[timedelta]
     actual_duration: Optional[int]
     done: bool = False
 

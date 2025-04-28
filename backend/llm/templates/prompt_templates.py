@@ -155,6 +155,7 @@ def build_lesson_prompt(lesson: LessonRequest, categorization: dict) -> str:
             - **Do not** include any comments (`//` or `#`) inside the JSON.
             - Ensure the output can be parsed successfully using `json.loads()`.
             - If you are unsure, prioritize strict JSON syntax correctness.
+            - Do not add trailing commas after the last item in any list or object.
         """
 
 

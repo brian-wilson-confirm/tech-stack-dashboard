@@ -12,4 +12,12 @@ def safe_json_loads(response: str):
     # Optionally: replace single quotes with double quotes
     json_text = json_text.replace("'", '"')
 
+    # Remove trailing commas before a closing bracket or brace
+    json_text = remove_trailing_commas(json_text)
+
     return json.loads(json_text)
+
+
+def remove_trailing_commas(json_text: str) -> str:
+    # Removes trailing commas before a closing bracket or brace
+    return re.sub(r',(\s*[}\]])', r'\1', json_text)

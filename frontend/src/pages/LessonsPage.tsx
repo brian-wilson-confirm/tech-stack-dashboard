@@ -327,6 +327,7 @@ const initialVisibleColumns = {
   subcategories: true,
   categories: true,
   topics: true,
+  level: true,
   module: false,
   course: false,
   content: false,
@@ -402,7 +403,13 @@ export default function LessonsPage() {
           {row.original.lesson_id}
         </Button>
     )},
-    { accessorKey: "title", header: "Title" },
+    { accessorKey: "title", header: "Title", 
+      cell: ({ row }) => (
+        <div className="max-w-[300px] truncate">
+          {row.original.title}
+        </div>
+      )
+    },
     { accessorKey: "description", header: "Description" },
     { accessorKey: "technologies", header: "Technologies", 
       cell: ({ row }) => {
@@ -453,6 +460,12 @@ export default function LessonsPage() {
           </div>
         );
       }
+    },
+    { accessorKey: "level", header: "Level",
+      enableSorting: true,
+      cell: ({ row }) => (
+        <span>{capitalizeWords(row.original.level)}</span>
+      ),
     },
     { accessorKey: "module", header: "Module" },
     { accessorKey: "course", header: "Course" },

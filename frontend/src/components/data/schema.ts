@@ -134,6 +134,7 @@ export const lessonSchema = z.object({
   lesson_id: z.string(),
   title: z.string().min(1, "Title is required"),
   description: z.string(),
+  level: z.string(),
   module: z.string(),
   course: z.string(),
   content: z.string(),
@@ -179,6 +180,7 @@ export const lessonTableSchema = z.object({
       name: z.string()
     })
   ),
+  level: z.string(),
   module: z.string(),
   course: z.string(),
   content: z.string(),

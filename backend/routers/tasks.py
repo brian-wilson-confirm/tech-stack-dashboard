@@ -103,12 +103,13 @@ async def create_task_from_url(request: QuickAddTaskRequest, session: Session = 
     # Get/Create the Lesson
     lesson_id = get_lesson_id(metadata.lesson.title, metadata.lesson.description, metadata.lesson.content, level_id, resource_id, session)
 
-    # Categorize the Lesson: Technology, Subcategory, Category
+    # Enrich the Lesson: Categorize (Technology, Subcategory, Category), Level, Duration
     response = enrich_lesson(lesson_id, session)
     print(f"\n\nresponse: {response}\n\n")
 
     # Create the Task
-    task = create_task(lesson_id, metadata.lesson.title, metadata.resource.resourcetype, session)
+    estimated_duration = response["estimated_duration"]
+    task = create_task(lesson_id, metadata.lesson.title, metadata.resource.resourcetype, estimated_duration, session)
 
     return task
 
@@ -426,6 +427,7 @@ def serialize_task(task: Task, session: Session) -> TaskRead:
             type=(typ := session.get(TaskType, task.type_id)) and typ.name,
             status=(stat := session.get(TaskStatus, task.status_id)) and stat.name,
             priority=(prio := session.get(TaskPriority, task.priority_id)) and prio.name,
+            #level=(lvl := session.get(Level, task.level_id)) and lvl.name,
             progress=task.progress,
             order=task.order,
             due_date=task.due_date,
@@ -447,7 +449,7 @@ def create_task(task_in: TaskCreate, session: Session = Depends(get_session)):
     return task
 
 
-def create_task(lesson_id: int, lesson_title: str, resourcetype: str, session: Session):
+def create_task(lesson_id: int, lesson_title: str, resourcetype: str, estimated_duration: str, session: Session):
     task = Task(
         task_id=generate_unique_task_id(session),
         task=generate_task_name(lesson_title, resourcetype),
@@ -461,7 +463,7 @@ def create_task(lesson_id: int, lesson_title: str, resourcetype: str, session: S
         due_date=None,
         start_date=None,
         end_date=None,
-        estimated_duration=None, # TODO: Remove estimated_duration
+        estimated_duration=estimated_duration,
         actual_duration=None,
         done=False
     )

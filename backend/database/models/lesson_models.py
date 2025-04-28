@@ -1,6 +1,12 @@
 from sqlmodel import Field, Relationship, SQLModel
-from typing import List, Optional
+from typing import List, Optional, TYPE_CHECKING
 from datetime import datetime
+
+
+if TYPE_CHECKING:
+    from backend.database.models.level_models import Level
+
+
 """
     LESSONS
 """
@@ -24,7 +30,7 @@ class Lesson(SQLModel, table=True):
     lesson_topics: List["LessonTopic"] = Relationship(back_populates="lesson")
     #module: Optional["Module"] = Relationship(back_populates="lessons")
     #course: Optional["Course"] = Relationship(back_populates="lessons")
-    #level: Optional["Level"] = Relationship(back_populates="lessons")
+    level: Optional["Level"] = Relationship(back_populates="lessons")
     #resource: Optional["Source"] = Relationship(back_populates="lessons")
 
 

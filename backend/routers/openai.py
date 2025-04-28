@@ -3,6 +3,7 @@ import os
 from openai import OpenAI
 from typing import List, Dict, Any
 from dotenv import load_dotenv
+import json
 
 
 # Load environment variables from .env file
@@ -96,3 +97,17 @@ def build_prompt(course_data: Dict[str, Any], categories: List[str]) -> str:
                 ]
             }}
             """
+
+
+def isValidResponse(response_json: Any, valid_categories_map: dict) -> bool:
+    categories = response_json.get("categories", [])
+    for category_obj in categories:
+        category = category_obj.get("category")
+        if category not in valid_categories_map:
+            return False
+        subcategories = category_obj.get("subcategories", [])
+        for subcat_obj in subcategories:
+            subcategory = subcat_obj.get("subcategory")
+            if subcategory not in valid_categories_map[category]:
+                return False
+    return True

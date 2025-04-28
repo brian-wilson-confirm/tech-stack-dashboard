@@ -405,6 +405,11 @@ export default function TasksPage() {
     },
     { accessorKey: "task", header: "Task",
       enableSorting: true,
+      cell: ({ row }) => (
+        <div className="max-w-[300px] truncate">
+          {row.original.task}
+        </div>
+      )
     },
     { accessorKey: "description", header: "Description",
       enableSorting: true,

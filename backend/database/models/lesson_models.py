@@ -5,7 +5,7 @@ from datetime import datetime
 
 if TYPE_CHECKING:
     from backend.database.models.level_models import Level
-
+    from backend.database.models.task_models import Task
 
 """
     LESSONS
@@ -32,6 +32,7 @@ class Lesson(SQLModel, table=True):
     #course: Optional["Course"] = Relationship(back_populates="lessons")
     level: Optional["Level"] = Relationship(back_populates="lessons")
     #resource: Optional["Source"] = Relationship(back_populates="lessons")
+    tasks: List["Task"] = Relationship(back_populates="lesson")
 
 
 """
@@ -46,6 +47,8 @@ class LessonCategory(SQLModel, table=True):
     lesson: "Lesson" = Relationship(back_populates="lesson_categories")
     category: "Category" = Relationship(back_populates="lesson_categories")
 
+
+
 """
     LESSON SUBCATEGORIES
 """
@@ -57,6 +60,8 @@ class LessonSubcategory(SQLModel, table=True):
 
     lesson: "Lesson" = Relationship(back_populates="lesson_subcategories")
     subcategory: "Subcategory" = Relationship(back_populates="lesson_subcategories")
+
+
 
 """
     LESSON TECHNOLOGIES
@@ -71,6 +76,7 @@ class LessonTechnology(SQLModel, table=True):
     technology: "Technology" = Relationship(back_populates="lesson_technologies")
 
 
+
 """
     LESSON TOPICS
 """
@@ -82,6 +88,7 @@ class LessonTopic(SQLModel, table=True):
 
     lesson: "Lesson" = Relationship(back_populates="lesson_topics")
     topic: "Topic" = Relationship(back_populates="lesson_topics")
+
 
 
 """

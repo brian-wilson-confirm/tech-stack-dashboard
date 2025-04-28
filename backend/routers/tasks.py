@@ -3,10 +3,11 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 
 from sqlmodel import Session, select
-from sqlalchemy import func
+from sqlalchemy import desc,func
+from sqlalchemy.orm import selectinload
 from backend.database.connection import get_session
 
-from backend.database.models.lesson_models import Lesson
+from backend.database.models.lesson_models import Lesson, LessonTechnology, LessonSubcategory, LessonCategory, LessonTopic
 from backend.database.models.source_models import Source
 from backend.database.models.level_models import Level
 from backend.database.models.category_models import Category
@@ -14,8 +15,15 @@ from backend.database.models.subcategory_models import Subcategory
 from backend.database.models.technology_models import Technology
 from backend.database.models.task_models import TaskTopicLink, Task, TaskPriority, TaskStatus, TaskType, TechnologyWithSubcatAndCat
 from backend.database.models.topic_models import Topic
-from backend.database.views.task_schemas import QuickAddTaskRequest, TaskCreate, TaskRead, TaskResponse, TaskUpdate
+from backend.database.views.lesson_schemas import LessonDetailsRead
+from backend.database.views.task_schemas import QuickAddTaskRequest, TaskCreate, TaskDetailsRead, TaskRead, TaskResponse, TaskUpdate
+from backend.database.views.taskpriority_schemas import TaskPriorityRead
+from backend.database.views.taskstatus_schemas import TaskStatusRead
+from backend.database.views.tasktype_schemas import TaskTypeRead
 from backend.database.views.technology_schemas import TechnologyCreate, TechnologyRead
+from backend.database.views.topic_schemas import TopicRead
+from backend.database.views.subcategory_schemas import SubcategoryRead
+from backend.database.views.category_schemas import CategoryRead
 from sqlalchemy import text
 
 from backend.routers.lessons import enrich_lesson, get_lesson_id
@@ -35,6 +43,30 @@ router = APIRouter(prefix="/tasks")
 async def get_tasks(session: Session = Depends(get_session)):
     tasks = session.exec(select(Task)).all()
     return [serialize_task(task, session) for task in tasks]
+
+
+@router.get("/detailed", response_model=List[TaskDetailsRead])
+async def get_tasks_detailed(session: Session = Depends(get_session)):
+    # Step 1: Fetch ALL lessons with their relationships preloaded
+    tasks = session.exec(
+        select(Task).order_by(desc(Task.due_date))
+        .options(
+            selectinload(Task.lesson).selectinload(Lesson.lesson_technologies).selectinload(LessonTechnology.technology),
+            selectinload(Task.lesson).selectinload(Lesson.lesson_subcategories).selectinload(LessonSubcategory.subcategory),
+            selectinload(Task.lesson).selectinload(Lesson.lesson_categories).selectinload(LessonCategory.category),
+            selectinload(Task.lesson).selectinload(Lesson.lesson_topics).selectinload(LessonTopic.topic),
+            selectinload(Task.lesson).selectinload(Lesson.level),
+            selectinload(Task.status),
+            selectinload(Task.type),
+            selectinload(Task.priority),
+            #selectinload(Lesson.module),
+            #selectinload(Lesson.course),
+            #selectinload(Lesson.resource)
+        )
+    ).all()
+
+    # Step 2: Serialize each lesson individually
+    return [serialize_task_for_table(task) for task in tasks]
 
 
 @router.get("/count", response_model=int)
@@ -416,7 +448,6 @@ async def get_technologies_with_subcategory_and_category(session: Session = Depe
 """
     Helper functions
 """
-
 def serialize_task(task: Task, session: Session) -> TaskRead:
     return TaskRead(
             id=task.id,
@@ -437,6 +468,72 @@ def serialize_task(task: Task, session: Session) -> TaskRead:
             actual_duration=task.actual_duration,
             done=task.done
         )
+
+
+def serialize_task_for_table(task: Task) -> TaskDetailsRead:
+    return TaskDetailsRead(
+        id=task.id,
+        task_id=task.task_id,
+        task=task.task,
+        description=task.description,
+        lesson=LessonDetailsRead(
+            id=task.lesson_id,
+            lesson_id=task.lesson.lesson_id,
+            title=task.lesson.title,
+            description=task.lesson.description,
+            content=task.lesson.content,
+            order=task.lesson.order,
+            estimated_duration=task.lesson.estimated_duration,
+            technologies=[
+                TechnologyRead(
+                    id=lt.technology.id,
+                    name=lt.technology.name,
+                    description=lt.technology.description
+                ) for lt in (task.lesson.lesson_technologies or []  )
+            ],
+            subcategories=[
+                SubcategoryRead(
+                    id=lsc.subcategory.id,
+                    name=lsc.subcategory.name,
+                    category=lsc.subcategory.category.name,
+                    description=lsc.subcategory.description
+                ) for lsc in (task.lesson.lesson_subcategories or [])
+            ],
+            categories=[
+                CategoryRead(
+                    id=lc.category.id,
+                    name=lc.category.name
+                ) for lc in (task.lesson.lesson_categories or [])
+            ],
+            topics=[
+                TopicRead(
+                    id=lt.topic.id,
+                    name=lt.topic.name
+                ) for lt in (task.lesson.lesson_topics or [])
+            ],
+            level=task.lesson.level.name if task.lesson.level else None,
+        ),
+        type=TaskTypeRead(
+            id=task.type_id,
+            name=task.type.name
+        ),
+        status=TaskStatusRead(
+            id=task.status_id,
+            name=task.status.name
+        ),
+        priority=TaskPriorityRead(
+            id=task.priority_id,
+            name=task.priority.name
+        ),
+        progress=task.progress,
+        order=task.order,
+        due_date=task.due_date,
+        start_date=task.start_date,
+        end_date=task.end_date,
+        estimated_duration=task.estimated_duration,
+        actual_duration=task.actual_duration,
+        done=task.done
+    )
 
 
 def create_task(task_in: TaskCreate, session: Session = Depends(get_session)):

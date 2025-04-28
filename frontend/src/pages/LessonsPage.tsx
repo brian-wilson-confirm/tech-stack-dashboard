@@ -622,7 +622,7 @@ export default function LessonsPage() {
   const fetchRows = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/lessons/enriched');
+      const response = await fetch('/api/lessons/detailed');
       if (!response.ok) {
         throw new Error('Failed to fetch lessons');
       }

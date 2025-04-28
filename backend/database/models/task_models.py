@@ -1,6 +1,14 @@
 from datetime import date
 from sqlmodel import Field, Relationship, SQLModel
-from typing import List, Optional
+from typing import List, Optional, TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from backend.database.models.lesson_models import Lesson
+    from backend.database.models.task_models import TaskStatus
+    from backend.database.models.task_models import TaskType
+    from backend.database.models.task_models import TaskPriority
+    from backend.database.models.topic_models import Topic
 
 """
     TASKS
@@ -29,6 +37,12 @@ class Task(SQLModel, table=True):
     estimated_duration: Optional[int]
     actual_duration: Optional[int]
     done: bool = False
+
+    lesson: Optional["Lesson"] = Relationship(back_populates="tasks")
+    status: Optional["TaskStatus"] = Relationship(back_populates="tasks")
+    type: Optional["TaskType"] = Relationship(back_populates="tasks")
+    priority: Optional["TaskPriority"] = Relationship(back_populates="tasks")
+
 
 
 class TaskOld(SQLModel, table=True):
@@ -75,17 +89,23 @@ class TaskType(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
 
+    tasks: List["Task"] = Relationship(back_populates="type")
+
 class TaskStatus(SQLModel, table=True):
     __tablename__ = "task_status"
     
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
 
+    tasks: List["Task"] = Relationship(back_populates="status")
+
 class TaskPriority(SQLModel, table=True):
     __tablename__ = "task_priority"
     
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
+
+    tasks: List["Task"] = Relationship(back_populates="priority")
 
 
 """

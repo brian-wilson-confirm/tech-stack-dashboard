@@ -327,6 +327,7 @@ const initialVisibleColumns = {
   description: false,
   lesson: true,
   type: false,
+  level: true,
   status: true,
   priority: true,
   progress: false,
@@ -334,7 +335,7 @@ const initialVisibleColumns = {
   due_date: true,
   start_date: false,
   end_date: false,
-  estimated_duration: false,
+  estimated_duration: true,
   actual_duration: false,
   done: false
 }
@@ -357,7 +358,7 @@ export default function TasksPage() {
   const [visibleColumns, setVisibleColumns] = useState<VisibilityState>(initialVisibleColumns);
 
   // Table Pagination
-  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 15 });
 
   // Row Filter
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -416,6 +417,11 @@ export default function TasksPage() {
     },
     { accessorKey: "lesson", header: "Lesson",
       enableSorting: true,
+      cell: ({ row }) => (
+        <div className="max-w-[300px] truncate">
+          {row.original.lesson.title}
+        </div>
+      )
     },
     { accessorKey: "type", header: "Type",
       enableSorting: true,
@@ -423,14 +429,36 @@ export default function TasksPage() {
         <span>{capitalizeWords(row.original.type)}</span>
       ),
     },
-    { accessorKey: "estimated_duration", header: "Est. Duration",
+    { accessorKey: "level", header: "Level",
       enableSorting: true,
       cell: ({ row }) => (
-        <div className="flex items-center gap-1">
-          <Clock className="h-4 w-4" />
-          <span>{row.original.estimated_duration}h</span>
-        </div>
+        <span>{capitalizeWords(row.original.lesson.level)}</span>
       ),
+    },
+    { accessorKey: "estimated_duration", header: "Est. Duration",
+      enableSorting: true,
+      cell: ({ row }) => {
+        const duration = row.original.estimated_duration; // example: "PT2H30M"
+        if (!duration) return null;
+    
+        const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?/);
+    
+        if (!match) return null;
+    
+        const hours = match[1] ? parseInt(match[1], 10) : 0;
+        const minutes = match[2] ? parseInt(match[2], 10) : 0;
+    
+        let display = "";
+        if (hours > 0) display += `${hours} h `;
+        if (minutes > 0) display += `${minutes} m`;
+    
+        return (
+          <div className="flex items-center gap-1">
+            <Clock className="h-4 w-4" />
+            <span>{display.trim() || "0 m"}</span>
+          </div>
+        );
+      }
     },
     { accessorKey: "actual_duration", header: "Actual Duration",
       enableSorting: true,
@@ -633,7 +661,7 @@ export default function TasksPage() {
   const fetchRows = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/tasks');
+      const response = await fetch('/api/tasks/detailed');
       if (!response.ok) {
         throw new Error('Failed to fetch tasks');
       }
@@ -646,7 +674,7 @@ export default function TasksPage() {
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+        setIsLoading(false);
     }
   };
   

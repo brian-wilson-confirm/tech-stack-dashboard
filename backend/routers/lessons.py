@@ -42,8 +42,8 @@ async def get_lessons(session: Session = Depends(get_session)):
     return [serialize_lesson(lesson, session) for lesson in lessons]
 
 
-@router.get("/enriched", response_model=List[LessonDetailsRead])
-async def get_lessons_enriched(session: Session = Depends(get_session)):
+@router.get("/detailed", response_model=List[LessonDetailsRead])
+async def get_lessons_detailed(session: Session = Depends(get_session)):
     # Step 1: Fetch ALL lessons with their relationships preloaded
     lessons = session.exec(
         select(Lesson).order_by(desc(Lesson.created_at))

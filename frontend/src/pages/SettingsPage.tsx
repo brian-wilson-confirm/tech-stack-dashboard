@@ -1,8 +1,113 @@
-import { Settings, MapPin, Calendar } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { AddTechnologyWidget } from "@/components/widgets/AddTechnologyWidget"
+import { useState } from "react";
+import { Settings, BookOpen } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { CategoryResultsDialog } from "@/components/dialogs/CategoryResultsDialog";
+import { AddTechnologyWidget } from "@/components/widgets/AddTechnologyWidget";
+import { TestingWidget } from "@/components/widgets/TestingWidget";
+
+type CategoryResult = {
+  course: string;
+  category: string;
+  reasoning: string;
+}
 
 export default function SettingsPage() {
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+  const [results, setResults] = useState<CategoryResult[]>([]);
+
+  const analyzeCourseCategories = async () => {
+    setIsAnalyzing(true);
+    const analysisResults: CategoryResult[] = [];
+
+    try {
+      // Fetch all courses
+      const coursesResponse = await fetch('/api/courses');
+      if (!coursesResponse.ok) {
+        throw new Error('Failed to fetch courses');
+      }
+      const courses = await coursesResponse.json();
+
+      // Fetch categories for analysis
+      const categoriesResponse = await fetch('/api/tasks/categories');
+      if (!categoriesResponse.ok) {
+        throw new Error('Failed to fetch categories');
+      }
+      const categoriesData = await categoriesResponse.json();
+      const categories = categoriesData.map((cat: { name: string }) => cat.name);
+
+      // Analyze each course
+      for (const course of courses) {
+        try {
+          // Get detailed course info
+          const detailsResponse = await fetch(`/api/courses/${course.id}/details`);
+          const courseDetails = await detailsResponse.json();
+
+          // Call the analyze-course-category endpoint
+          const analysisResponse = await fetch('/api/analyze-course-category', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              course_data: courseDetails,
+              categories: categories
+            }),
+          });
+
+          if (!analysisResponse.ok) {
+            throw new Error(`Analysis failed with status: ${analysisResponse.status}`);
+          }
+
+          const analysisResult = await analysisResponse.json();
+          const parsedResult = JSON.parse(analysisResult);
+
+          // Handle the new response format
+          if (parsedResult.courses && parsedResult.courses.length > 0) {
+            const courseAnalysis = parsedResult.courses[0];
+            if (courseAnalysis.categories && courseAnalysis.categories.length > 0) {
+              // Add each category analysis as a separate result
+              courseAnalysis.categories.forEach((categoryAnalysis: any) => {
+                analysisResults.push({
+                  course: courseDetails.title,
+                  category: categoryAnalysis.category,
+                  reasoning: categoryAnalysis.reasoning
+                });
+              });
+            }
+          }
+
+          // Update course categories in the database
+          const updateResponse = await fetch('/api/courses/categories', {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ llm_response: analysisResult }) // Wrap the response in the expected format
+          });
+
+          if (!updateResponse.ok) {
+            throw new Error(`Failed to update course categories: ${updateResponse.status}`);
+          }
+
+        } catch (error) {
+          console.error(`Error analyzing course ${course.id}:`, error);
+          toast.error(`Failed to analyze course ${course.title}`);
+        }
+      }
+
+      setResults(analysisResults);
+      setShowResults(true);
+      toast.success('Course categories have been analyzed and updated successfully');
+    } catch (error) {
+      console.error('Error in course analysis:', error);
+      toast.error('Failed to analyze courses');
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
   return (
     <div className="p-8">
       <div className="flex items-center gap-3 mb-8">
@@ -24,65 +129,53 @@ export default function SettingsPage() {
 
         {/* Widget #3 */}
         <div className="border rounded-lg p-6">
-          <h2 className="text-xl font-semibold mb-4">Upcoming Trips</h2>
-          <div className="space-y-4">
-            {[
-              {
-                destination: 'New York',
-                date: 'Mar 15 - Mar 20',
-                status: 'Confirmed'
-              },
-              {
-                destination: 'San Francisco',
-                date: 'Apr 1 - Apr 5',
-                status: 'Pending'
-              },
-              {
-                destination: 'London',
-                date: 'Apr 15 - Apr 22',
-                status: 'Planning'
-              }
-            ].map((trip) => (
-              <div key={trip.destination} className="flex items-center justify-between p-4 bg-secondary/50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <MapPin className="h-5 w-5 text-primary" />
-                  <div>
-                    <p className="font-medium">{trip.destination}</p>
-                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                      <Calendar className="h-4 w-4" />
-                      <span>{trip.date}</span>
-                    </div>
-                  </div>
+        <h2 className="text-xl font-semibold mb-4">Auto-Discover Resource Categorization</h2>
+          {[
+            {
+              destination: 'Course'
+            },
+            {
+              destination: 'Module'
+            },
+            {
+              destination: 'Lesson'
+            },
+            {
+              destination: 'Resource'
+            }
+          ].map((obj) => (
+            <div key={obj.destination} className="flex items-center justify-between p-4 bg-secondary/50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <BookOpen className="h-5 w-5 text-primary" />
+                <div>
+                  <p className="font-medium">{obj.destination}</p>
                 </div>
-                <Button variant="outline" size="sm">{trip.status}</Button>
               </div>
-            ))}
-          </div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={obj.destination === 'Course' ? analyzeCourseCategories : undefined}
+                disabled={obj.destination === 'Course' && isAnalyzing}
+              >
+                {obj.destination === 'Course' && isAnalyzing ? 'Analyzing...' : 'Category'}
+              </Button>
+              <Button variant="outline" size="sm">Subcategory</Button>
+              <Button variant="outline" size="sm">Lesson</Button>
+            </div>
+          ))}
         </div>
+
 
         {/* Widget #4 */} 
         <div className="border rounded-lg p-6">
-          <h2 className="text-xl font-semibold mb-4">Settings Stats</h2>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="p-4 bg-secondary/50 rounded-lg">
-              <p className="text-2xl font-bold">12</p>
-              <p className="text-sm text-muted-foreground">Total Trips</p>
-            </div>
-            <div className="p-4 bg-secondary/50 rounded-lg">
-              <p className="text-2xl font-bold">5</p>
-              <p className="text-sm text-muted-foreground">Countries</p>
-            </div>
-            <div className="p-4 bg-secondary/50 rounded-lg">
-              <p className="text-2xl font-bold">45</p>
-              <p className="text-sm text-muted-foreground">Flight Hours</p>
-            </div>
-            <div className="p-4 bg-secondary/50 rounded-lg">
-              <p className="text-2xl font-bold">$12.5k</p>
-              <p className="text-sm text-muted-foreground">Budget Used</p>
-            </div>
-          </div>
+          <TestingWidget />
         </div>
       </div>
+      <CategoryResultsDialog
+        open={showResults}
+        onOpenChange={setShowResults}
+        results={results}
+      />
     </div>
-  )
+  );
 } 

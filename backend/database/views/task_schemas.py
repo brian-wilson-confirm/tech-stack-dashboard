@@ -1,44 +1,40 @@
 from typing import List, Optional
 from datetime import date
-from sqlmodel import SQLModel
+from pydantic import BaseModel
+from datetime import timedelta
 
+from backend.database.views.lesson_schemas import LessonDetailsRead
+from backend.database.views.taskstatus_schemas import TaskStatusRead
+from backend.database.views.tasktype_schemas import TaskTypeRead
+from backend.database.views.taskpriority_schemas import TaskPriorityRead
 
-class TaskBase(SQLModel):
+"""
+    TASK
+"""
+class TaskBase(BaseModel):
     task: str
     description: Optional[str] = None
-    topics: List[str]
-    section: Optional[str] = None
     progress: int
     order: Optional[int]
     due_date: Optional[date]
     start_date: Optional[date]
     end_date: Optional[date]
-    estimated_duration: Optional[int]
+    estimated_duration: Optional[timedelta]
     actual_duration: Optional[int]
     done: bool = False
 
 
-# Actively using 4/18
 class TaskCreate(TaskBase):
-    technology_id: int
-    subcategory_id: int
-    category_id: int
-    source_id: int
-    level_id: int
+    lesson_id: int
     type_id: int
     status_id: int
     priority_id: int
 
 
-# Actively using 4/21
 class TaskRead(TaskBase):
     id: int
     task_id: str
-    technology: str
-    subcategory: str
-    category: str
-    source: str
-    level: Optional[str] = None
+    lesson: str
     type: Optional[str] = None
     status: Optional[str] = None
     priority: Optional[str] = None
@@ -47,3 +43,39 @@ class TaskRead(TaskBase):
 class TaskUpdate(TaskCreate):
     id: int
     task_id: str
+
+
+"""
+    QUICK ADD TASK
+"""
+class QuickAddTaskRequest(BaseModel):
+    url: str
+    notes: str
+
+
+class TaskResponse(BaseModel):
+    title: str
+    notes: Optional[str] = None
+    url: str
+
+
+"""
+    TASK DETAILS
+"""
+class TaskDetailsRead(BaseModel):
+    id: int
+    task_id: str
+    task: str
+    description: Optional[str]
+    lesson: LessonDetailsRead
+    type: TaskTypeRead
+    status: TaskStatusRead
+    priority: TaskPriorityRead
+    progress: int
+    order: Optional[int]
+    due_date: Optional[date]
+    start_date: Optional[date]
+    end_date: Optional[date]
+    estimated_duration: Optional[timedelta]
+    actual_duration: Optional[int]
+    done: bool = False

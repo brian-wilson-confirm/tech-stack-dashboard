@@ -24,6 +24,7 @@ import { SelectTrigger } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
 import { TaskSheet } from '@/components/ui/task-sheet'
 import { usePageTitle } from '@/hooks/usePageTitle'
+import { QuickAddTaskWidget } from '@/components/widgets/QuickAddTaskWidget'
 
 
 
@@ -843,7 +844,7 @@ export default function Dashboard() {
 
 
   return (
-    <div className="p-8">
+    <div className="p-8">   
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold">Tech Stack Dashboard</h1>
         <Button 
@@ -855,6 +856,7 @@ export default function Dashboard() {
         </Button>
       </div>
 
+      {/* Category Widgets: Language, Backend, Data Storage, and DevOps */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {categories.map((category) => (
           <CategoryWidget
@@ -867,49 +869,54 @@ export default function Dashboard() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 gap-6 mb-8">
-        <DataTableWidget
-          title="Today's Tasks"
-          data={tasks}
-          isLoading={isLoading}
-          columns={columns}
-          columnOptions={columnOptions}
-          visibleColumns={visibleColumns}
-          columnFilters={undefined}
-          onColumnVisibilityChange={setVisibleColumns}
-          onColumnFiltersChange={undefined}
-          pagination={undefined}
-          onPaginationChange={undefined}
-          filterConfigs={undefined}
-          searchQuery={undefined}
-          setSearchQuery={undefined}
-          sortConfigs={undefined}
-          onSortChange={undefined}
-          rowSelection={rowSelection}
-          onRowSelectionChange={setRowSelection}
-          editForm={editForm}
-          editModeRenderers={editModeRenderers}
-          nonEditableColumns={['task_id']}
-          onStartEdit={startEditing}
-          onEditChange={onEditChange}
-          editingRow={editingRow}
-          onSaveEdit={onSaveEdit}
-          onCancelEdit={onCancelEdit}
-          onDeleteRow={handleRowDelete}
-          showCheckboxes={false}
-          showActions={true}
-          showPagination={false}
-          AddItemDialog={undefined}
-          onAddItem={undefined}
-        />
+      {/* Today's Tasks and Quick Add Task side by side */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr,400px] gap-6 mb-8">
+        <div>
+          <DataTableWidget
+            title="Today's Tasks"
+            data={tasks}
+            isLoading={isLoading}
+            columns={columns}
+            columnOptions={columnOptions}
+            visibleColumns={visibleColumns}
+            columnFilters={undefined}
+            onColumnVisibilityChange={setVisibleColumns}
+            onColumnFiltersChange={undefined}
+            pagination={undefined}
+            onPaginationChange={undefined}
+            filterConfigs={undefined}
+            searchQuery={undefined}
+            setSearchQuery={undefined}
+            sortConfigs={undefined}
+            onSortChange={undefined}
+            rowSelection={rowSelection}
+            onRowSelectionChange={setRowSelection}
+            editForm={editForm}
+            editModeRenderers={editModeRenderers}
+            nonEditableColumns={['task_id']}
+            onStartEdit={startEditing}
+            onEditChange={onEditChange}
+            editingRow={editingRow}
+            onSaveEdit={onSaveEdit}
+            onCancelEdit={onCancelEdit}
+            onDeleteRow={handleRowDelete}
+            showCheckboxes={false}
+            showActions={true}
+            showPagination={false}
+            AddItemDialog={undefined}
+            onAddItem={undefined}
+          />
 
-      <TaskSheet
-        task={selectedRow}
-        open={sheetOpen}
-        onOpenChange={setSheetOpen}
-      />
+          <TaskSheet
+            task={selectedRow}
+            open={sheetOpen}
+            onOpenChange={setSheetOpen}
+          />
+        </div>
+        <QuickAddTaskWidget />
       </div>
 
+      {/* Coverage Widget */}
       <div className="grid grid-cols-1 gap-6 mb-8">
         <CoverageWidget 
           items={coverage.items}
@@ -917,6 +924,7 @@ export default function Dashboard() {
         />
       </div>
 
+      {/* Security and System Widget */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <SecurityWidget 
           alerts={securityAlerts} 
@@ -926,6 +934,7 @@ export default function Dashboard() {
         />
       </div>
 
+      {/* Task Distribution Bar Chart (by category) */}
       <div className="grid grid-cols-1 gap-6 mb-8">
         Task Distribution Bar Chart (by category)
         Task Distribution Bar/Pie Chart (by priority)

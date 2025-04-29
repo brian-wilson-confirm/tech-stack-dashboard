@@ -193,20 +193,15 @@ def enrich_lesson(lesson_id: int, session: Session):
     response = submit_prompt(prompt)
 
     if not response:
-        raise HTTPException(
-            status_code=400,
-            detail="No response returned from ChatGPT"
-        )
+        raise ValueError("No response returned from ChatGPT")
 
     # Parse the response
     print(f"\n\nresponse: {response}\n\n")
     response_json = safe_json_loads(response)
 
     if not isValidResponse(response_json, category_subcategory_map):
-        raise HTTPException(
-            status_code=400,  # or 422, depending on your use case
-            detail="Invalid classification returned from ChatGPT"
-        )
+        raise ValueError("Invalid classification returned from ChatGPT")
+
 
     # Extract the category, subcategory, and technology
     level = response_json["level"]

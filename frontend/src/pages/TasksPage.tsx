@@ -475,8 +475,8 @@ export default function TasksPage() {
         return filterValue.includes(row.getValue(columnId));
       }) as FilterFn<Task>,
       cell: ({ row }) => (
-        <Badge variant="secondary" className={`${getStatusColor(row.original.status as StatusEnum)} text-white`}>
-          {capitalizeWords((row.original.status ?? '').replace('_', ' '))}
+        <Badge variant="secondary" className={`${getStatusColor(row.original.status.name as StatusEnum)} text-white`}>
+          {capitalizeWords((row.original.status.name ?? '').replace('_', ' '))}
         </Badge>
       ),
     },
@@ -486,8 +486,8 @@ export default function TasksPage() {
         return filterValue.includes(row.getValue(columnId));
       }) as FilterFn<Task>,
       cell: ({ row }) => (
-        <Badge variant="secondary" className={`${getPriorityColor(row.original.priority as PriorityEnum)} text-white`}>
-          {capitalizeWords(row.original.priority)}
+        <Badge variant="secondary" className={`${getPriorityColor(row.original.priority.name as PriorityEnum)} text-white`}>
+          {capitalizeWords(row.original.priority.name)}
         </Badge>
       ),
     },

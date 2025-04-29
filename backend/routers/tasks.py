@@ -1,6 +1,6 @@
 import random
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, WebSocket
 
 from sqlmodel import Session, select
 from sqlalchemy import desc,func
@@ -33,7 +33,7 @@ from backend.routers.resources import get_resource_id, get_resourcetype_id
 from backend.routers.topics import get_topic_ids
 from backend.routers.sources import create_source_authors, get_source_id, get_sourcetype_id
 from backend.utils.web_scraper_util import extract_article_metadata
-
+import asyncio
 router = APIRouter(prefix="/tasks")
 
 """
@@ -144,6 +144,79 @@ async def create_task_from_url(request: QuickAddTaskRequest, session: Session = 
     task = create_task(lesson_id, metadata.lesson.title, metadata.resource.resourcetype, estimated_duration, session)
 
     return task
+
+
+@router.websocket("/ws/quick-add")
+async def websocket_endpoint(websocket: WebSocket, session: Session = Depends(get_session)):
+    await websocket.accept()
+
+    # 1. Receive initial message with URL
+    data = await websocket.receive_json()
+    await websocket.send_json({"progress": 12, "stage": "Starting..."})
+    await asyncio.sleep(0)
+    url = data.get("resourceUrl")
+
+    # 2. Scrape the HTML at the URL
+    await websocket.send_json({"progress": 18, "stage": "Scraping URL..."})
+    await asyncio.sleep(0)
+    metadata = extract_article_metadata(url)
+
+    # 3. Get/Create the Person id(s)
+    await websocket.send_json({"progress": 24, "stage": "Fetching IDs..."})
+    await asyncio.sleep(0)
+    person_ids = get_person_ids(metadata.resource.source.authors, session)
+    sourcetype_id = get_sourcetype_id(metadata.resource.source.sourcetype, session)
+
+    # 4. Get/Create the Source
+    await websocket.send_json({"progress": 30, "stage": "Creating Source..."})
+    await asyncio.sleep(0)
+    source_id = get_source_id(metadata.resource.source.name, session)
+
+    # 5. Create the source_author relationship(s) if it doesn't already exist
+    await websocket.send_json({"progress": 36, "stage": "Creating Source Authors..."})
+    await asyncio.sleep(0)
+    create_source_authors(source_id, person_ids, session)
+
+    # 6. Get/Create the ResourceType
+    await websocket.send_json({"progress": 42, "stage": "Creating Resource Type..."})
+    await asyncio.sleep(0)
+    resourcetype_id = get_resourcetype_id(metadata.resource.resourcetype, session)
+
+    # 7. Get/Create the Resource
+    await websocket.send_json({"progress": 48, "stage": "Creating Resource..."})
+    await asyncio.sleep(0)
+    resource_id = get_resource_id(resourcetype_id, source_id, metadata.resource.title, metadata.resource.description, metadata.resource.url, session)
+
+    # 8. Get the Level
+    await websocket.send_json({"progress": 54, "stage": "Creating Level..."})
+    await asyncio.sleep(0)
+    level_id = get_level_id(metadata.lesson.level, session)
+
+    # 9. Get/Create the Lesson
+    await websocket.send_json({"progress": 60, "stage": "Creating Lesson..."})
+    await asyncio.sleep(0)
+    lesson_id = get_lesson_id(metadata.lesson.title, metadata.lesson.description, metadata.lesson.content, level_id, resource_id, session)
+
+    # 10. Enrich the Lesson: Categorize (Technology, Subcategory, Category), Level, Duration
+    await websocket.send_json({"progress": 70, "stage": "Enriching Lesson..."})
+    await asyncio.sleep(0)
+    try:
+        response = enrich_lesson(lesson_id, session)
+        print(f"\n\nresponse: {response}\n\n")
+    except ValueError as e:
+        await websocket.send_json({"progress": 70, "stage": "Error Enriching Lesson", "error": str(e)})
+        await websocket.close()
+        return
+
+    # 11. Create the Task
+    await websocket.send_json({"progress": 90, "stage": "Creating Task..."})
+    await asyncio.sleep(0)
+    estimated_duration = response["estimated_duration"]
+    task = create_task(lesson_id, metadata.lesson.title, metadata.resource.resourcetype, estimated_duration, session)
+
+    await websocket.send_json({"progress": 100, "stage": "Task Created"})
+    await asyncio.sleep(0)
+    await websocket.close()
 
 
 """

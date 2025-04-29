@@ -1,6 +1,39 @@
 import { z } from "zod"
 
 
+
+/*******************
+  TASK TYPE SCHEMA
+*******************/
+export const taskTypeSchema = z.object({
+  id: z.string(),
+  name: z.string()
+})
+export type TaskType = z.infer<typeof taskTypeSchema>
+
+
+
+/*******************
+  TASK STATUS SCHEMA
+*******************/
+export const taskStatusSchema = z.object({
+  id: z.string(),
+  name: z.string()
+})
+export type TaskStatus = z.infer<typeof taskStatusSchema>
+
+
+/*******************
+  TASK PRIORITY SCHEMA
+*******************/
+export const taskPrioritySchema = z.object({
+  id: z.string(),
+  name: z.string()
+})
+export type TaskPriority = z.infer<typeof taskPrioritySchema>
+
+
+
 /*******************
   LESSON SCHEMA
 *******************/
@@ -162,9 +195,9 @@ export const taskSchema = taskBaseSchema.extend({
   id: z.string(),
   task_id: z.string(),
   lesson: lessonTableSchema,
-  type: z.string(),
-  status: z.string(),
-  priority: z.string(),
+  type: taskTypeSchema,
+  status: taskStatusSchema,
+  priority: taskPrioritySchema,
   done: z.boolean(),
 })
 export type Task = z.infer<typeof taskSchema> 

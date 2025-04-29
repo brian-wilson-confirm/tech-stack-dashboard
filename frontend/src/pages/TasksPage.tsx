@@ -50,33 +50,23 @@ function ShowAddTaskDialog({ onAddItem, disabled }: { onAddItem: (item: TaskForm
   const [levelOptions, setLevelOptions] = useState<{ name: string; id: number }[]>([])
   const [statusOptions, setStatusOptions] = useState<{ name: string; id: number }[]>([])
   const [priorityOptions, setPriorityOptions] = useState<{ name: string; id: number }[]>([])
-  const [categoryOptions, setCategoryOptions] = useState<{ name: string; id: number }[]>([])
-  const [subcategoryOptions, setSubcategoryOptions] = useState<{ name: string; id: number }[]>([])
-  const [technologyOptions, setTechnologyOptions] = useState<{ name: string; id: number }[]>([])
-  const [sourceOptions, setSourceOptions] = useState<{ name: string; id: number }[]>([])
   
   const form = useForm<TaskForm>({
     resolver: zodResolver(taskFormSchema),
     defaultValues: {
       task: "",
       description: "",
-      technology_id: "",
-      subcategory_id: "",
-      category_id: "",
-      order: 0,
-      status_id: "1",
-      progress: 0,
-      priority_id: "1",
+      lesson_id: "1",
       type_id: "1",
-      level_id: "1",
-      section: "",
-      topics: [],
-      source_id: "",
-      estimated_duration: 8,
-      actual_duration: null,
+      status_id: "1",
+      priority_id: "1",
+      progress: 0,
+      order: 0,
       due_date: null,
       start_date: null,
       end_date: null,
+      estimated_duration: 8,
+      actual_duration: null
     },
   })
 
@@ -87,39 +77,33 @@ function ShowAddTaskDialog({ onAddItem, disabled }: { onAddItem: (item: TaskForm
     }
   }, [open, form])
 
-  // Fetch types, levels, statuses, priorities, categories, and sources when dialog opens
+  // Fetch types, levels, statuses, and priorities when dialog opens
   useEffect(() => {
     if (open) {
       const fetchOptions = async () => {
         try {
-          const [typesRes, levelsRes, statusesRes, prioritiesRes, categoriesRes, sourcesRes] = await Promise.all([
-            fetch('/api/tasks/types'),
-            fetch('/api/tasks/levels'),
-            fetch('/api/tasks/statuses'),
-            fetch('/api/tasks/priorities'),
-            fetch('/api/tasks/categories'),
-            fetch('/api/tasks/sources')
+          const [typesRes, levelsRes, statusesRes, prioritiesRes] = await Promise.all([
+            fetch('/api/tasksold/types'),
+            fetch('/api/tasksold/levels'),
+            fetch('/api/tasksold/statuses'),
+            fetch('/api/tasksold/priorities')
           ])
           
-          if (!typesRes.ok || !levelsRes.ok || !statusesRes.ok || !prioritiesRes.ok || !categoriesRes.ok || !sourcesRes.ok) {
+          if (!typesRes.ok || !levelsRes.ok || !statusesRes.ok || !prioritiesRes.ok) {
             throw new Error('Failed to fetch options')
           }
           
-          const [types, levels, statuses, priorities, categories, sources] = await Promise.all([
+          const [types, levels, statuses, priorities] = await Promise.all([
             typesRes.json(),
             levelsRes.json(),
             statusesRes.json(),
-            prioritiesRes.json(),
-            categoriesRes.json(),
-            sourcesRes.json()
+            prioritiesRes.json()
           ])
           
           setTypeOptions(types)
           setLevelOptions(levels)
           setStatusOptions(statuses)
           setPriorityOptions(priorities)
-          setCategoryOptions(categories)
-          setSourceOptions(sources)
         } catch (error) {
           console.error('Error fetching options:', error)
           toast({
@@ -133,64 +117,6 @@ function ShowAddTaskDialog({ onAddItem, disabled }: { onAddItem: (item: TaskForm
     }
   }, [open])
 
-  // Fetch subcategories when category changes
-  useEffect(() => {
-    const categoryId = form.watch('category_id')
-    if (categoryId) {
-      const fetchSubcategories = async () => {
-        try {
-          const response = await fetch(`/api/tasks/subcategories/${categoryId}`)
-          if (!response.ok) {
-            throw new Error('Failed to fetch subcategories')
-          }
-          const data = await response.json()
-          setSubcategoryOptions(data)
-          // Reset subcategory and technology when category changes
-          form.setValue('subcategory_id', '')
-          form.setValue('technology_id', '')
-        } catch (error) {
-          console.error('Error fetching subcategories:', error)
-          toast({
-            title: "Error",
-            description: "Failed to load subcategories.",
-            variant: "destructive",
-          })
-        }
-      }
-      fetchSubcategories()
-    } else {
-      setSubcategoryOptions([])
-    }
-  }, [form.watch('category_id')])
-
-  // Fetch technologies when subcategory changes
-  useEffect(() => {
-    const subcategoryId = form.watch('subcategory_id')
-    if (subcategoryId) {
-      const fetchTechnologies = async () => {
-        try {
-          const response = await fetch(`/api/tasks/technologies/${subcategoryId}`)
-          if (!response.ok) {
-            throw new Error('Failed to fetch technologies')
-          }
-          const data = await response.json()
-          setTechnologyOptions(data)
-          // Reset technology when subcategory changes
-          form.setValue('technology_id', '')
-        } catch (error) {
-          console.error('Error fetching technologies:', error)
-          toast({
-            title: "Error",
-            description: "Failed to load technologies.",
-            variant: "destructive",
-          })
-        }
-      }
-      fetchTechnologies()
-    } else {
-      setTechnologyOptions([])
-    }
-  }, [form.watch('subcategory_id')])
 
   const onSubmit = async (data: TaskForm) => {
     setIsSubmitting(true)
@@ -251,14 +177,6 @@ function ShowAddTaskDialog({ onAddItem, disabled }: { onAddItem: (item: TaskForm
                   </FormItem>
                 )} />
 
-                {/*
-                <FormField control={form.control} name="order" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Order</FormLabel>
-                    <FormControl><Input type="number" {...field} onChange={e => field.onChange(Number(e.target.value))} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />*/}
               </div>
             </div>
 
@@ -286,9 +204,9 @@ function ShowAddTaskDialog({ onAddItem, disabled }: { onAddItem: (item: TaskForm
                   </FormItem>
                 )} />
 
-                <FormField control={form.control} name="level_id" render={({ field }) => (
+                <FormField control={form.control} name="lesson_id" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="capitalize">Level *</FormLabel>
+                    <FormLabel className="capitalize">Lesson *</FormLabel>
                     <Select
                       value={levelOptions.find((l: { name: string; id: number }) => l.name === field.value || l.id.toString() === field.value?.toString())?.id.toString() ?? "1"}
                       onValueChange={(value) => field.onChange(value)}
@@ -348,126 +266,6 @@ function ShowAddTaskDialog({ onAddItem, disabled }: { onAddItem: (item: TaskForm
               </div>
             </div>
 
-            {/* 3. Categorization */}
-            <div className="space-y-2">
-              <h3 className="text-lg font-semibold">Categorization</h3>
-              <div className="grid grid-cols-3 gap-4">
-                <FormField control={form.control} name="category_id" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="capitalize">Category *</FormLabel>
-                    <Select
-                      value={categoryOptions.find((c: { name: string; id: number }) => c.name === field.value || c.id.toString() === field.value?.toString())?.id.toString() ?? ""}
-                      onValueChange={(value) => field.onChange(value)}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categoryOptions.map((category: { name: string; id: number }) => (
-                          <SelectItem key={category.id} value={category.id.toString()}>{capitalizeWords(category.name)}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-
-                <FormField control={form.control} name="subcategory_id" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="capitalize">Subcategory *</FormLabel>
-                    <Select
-                      value={subcategoryOptions.find((s: { name: string; id: number }) => s.name === field.value || s.id.toString() === field.value?.toString())?.id.toString() ?? ""}
-                      onValueChange={(value) => {
-                        field.onChange(value)
-                        // Reset technology when subcategory changes
-                        form.setValue('technology_id', '')
-                      }}
-                      disabled={!form.watch('category_id')}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {subcategoryOptions.map((subcategory: { name: string; id: number }) => (
-                          <SelectItem key={subcategory.id} value={subcategory.id.toString()}>{capitalizeWords(subcategory.name)}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-
-                <FormField control={form.control} name="technology_id" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="capitalize">Technology *</FormLabel>
-                    <Select
-                      value={technologyOptions.find((t: { name: string; id: number }) => t.name === field.value || t.id.toString() === field.value?.toString())?.id.toString() ?? ""}
-                      onValueChange={(value) => field.onChange(value)}
-                      disabled={!form.watch('subcategory_id')}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {technologyOptions.map((technology: { name: string; id: number }) => (
-                          <SelectItem key={technology.id} value={technology.id.toString()}>{capitalizeWords(technology.name)}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-              </div>
-            </div>
-
-            {/* 4. Sources, Section, & Topics */}
-            <div className="space-y-2">
-              <h3 className="text-lg font-semibold">Sources & Topics</h3>
-              <div className="grid grid-cols-3 gap-4">
-                <FormField control={form.control} name="source_id" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Source *</FormLabel>
-                    <Select
-                      value={sourceOptions.find((s: { name: string; id: number }) => s.name === field.value || s.id.toString() === field.value?.toString())?.id.toString() ?? ""}
-                      onValueChange={(value) => field.onChange(value)}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {sourceOptions.map((source: { name: string; id: number }) => (
-                          <SelectItem key={source.id} value={source.id.toString()}>{capitalizeWords(source.name)}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-
-                <FormField control={form.control} name="section" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Section</FormLabel>
-                    <FormControl><Input {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-
-                <FormField control={form.control} name="topics" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Topics</FormLabel>
-                    <FormControl>
-                      <Input 
-                        {...field}
-                        value={field.value.join(', ')}
-                        onChange={(e) => field.onChange(e.target.value.split(',').map(t => t.trim()))}
-                        placeholder="Comma-separated topics"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-        </div>
-        </div>
 
             {/* 5. Time & Progress */}
             <div className="space-y-2">
@@ -498,31 +296,6 @@ function ShowAddTaskDialog({ onAddItem, disabled }: { onAddItem: (item: TaskForm
                   </FormItem>
                 )} />
 
-                {/*
-                <FormField control={form.control} name="start_date" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Start Date</FormLabel>
-                    <FormControl><Input type="date" {...field} value={field.value || ''} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-
-                <FormField control={form.control} name="end_date" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>End Date</FormLabel>
-                    <FormControl><Input type="date" {...field} value={field.value || ''} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-
-                
-                <FormField control={form.control} name="progress" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Progress (%)</FormLabel>
-                    <FormControl><Input type="number" min="0" max="100" {...field} onChange={e => field.onChange(Number(e.target.value))} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />*/}
               </div>
             </div>
 
@@ -551,14 +324,10 @@ const initialVisibleColumns = {
   id: false,   
   task_id: true,
   task: true,
-  technology: true,
-  subcategory: true,
-  category: true,
-  topics: false,
-  section: false,
-  source: false,
-  level: false,
+  description: false,
+  lesson: true,
   type: false,
+  level: true,
   status: true,
   priority: true,
   progress: false,
@@ -566,7 +335,7 @@ const initialVisibleColumns = {
   due_date: true,
   start_date: false,
   end_date: false,
-  estimated_duration: false,
+  estimated_duration: true,
   actual_duration: false,
   done: false
 }
@@ -589,7 +358,7 @@ export default function TasksPage() {
   const [visibleColumns, setVisibleColumns] = useState<VisibilityState>(initialVisibleColumns);
 
   // Table Pagination
-  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 15 });
 
   // Row Filter
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -616,11 +385,6 @@ export default function TasksPage() {
   const [priorityOptions, setPriorityOptions] = useState<{ name: string; id: number }[]>([]);
   const [typeOptions, setTypeOptions] = useState<{ name: string; id: number }[]>([]);
   const [statusOptions, setStatusOptions] = useState<{ name: string; id: number }[]>([]);
-  const [sourceOptions, setSourceOptions] = useState<{ name: string; id: number }[]>([]);
-  const [levelOptions, setLevelOptions] = useState<{ name: string; id: number }[]>([]);
-  const [categoryOptions, setCategoryOptions] = useState<{ name: string; id: number }[]>([]);
-  const [subcategoryOptions, setSubcategoryOptions] = useState<{ name: string; id: number }[]>([]);
-  const [technologyOptions, setTechnologyOptions] = useState<{ name: string; id: number }[]>([]);
 
 
 
@@ -628,9 +392,7 @@ export default function TasksPage() {
     COLUMN DEFINITIONS
   ********************/
   const columns: ColumnDef<Task>[] = [
-    {
-      accessorKey: "task_id",
-      header: "Task ID",
+    { accessorKey: "task_id", header: "Task ID",
       enableSorting: true,
       cell: ({ row }) => (
         <Button
@@ -642,83 +404,63 @@ export default function TasksPage() {
         </Button>
       ),
     },
-    {
-      accessorKey: "task",
-      header: "Task",
-      enableSorting: true,
-    },
-    {
-      accessorKey: "technology",
-      header: "Technology",
-      enableSorting: true,
-    },
-    {
-      accessorKey: "subcategory",
-      header: "Subcategory",
-      enableSorting: true,
-    },
-    {
-      accessorKey: "category",
-      header: "Category",
-      enableSorting: true,
-    },
-    {
-      accessorKey: "topics",
-      header: "Topics",
+    { accessorKey: "task", header: "Task",
       enableSorting: true,
       cell: ({ row }) => (
-        <div className="flex flex-wrap gap-2">
-          {row.original.topics.map((topic, index) => (
-            <Badge key={index} variant="secondary" className="bg-gray-200 text-gray-800">
-              {topic}
-            </Badge>
-          ))}
+        <div className="max-w-[300px] truncate">
+          {row.original.task}
         </div>
-      ),
+      )
     },
-    {
-      accessorKey: "section",
-      header: "Section",
+    { accessorKey: "description", header: "Description",
       enableSorting: true,
     },
-    {
-      accessorKey: "source",
-      header: "Source",
+    { accessorKey: "lesson", header: "Lesson",
       enableSorting: true,
       cell: ({ row }) => (
-        <span>{capitalizeWords(row.original.source)}</span>
-      ),
+        <div className="max-w-[300px] truncate">
+          {row.original.lesson.title}
+        </div>
+      )
     },
-    {
-      accessorKey: "level",
-      header: "Level",
-      enableSorting: true,
-      cell: ({ row }) => (
-        <span>{capitalizeWords(row.original.level)}</span>
-      ),
-    },
-    {
-      accessorKey: "type",
-      header: "Type",
+    { accessorKey: "type", header: "Type",
       enableSorting: true,
       cell: ({ row }) => (
         <span>{capitalizeWords(row.original.type)}</span>
       ),
     },
-    {
-      accessorKey: "estimated_duration",
-      header: "Est. Duration",
+    { accessorKey: "level", header: "Level",
       enableSorting: true,
       cell: ({ row }) => (
-        <div className="flex items-center gap-1">
-          <Clock className="h-4 w-4" />
-          <span>{row.original.estimated_duration}h</span>
-        </div>
+        <span>{capitalizeWords(row.original.lesson.level)}</span>
       ),
     },
-    {
-      accessorKey: "actual_duration",
-      header: "Actual Duration",
+    { accessorKey: "estimated_duration", header: "Est. Duration",
+      enableSorting: true,
+      cell: ({ row }) => {
+        const duration = row.original.estimated_duration; // example: "PT2H30M"
+        if (!duration) return null;
+    
+        const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?/);
+    
+        if (!match) return null;
+    
+        const hours = match[1] ? parseInt(match[1], 10) : 0;
+        const minutes = match[2] ? parseInt(match[2], 10) : 0;
+    
+        let display = "";
+        if (hours > 0) display += `${hours} h `;
+        if (minutes > 0) display += `${minutes} m`;
+    
+        return (
+          <div className="flex items-center gap-1">
+            <Clock className="h-4 w-4" />
+            <span>{display.trim() || "0 m"}</span>
+          </div>
+        );
+      }
+    },
+    { accessorKey: "actual_duration", header: "Actual Duration",
       enableSorting: true,
       cell: ({ row }) => (
         <div className="flex items-center gap-1">
@@ -727,35 +469,29 @@ export default function TasksPage() {
         </div>
       ),
     },
-    {
-      accessorKey: "status",
-      header: "Status",
+    { accessorKey: "status", header: "Status",
       enableSorting: true,
       filterFn: ((row, columnId, filterValue) => {
         return filterValue.includes(row.getValue(columnId));
       }) as FilterFn<Task>,
       cell: ({ row }) => (
-        <Badge variant="secondary" className={`${getStatusColor(row.original.status as StatusEnum)} text-white`}>
-          {capitalizeWords((row.original.status ?? '').replace('_', ' '))}
+        <Badge variant="secondary" className={`${getStatusColor(row.original.status.name as StatusEnum)} text-white`}>
+          {capitalizeWords((row.original.status.name ?? '').replace('_', ' '))}
         </Badge>
       ),
     },
-    {
-      accessorKey: "priority",
-      header: "Priority",
+    { accessorKey: "priority", header: "Priority",
       enableSorting: true,
       filterFn: ((row, columnId, filterValue) => {
         return filterValue.includes(row.getValue(columnId));
       }) as FilterFn<Task>,
       cell: ({ row }) => (
-        <Badge variant="secondary" className={`${getPriorityColor(row.original.priority as PriorityEnum)} text-white`}>
-          {capitalizeWords(row.original.priority)}
+        <Badge variant="secondary" className={`${getPriorityColor(row.original.priority.name as PriorityEnum)} text-white`}>
+          {capitalizeWords(row.original.priority.name)}
         </Badge>
       ),
     },
-    {
-      accessorKey: "progress",
-      header: "Progress",
+    { accessorKey: "progress", header: "Progress",
       enableSorting: true,
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
@@ -764,14 +500,10 @@ export default function TasksPage() {
         </div>
       ),
     },
-    {
-      accessorKey: "order",
-      header: "Order",
+    { accessorKey: "order", header: "Order",
       enableSorting: true,
     },
-    {
-      accessorKey: "due_date",
-      header: "Due Date",
+    { accessorKey: "due_date", header: "Due Date",
       enableSorting: true,
       cell: ({ row }) => {
         const toLocalInputDate = (date: Date | string | null) => {
@@ -783,9 +515,7 @@ export default function TasksPage() {
         return <span>{toLocalInputDate(row.original.due_date)}</span>;
       },
     },
-    {
-      accessorKey: "start_date",
-      header: "Start Date",
+    { accessorKey: "start_date", header: "Start Date",
       enableSorting: true,
       cell: ({ row }) => {
         const toLocalInputDate = (date: Date | string | null) => {
@@ -797,9 +527,7 @@ export default function TasksPage() {
         return <span>{toLocalInputDate(row.original.start_date)}</span>;
       },
     },
-    {
-      accessorKey: "end_date",
-      header: "End Date",
+    { accessorKey: "end_date", header: "End Date",
       enableSorting: true,
       cell: ({ row }) => {
         const toLocalInputDate = (date: Date | string | null) => {
@@ -903,25 +631,22 @@ export default function TasksPage() {
   // Fetch Options
   const fetchOptions = async () => {
     try {
-      const [statusesRes, prioritiesRes, categoriesRes] = await Promise.all([
-        fetch('/api/tasks/statuses'),
-        fetch('/api/tasks/priorities'),
-        fetch('/api/tasks/categories')
+      const [statusesRes, prioritiesRes] = await Promise.all([
+        fetch('/api/tasksold/statuses'),
+        fetch('/api/tasksold/priorities')
       ]);
 
-      if (!statusesRes.ok || !prioritiesRes.ok || !categoriesRes.ok) {
+      if (!statusesRes.ok || !prioritiesRes.ok) {
         throw new Error('Failed to fetch options');
       }
 
-      const [statuses, priorities, categories] = await Promise.all([
+      const [statuses, priorities] = await Promise.all([
         statusesRes.json(),
-        prioritiesRes.json(),
-        categoriesRes.json()
+        prioritiesRes.json()
       ]);
 
       setStatusOptions(statuses);
       setPriorityOptions(priorities);
-      setCategoryOptions(categories);
     } catch (error) {
       console.error('Error fetching options:', error);
       toast({
@@ -936,7 +661,7 @@ export default function TasksPage() {
   const fetchRows = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/tasks');
+      const response = await fetch('/api/tasks/detailed');
       if (!response.ok) {
         throw new Error('Failed to fetch tasks');
       }
@@ -949,7 +674,7 @@ export default function TasksPage() {
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+        setIsLoading(false);
     }
   };
   
@@ -970,46 +695,6 @@ export default function TasksPage() {
   /*******************
     ADDITIONAL FUNCTIONS
   ********************/
-  // Add a function to fetch subcategories for a specific category
-  const fetchSubcategoryOptionsForCategory = async (categoryId: string) => {
-    try {
-      const response = await fetch(`/api/tasks/subcategories/${categoryId}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch subcategory options');
-      }
-      const data = await response.json();
-      setSubcategoryOptions(data);
-      return data;
-    } catch (error) {
-      console.error('Error fetching subcategories:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load subcategories for the selected category.",
-        variant: "destructive",
-      });
-    }
-  };
-
-
-  // Add a function to fetch technologies for a specific subcategory
-  const fetchTechnologyOptionsForSubcategory = async (subcategoryId: string) => {
-    try {
-      const response = await fetch(`/api/tasks/technologies/${subcategoryId}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch technologies');
-      }
-      const data = await response.json();
-      setTechnologyOptions(data);
-      return data;
-    } catch (error) {
-      console.error('Error fetching technologies:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load technologies for the selected subcategory.",
-        variant: "destructive",
-      });
-    }
-  };
 
 
 
@@ -1023,20 +708,14 @@ export default function TasksPage() {
       const [
         prioritiesRes,
         statusesRes,
-        typesRes,
-        levelsRes,
-        sourcesRes,
-        categoriesRes
+        typesRes
       ] = await Promise.all([
-        fetch('/api/tasks/priorities'),
-        fetch('/api/tasks/statuses'),
-        fetch('/api/tasks/types'),
-        fetch('/api/tasks/levels'),
-        fetch('/api/tasks/sources'),
-        fetch('/api/tasks/categories')
+        fetch('/api/tasksold/priorities'),
+        fetch('/api/tasksold/statuses'),
+        fetch('/api/tasksold/types')
       ])
 
-      if (!prioritiesRes.ok || !statusesRes.ok || !typesRes.ok || !levelsRes.ok || !sourcesRes.ok || !categoriesRes.ok) {
+      if (!prioritiesRes.ok || !statusesRes.ok || !typesRes.ok) {
         throw new Error('Failed to fetch some options')
       }
       
@@ -1044,35 +723,23 @@ export default function TasksPage() {
       const [
         priorityOptions,
         statusOptions,
-        typeOptions,
-        levelOptions,
-        sourceOptions,
-        categoryOptions
+        typeOptions
       ] = await Promise.all([
         prioritiesRes.json(),
         statusesRes.json(),
-        typesRes.json(),
-        levelsRes.json(),
-        sourcesRes.json(),
-        categoriesRes.json()
+        typesRes.json()
       ])
 
       // Set the options globally
       setPriorityOptions(priorityOptions)
       setStatusOptions(statusOptions)
       setTypeOptions(typeOptions)
-      setLevelOptions(levelOptions)
-      setSourceOptions(sourceOptions)
-      setCategoryOptions(categoryOptions)
 
       
       // Find all IDs that match the task's current values
       const priorityId = priorityOptions.find((p: { id: number; name: string }) => p.name === task.priority)?.id.toString()
       const statusId = statusOptions.find((s: { id: number; name: string }) => s.name === task.status)?.id.toString()
       const typeId = typeOptions.find((t: { id: number; name: string }) => t.name === task.type)?.id.toString()
-      const levelId = levelOptions.find((l: { id: number; name: string }) => l.name === task.level)?.id.toString()
-      const sourceId = sourceOptions.find((s: { id: number; name: string }) => s.name === task.source)?.id.toString()
-      const categoryId = categoryOptions.find((c: { id: number; name: string }) => c.name === task.category)?.id.toString()
 
 
       setEditingRow(task.id)
@@ -1083,49 +750,10 @@ export default function TasksPage() {
         priority: priorityId || task.priority,
         status: statusId || task.status,
         type: typeId || task.type,
-        level: levelId || task.level,
-        source: sourceId || task.source,
-        category: categoryId || task.category
       };
 
 
       setEditForm(initialEditForm);
-
-      // Fetch subcategories based on the task's category
-      if (categoryId) {
-        const fetchedSubcategoryOptions = await fetchSubcategoryOptionsForCategory(categoryId);
-        setSubcategoryOptions(fetchedSubcategoryOptions);
-
-        const subcategoryId = fetchedSubcategoryOptions.find((s: { id: number; name: string }) => 
-          s.name === task.subcategory
-        )?.id.toString();
-          
-        if (subcategoryId) {
-          // Update form with subcategory
-          setEditForm({
-            ...initialEditForm,
-            subcategory: subcategoryId
-          });
-            
-          // Now fetch technologies based on the subcategory
-          const fetchedTechOptions = await fetchTechnologyOptionsForSubcategory(subcategoryId);
-          setTechnologyOptions(fetchedTechOptions);
-            
-          // Once technologies are loaded, find the matching technology ID
-          const technologyId = fetchedTechOptions.find((t: { id: number; name: string }) => 
-            t.name === task.technology
-          )?.id.toString();
-              
-          if (technologyId) {
-            // Finally update the form with technology
-            setEditForm({
-              ...initialEditForm,
-              subcategory: subcategoryId,
-              technology: technologyId
-            });
-          }
-        }
-      }
     }catch (error) {
       console.error('Error fetching options:', error)
       toast({
@@ -1141,61 +769,6 @@ export default function TasksPage() {
     setEditForm(prev => prev ? { ...prev, [field]: value } : prev)
   }
 
-  // Update handleEditChange to fetch technologies when subcategory changes
-  const handleEditChange = (field: keyof Task, value: string | number | boolean | string[] | Date | null) => {
-    if (editForm) {
-      let processedValue: any = value;
-      
-      // Handle numeric fields
-      if (['order', 'progress', 'estimated_duration'].includes(field)) {
-        processedValue = Number(value);
-      }
-      
-      // Handle array fields
-      if (field === 'topics' && typeof value === 'string') {
-        processedValue = value.split(',').map(t => t.trim());
-      }
-      
-      // Handle boolean fields
-      if (field === 'done') {
-        processedValue = Boolean(value);
-      }
-
-      // Handle date fields
-      if (['start_date', 'end_date'].includes(field)) {
-        processedValue = value instanceof Date ? value : null;
-      }
-      
-      // When category changes, fetch related subcategories
-      if (field === 'category' && typeof value === 'string') {
-        fetchSubcategoryOptionsForCategory(value);
-        
-        // Reset subcategory and technology when category changes
-        setEditForm({ 
-          ...editForm, 
-          [field]: processedValue,
-          subcategory: "",
-          technology: ""
-        });
-        return;
-      }
-      
-      // When subcategory changes, fetch related technologies
-      if (field === 'subcategory' && typeof value === 'string') {
-        fetchTechnologyOptionsForSubcategory(value);
-        
-        // Reset technology when subcategory changes
-        setEditForm({ 
-          ...editForm, 
-          [field]: processedValue,
-          technology: ""
-        });
-        return;
-      }
-      
-      setEditForm({ ...editForm, [field]: processedValue });
-    }
-  };
 
   // Save Edit
   const onSaveEdit = async () => {
@@ -1209,17 +782,12 @@ export default function TasksPage() {
     setIsLoading(true);
 
     // Destructure all dropdown fields out and rename remaining fields
-    const { priority, status, type, level, source, category, subcategory, technology, ...rest } = updatedRow;
+    const { priority, status, type, ...rest } = updatedRow;
     const payload = {
       ...rest,
       priority_id: priority,
       status_id: status,
-      type_id: type,
-      level_id: level,
-      source_id: source,
-      category_id: category,
-      subcategory_id: subcategory,
-      technology_id: technology,
+      type_id: type
     };
 
     try {
@@ -1306,83 +874,6 @@ export default function TasksPage() {
     RENDER CELLS IN EDIT-MODE
   ********************/
   const editModeRenderers: EditModeRenderer<Task> = {
-    technology: (value, onChange) => (
-      <Select
-        value={ technologyOptions.find((t) => t.name === value || t.id.toString() === value?.toString())?.id.toString() ?? "" }
-        onValueChange={(selectedId) => { onChange(Number(selectedId)); }}
-      >
-        <SelectTrigger className="w-[140px]">
-          <SelectValue placeholder="Select" />
-        </SelectTrigger>
-        <SelectContent>
-          {technologyOptions.map(technology => (
-            <SelectItem key={technology.id} value={technology.id.toString()}>{technology.name}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    ),
-    subcategory: (value) => (
-      <Select
-        value={ subcategoryOptions.find((s) => s.name === value || s.id.toString() === value?.toString())?.id.toString() ?? "" }
-        onValueChange={(value) => handleEditChange('subcategory', value)}
-        //onValueChange={(selectedId) => { onChange(Number(selectedId)); }}
-      >
-        <SelectTrigger className="w-[140px]">
-          <SelectValue placeholder="Select" />
-        </SelectTrigger>
-        <SelectContent>
-          {subcategoryOptions.map(subcategory => (
-            <SelectItem key={subcategory.id} value={subcategory.id.toString()}>{subcategory.name}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    ),
-    category: (value) => (
-      <Select
-        value={ categoryOptions.find((c) => c.name === value || c.id.toString() === value?.toString())?.id.toString() ?? "" }
-        onValueChange={(value) => handleEditChange('category', value)}
-        //onValueChange={(selectedId) => { onChange(Number(selectedId)); }}
-      >
-        <SelectTrigger className="w-[140px]">
-          <SelectValue placeholder="Select" />
-        </SelectTrigger>
-        <SelectContent>
-          {categoryOptions.map(category => (
-            <SelectItem key={category.id} value={category.id.toString()}>{capitalizeWords(category.name)}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    ),
-    source: (value, onChange) => (  
-      <Select
-        value={ sourceOptions.find((s) => s.name === value || s.id.toString() === value?.toString())?.id.toString() ?? "" }
-        onValueChange={(selectedId) => { onChange(Number(selectedId)); }}
-      >
-        <SelectTrigger className="w-[140px]">
-          <SelectValue placeholder="Select" />
-        </SelectTrigger>
-        <SelectContent>
-          {sourceOptions.map(source => (
-            <SelectItem key={source.id} value={source.id.toString()}>{capitalizeWords(source.name)}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    ),
-    level: (value, onChange) => (
-      <Select
-        value={ levelOptions.find((l) => l.name === value || l.id.toString() === value?.toString())?.id.toString() ?? "" }
-        onValueChange={(selectedId) => { onChange(Number(selectedId)); }}
-      >
-        <SelectTrigger className="w-[140px]">
-          <SelectValue placeholder="Select" />
-        </SelectTrigger>
-        <SelectContent>
-          {levelOptions.map(level => (
-            <SelectItem key={level.id} value={level.id.toString()}>{capitalizeWords(level.name)}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    ),
     type: (value, onChange) => (
       <Select
         value={ typeOptions.find((t) => t.name === value || t.id.toString() === value?.toString())?.id.toString() ?? "" }
@@ -1439,46 +930,6 @@ export default function TasksPage() {
       />  
     ),
     due_date: (value, onChange) => {
-      const toLocalInputDate = (date: Date | string | null) => {
-        if (!date) return '';
-        const dateObj = date instanceof Date ? date : new Date(date);
-        if (isNaN(dateObj.getTime())) return '';
-        return dateObj.toISOString().split('T')[0]; // Return the date part directly
-      };
-    
-      const fromLocalInputDate = (dateStr: string) => dateStr; // already in YYYY-MM-DD  
-      const typedValue = value as string | Date | null;
-    
-      return (
-      <Input
-          type="date"
-          value={toLocalInputDate(typedValue)}
-          onChange={(e) => onChange(fromLocalInputDate(e.target.value))}
-          className="w-[130px]"
-        />
-      );
-    }, 
-    start_date: (value, onChange) => {
-      const toLocalInputDate = (date: Date | string | null) => {
-        if (!date) return '';
-        const dateObj = date instanceof Date ? date : new Date(date);
-        if (isNaN(dateObj.getTime())) return '';
-        return dateObj.toISOString().split('T')[0]; // Return the date part directly
-      };
-    
-      const fromLocalInputDate = (dateStr: string) => dateStr; // already in YYYY-MM-DD  
-      const typedValue = value as string | Date | null;
-    
-      return (
-      <Input
-          type="date"
-          value={toLocalInputDate(typedValue)}
-          onChange={(e) => onChange(fromLocalInputDate(e.target.value))}
-          className="w-[130px]"
-        />
-      );
-    },
-    end_date: (value, onChange) => {
       const toLocalInputDate = (date: Date | string | null) => {
         if (!date) return '';
         const dateObj = date instanceof Date ? date : new Date(date);
@@ -1584,7 +1035,7 @@ export default function TasksPage() {
           onRowSelectionChange={setRowSelection}
           editForm={editForm}
           editModeRenderers={editModeRenderers}
-          nonEditableColumns={['task_id']}
+          nonEditableColumns={['task_id', 'lesson']}
           onStartEdit={startEditing}
           onEditChange={onEditChange}
           editingRow={editingRow}

@@ -544,7 +544,7 @@ export function DataTableWidget<T extends Record<string, any>>({
         <div className="flex items-center justify-between px-4 py-3 border rounded-md bg-muted">
           <div className="text-sm text-muted-foreground">
             {table.getFilteredSelectedRowModel().rows.length} {table.getFilteredSelectedRowModel().rows.length === 1 ? "row" : "rows"} selected
-      </div>
+          </div>
           <div className="flex gap-2">
             <Button
               size="sm"

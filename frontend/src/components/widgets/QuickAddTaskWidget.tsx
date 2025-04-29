@@ -32,7 +32,7 @@ export function QuickAddTaskWidget({ onClose }: QuickAddTaskWidgetProps) {
       socket.onopen = () => {
         setIsLoading(true);
         setProgress(8); // <-- initial value before backend responds
-        setStage("Scanning URL...");
+        setStage("Starting...");
         socket.send(JSON.stringify({ resourceUrl }));
       };
 

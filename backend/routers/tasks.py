@@ -152,7 +152,7 @@ async def websocket_endpoint(websocket: WebSocket, session: Session = Depends(ge
 
     # 1. Receive initial message with URL
     data = await websocket.receive_json()
-    await websocket.send_json({"progress": 12, "stage": "Starting..."})
+    await websocket.send_json({"progress": 12, "stage": "Scanning URL..."})
     await asyncio.sleep(0)
     url = data.get("resourceUrl")
 
@@ -214,7 +214,7 @@ async def websocket_endpoint(websocket: WebSocket, session: Session = Depends(ge
     estimated_duration = response["estimated_duration"]
     task = create_task(lesson_id, metadata.lesson.title, metadata.resource.resourcetype, estimated_duration, session)
 
-    await websocket.send_json({"progress": 100, "stage": "Task Created"})
+    await websocket.send_json({"progress": 100, "stage": "Task Created!"})
     await asyncio.sleep(0)
     await websocket.close()
 

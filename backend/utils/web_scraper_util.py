@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
+from newspaper import ArticleException
 
 
 def extract_article_metadata(url: str):
@@ -18,9 +19,14 @@ def extract_article_metadata(url: str):
 
 
     # Step 2: Parse with newspaper
-    article = Article(url)
-    article.download()
-    article.parse()
+    try:
+        article = Article(url)
+        article.download()
+        article.parse()
+    except ArticleException as e:
+        return {
+            "error": f"Failed to fetch article from URL: {str(e)}"
+        }
 
     #article.html
     #article.meta_favicon

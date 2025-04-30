@@ -161,6 +161,11 @@ async def websocket_endpoint(websocket: WebSocket, session: Session = Depends(ge
     await asyncio.sleep(0)
     metadata = extract_article_metadata(url)
 
+    if metadata.get("error"):
+        await websocket.send_json({"progress": 18, "stage": "Error Scraping URL", "error": metadata.get("error")})
+        await websocket.close()
+        return
+
     # 3. Get/Create the Person id(s)
     await websocket.send_json({"progress": 24, "stage": "Fetching IDs..."})
     await asyncio.sleep(0)

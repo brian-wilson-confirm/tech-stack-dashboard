@@ -24,73 +24,81 @@ export function QuickAddTaskWidget({ onClose }: QuickAddTaskWidgetProps) {
     const resourceUrl = (form.elements.namedItem('resourceUrl') as HTMLInputElement).value
     const notes = (form.elements.namedItem('notes') as HTMLTextAreaElement).value
 
-    setIsLoading(true)
     try {
-
       const socket = new WebSocket("ws://localhost:8000/api/tasks/ws/quick-add");
-
+    
       socket.onopen = () => {
         setIsLoading(true);
-        setProgress(8); // <-- initial value before backend responds
+        setProgress(8);
         setStage("Starting...");
         socket.send(JSON.stringify({ resourceUrl }));
       };
-
+    
       socket.onmessage = (event) => {
-        const message = JSON.parse(event.data);
-
-        if (message.progress) {
-          setProgress(message.progress);
-          setStage(message.stage);
-          console.log("Message:", message);
-        }
-
-        if (message.progress === 100) {
+        try {
+          const message = JSON.parse(event.data);
+    
+          if (message.error) {
+            console.error("Error creating task:", message.error);
+            socket.close();
+            setIsLoading(false);
+            toast({
+              title: "Error",
+              description: message.error,
+              variant: "destructive",
+            });
+            return;
+          }
+    
+          if (message.progress) {
+            setProgress(message.progress);
+            setStage(message.stage);
+            console.log("Message:", message);
+          }
+    
+          if (message.progress === 100) {
+            socket.close();
+            toast({
+              title: "Task Created",
+              description: "The task has been successfully created.",
+              duration: 3000,
+              variant: "default",
+            });
+            form.reset();
+          }
+        } catch (e) {
+          console.error("Failed to parse WebSocket message:", e);
           socket.close();
           setIsLoading(false);
-
           toast({
-            title: "Task Created",
-            description: "The task has been successfully created.",
-            duration: 3000,
-            variant: "default",
+            title: "Invalid Response",
+            description: "An error occurred while processing the response.",
+            variant: "destructive",
           });
-          form.reset()
         }
       };
-
-      /*
-      const response = await fetch('/api/tasks/from-url', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          url: resourceUrl,
-          notes: notes 
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to create task')
-      }
-
+    
+      socket.onerror = (error) => {
+        console.error("WebSocket error:", error);
+        setIsLoading(false);
+        toast({
+          title: "WebSocket Error",
+          description: "Failed to connect or send data.",
+          variant: "destructive",
+        });
+      };
+    
+      socket.onclose = (event) => {
+        console.log("WebSocket closed:", event.code, event.reason);
+      };
+    } catch (e) {
+      console.error("WebSocket setup failed:", e);
+      setIsLoading(false);
       toast({
-        title: "Task Created",
-        description: "The task has been successfully created.",
-        duration: 3000,
-        variant: "default",
-      });
-      form.reset() */
-    } catch (error: any) {
-      console.error('Error creating task:', error)
-      toast({
-        title: "Error",
-        description: error.response.data.detail || "Failed to create task",
+        title: "Connection Error",
+        description: "Unable to open WebSocket connection.",
         variant: "destructive",
-      })
-    } finally {
-      setIsLoading(false)
+      });
     }
   }
 

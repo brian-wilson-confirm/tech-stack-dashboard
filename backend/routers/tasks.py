@@ -32,7 +32,7 @@ from backend.routers.people import get_person_ids
 from backend.routers.resources import get_resource_id, get_resourcetype_id
 from backend.routers.topics import get_topic_ids
 from backend.routers.sources import create_source_authors, get_source_id, get_sourcetype_id
-from backend.utils.web_scraper_util import extract_article_metadata
+from backend.utils.web_scraper_util import extract_article_metadata, scrape_article
 import asyncio
 router = APIRouter(prefix="/tasks")
 
@@ -161,8 +161,8 @@ async def websocket_endpoint(websocket: WebSocket, session: Session = Depends(ge
     await asyncio.sleep(0)
     metadata = extract_article_metadata(url)
 
-    if metadata.get("error"):
-        await websocket.send_json({"progress": 18, "stage": "Error Scraping URL", "error": metadata.get("error")})
+    if metadata.error:
+        await websocket.send_json({"progress": 18, "stage": "Error Scraping URL", "error": metadata.error})
         await websocket.close()
         return
 

@@ -58,6 +58,7 @@ export function QuickAddTaskWidget({ onClose }: QuickAddTaskWidgetProps) {
     
           if (message.progress === 100) {
             socket.close();
+            setIsLoading(false);
             toast({
               title: "Task Created",
               description: "The task has been successfully created.",

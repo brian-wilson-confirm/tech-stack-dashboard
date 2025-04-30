@@ -1,10 +1,57 @@
 import requests
 from newspaper import Article
 from bs4 import BeautifulSoup
-from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
 from newspaper import ArticleException
+from dataclasses import dataclass
+import re
+import math
+#from playwright.sync_api import sync_playwright
+from playwright.async_api import async_playwright
+
+
+# REMOVE? THIS CODE IS FOR ARCHIVE LINKS BUT THE METADATA LOOKS BAD
+async def scrape_article(url: str) -> Article:
+    #async with sync_playwright() as p:
+    p = await async_playwright().start()  # ✅ FIX HERE
+    browser = await p.chromium.launch(headless=True)
+    page = await browser.new_page()
+    await page.goto(url, timeout=60000)
+    html = await page.content()
+    await browser.close()
+    await p.stop()
+
+    soup = BeautifulSoup(html, "html.parser")
+
+    # Try to extract reasonable metadata
+    title = soup.title.string.strip() if soup.title else "Untitled"
+    paragraphs = soup.find_all("p")
+    text = "\n\n".join(p.get_text().strip() for p in paragraphs if p.get_text().strip())
+
+    # Estimate reading time (average 200 wpm)
+    word_count = len(re.findall(r'\w+', text))
+    estimated_minutes = max(1, math.ceil(word_count / 200))
+
+    # Try to infer author or published date if present
+    author = None
+    pub_date = None
+
+    # Simple heuristics
+    if meta_author := soup.find("meta", {"name": "author"}):
+        author = meta_author.get("content")
+
+    if meta_date := soup.find("meta", {"property": "article:published_time"}):
+        pub_date = meta_date.get("content")
+
+    return Article(
+        title=title,
+        author=author,
+        text=text,
+        published_date=pub_date,
+        estimated_read_time_minutes=estimated_minutes,
+        source_url=url
+    )
 
 
 def extract_article_metadata(url: str):
@@ -24,9 +71,9 @@ def extract_article_metadata(url: str):
         article.download()
         article.parse()
     except ArticleException as e:
-        return {
-            "error": f"Failed to fetch article from URL: {str(e)}"
-        }
+        return WebMetadata(
+            error=f"Failed to fetch article from URL: {str(e)}"
+        )
 
     #article.html
     #article.meta_favicon
@@ -56,8 +103,8 @@ def extract_article_metadata(url: str):
     )
 
 
-
-class LessonMetadata(BaseModel):
+@dataclass
+class LessonMetadata:
     title: str
     description: str
     tags: List[str]
@@ -68,13 +115,15 @@ class LessonMetadata(BaseModel):
     summary: str
 
 
-class SourceMetadata(BaseModel):
+@dataclass
+class SourceMetadata:
     name: str
     sourcetype: str
     authors: List[str]
 
 
-class ResourceMetadata(BaseModel):
+@dataclass
+class ResourceMetadata:
     title: str
     description: str
     url: str
@@ -82,7 +131,9 @@ class ResourceMetadata(BaseModel):
     source: SourceMetadata
 
 
-class WebMetadata(BaseModel):
-    lesson: LessonMetadata
-    resource: ResourceMetadata
+@dataclass
+class WebMetadata:
+    lesson: Optional[LessonMetadata] = None
+    resource: Optional[ResourceMetadata] = None
+    error: Optional[str] = None
 

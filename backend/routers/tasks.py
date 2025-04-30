@@ -32,8 +32,11 @@ from backend.routers.people import get_person_ids
 from backend.routers.resources import get_resource_id, get_resourcetype_id
 from backend.routers.topics import get_topic_ids
 from backend.routers.sources import create_source_authors, get_source_id, get_sourcetype_id
-from backend.utils.web_scraper_util import extract_article_metadata, scrape_article
+from backend.utils.web_scraper_util import extract_article_metadata
+from backend.llm.agents.url_ingest_agent import run_url_ingestion_pipeline
 import asyncio
+
+
 router = APIRouter(prefix="/tasks")
 
 """
@@ -146,8 +149,8 @@ async def create_task_from_url(request: QuickAddTaskRequest, session: Session = 
     return task
 
 
-@router.websocket("/ws/quick-add")
-async def websocket_endpoint(websocket: WebSocket, session: Session = Depends(get_session)):
+@router.websocket("/ws/quick-add1")
+async def websocket_endpoint1(websocket: WebSocket, session: Session = Depends(get_session)):
     await websocket.accept()
 
     # 1. Receive initial message with URL
@@ -222,6 +225,29 @@ async def websocket_endpoint(websocket: WebSocket, session: Session = Depends(ge
     await websocket.send_json({"progress": 100, "stage": "Task Created!"})
     await asyncio.sleep(0)
     await websocket.close()
+
+
+@router.websocket("/ws/quick-add2")
+async def websocket_endpoint2(websocket: WebSocket, session: Session = Depends(get_session)):
+    await websocket.accept()
+
+    # 1. Receive initial message with URL
+    data = await websocket.receive_json()
+    await websocket.send_json({"progress": 12, "stage": "Scanning URL..."})
+    await asyncio.sleep(0)
+    url = data.get("resourceUrl")
+
+    # 2. Scrape the HTML at the URL
+    await websocket.send_json({"progress": 18, "stage": "Scraping URL..."})
+    await asyncio.sleep(0)
+    metadata = await run_url_ingestion_pipeline(url)
+    print(f"\n\nmetadata: {metadata}\n\n")
+    
+    # 3. Create the Task
+    await websocket.send_json({"progress": 100, "stage": "Task Created!"})
+    await asyncio.sleep(0)
+    await websocket.close()
+
 
 
 """

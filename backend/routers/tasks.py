@@ -26,6 +26,7 @@ from backend.database.views.subcategory_schemas import SubcategoryRead
 from backend.database.views.category_schemas import CategoryRead
 from sqlalchemy import text
 
+from backend.llm.schemas.metadata import TaskMetadata
 from backend.routers.categories import get_category_id
 from backend.routers.lessons import create_lesson_topics, enrich_lesson, get_lesson_id, create_lesson_categories, create_lesson_subcategories, create_lesson_technologies, create_technology_subcategories
 from backend.routers.levels import get_level_id
@@ -36,7 +37,7 @@ from backend.routers.technologies import get_technology_id
 from backend.routers.topics import get_topic_id, get_topic_ids
 from backend.routers.sources import get_source_id, get_sourcetype_id, create_source_authors
 from backend.utils.web_scraper_util import extract_article_metadata
-from backend.llm.agents.url_ingest_agent import run_url_ingestion_pipeline
+from backend.llm.agents.url_ingestion_agent import run_url_ingestion_pipeline
 import asyncio
 
 
@@ -307,12 +308,13 @@ async def websocket_endpoint2(websocket: WebSocket, session: Session = Depends(g
     # 15. Update the lesson_topic relationships
     topic_ids = [get_topic_id(topic, session) for topic in metadata.lesson.topics]
     create_lesson_topics(lesson_id, topic_ids, session)
-    print(f"\n\ntechnology_ids: {technology_ids}\n\n")
 
+    # 16. Create the Task
+    await websocket.send_json({"progress": 90, "stage": "Creating Task..."})
+    await asyncio.sleep(0)
+    task = create_task(lesson_id, metadata.task, metadata.lesson.estimated_duration, session)
+    print(f"\n\ntask: {task}\n\n")
 
-
-    
-    # 3. Create the Task
     await websocket.send_json({"progress": 100, "stage": "Task Created!"})
     await asyncio.sleep(0)
     await websocket.close()
@@ -719,15 +721,15 @@ def create_task(task_in: TaskCreate, session: Session = Depends(get_session)):
     return task
 
 
-def create_task(lesson_id: int, lesson_title: str, resourcetype: str, estimated_duration: str, session: Session):
+def create_task(lesson_id: int, task_metadata: TaskMetadata, estimated_duration: str, session: Session):
     task = Task(
         task_id=generate_unique_task_id(session),
-        task=generate_task_name(lesson_title, resourcetype),
-        description="No description provided",
+        task=task_metadata.name,
+        description=task_metadata.description,
         lesson_id=lesson_id,
-        type_id=1,  # Default type_id for tasks
-        status_id=1,  # Default status_id for tasks
-        priority_id=1,  # Default priority_id for tasks
+        type_id=get_tasktype_id(task_metadata.type, session),
+        status_id=get_status_id(task_metadata.status, session),
+        priority_id=get_priority_id(task_metadata.priority, session),
         progress=0,
         order=0,
         due_date=None,
@@ -741,6 +743,18 @@ def create_task(lesson_id: int, lesson_title: str, resourcetype: str, estimated_
     session.commit()
     session.refresh(task)
     return task
+
+
+def get_tasktype_id(task_type: str, session: Session):
+    return session.exec(select(TaskType).where(TaskType.name == task_type)).first().id
+
+
+def get_status_id(status: str, session: Session):
+    return session.exec(select(TaskStatus).where(TaskStatus.name == status)).first().id
+
+
+def get_priority_id(priority: str, session: Session):
+    return session.exec(select(TaskPriority).where(TaskPriority.name == priority)).first().id
 
 
 def generate_unique_task_id(session, prefix="TASK-", digits=4, max_attempts=10):

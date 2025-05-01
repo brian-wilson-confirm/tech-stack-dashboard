@@ -1,6 +1,6 @@
 from langchain.tools import tool
 from bs4 import BeautifulSoup
-from newspaper import Article
+from newspaper import Article, ArticleException
 from playwright.async_api import async_playwright
 import re, requests
 from backend.llm.schemas.article import RawArticle
@@ -12,40 +12,41 @@ async def scrape_web_article1(url: str) -> dict:
     Uses BeautifulSoup to scrape a webpage and extract its title, visible text, and metadata.
     Returns a RawArticle dictionary.
     """
+
+    # Check if it's a Medium article by inspecting meta generator# Step 1: Directly fetch raw HTML
+    raw_html = requests.get(url).text
+    soup = BeautifulSoup(raw_html, "html.parser")
+    site_name_tag = soup.find("meta", attrs={"property": "og:site_name"})
+    source_name = site_name_tag.get("content") if site_name_tag else None
+    site_type_tag = soup.find("meta", attrs={"property": "og:type"})
+    resource_type = site_type_tag.get("content") if site_type_tag else None
+
+
+    # Step 2: Parse with newspaper
     try:
-        # Check if it's a Medium article by inspecting meta generator# Step 1: Directly fetch raw HTML
-        raw_html = requests.get(url).text
-        soup = BeautifulSoup(raw_html, "html.parser")
-        site_name_tag = soup.find("meta", attrs={"property": "og:site_name"})
-        source_name = site_name_tag.get("content") if site_name_tag else None
-        site_type_tag = soup.find("meta", attrs={"property": "og:type"})
-        resource_type = site_type_tag.get("content") if site_type_tag else None
-
-
-        # Step 2: Parse with newspaper
         article = Article(url)
         article.download()
         article.parse()
+    except ArticleException as e:
+        return {"error": f"Failed to fetch article from URL: {str(e)}"}
 
-        return RawArticle(
-            url=url,
-            title=article.title,
-            text=article.text,
-            authors=article.authors if article.authors else None,
-            favicon_url=article.meta_favicon if article.meta_favicon else None,
-            html=article.html if article.html else None,
-            img_url=article.top_image if article.top_image else None,
-            publish_date=article.publish_date if article.publish_date else None,
-            resource_type=resource_type if resource_type else None,
-            source_name=source_name if source_name else None,
-            source_type=None,
-            source_url=article.source_url if article.source_url else None,
-            summary=article.summary if article.summary else None,
-            tags=article.tags if article.tags else None
-        )
+    return RawArticle(
+        url=url,
+        title=article.title,
+        text=article.text,
+        authors=article.authors if article.authors else None,
+        favicon_url=article.meta_favicon if article.meta_favicon else None,
+        html=article.html if article.html else None,
+        img_url=article.top_image if article.top_image else None,
+        publish_date=article.publish_date if article.publish_date else None,
+        resource_type=resource_type if resource_type else None,
+        source_name=source_name if source_name else None,
+        source_type=None,
+        source_url=article.source_url if article.source_url else None,
+        summary=article.summary if article.summary else None,
+        tags=article.tags if article.tags else None
+    )
     
-    except Exception as e:
-        return {"error": str(e)}
 
 #@tool
 async def scrape_web_article2(url: str) -> dict:

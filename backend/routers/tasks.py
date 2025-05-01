@@ -246,10 +246,15 @@ async def websocket_endpoint2(websocket: WebSocket, session: Session = Depends(g
     metadata = await run_url_ingestion_pipeline(url, websocket, session)
     print(f"\n\nmetadata: {metadata}\n\n")
 
+    if isinstance(metadata, dict) and "error" in metadata:
+        await websocket.send_json({"progress": -1, "stage": "Error Processing URL", "error": metadata["error"]})
+        await websocket.close()
+        return
+
     # 3. Get/Create the Person id(s)
     await update_progress(websocket, 85, "Fetching IDs...")
-    person_ids = get_person_ids(metadata.resource.authors, session)
-    sourcetype_id = get_sourcetype_id(metadata.source.type, session)
+    person_ids = get_person_ids(metadata["resource"]["authors"], session)
+    sourcetype_id = get_sourcetype_id(metadata["source"]["type"], session)
 
     # 4. Get/Create the Source
     await update_progress(websocket, 86, "Creating the Source...")

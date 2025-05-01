@@ -73,6 +73,9 @@ async def run_url_ingestion_pipeline(url: str, websocket: WebSocket, session: Se
     try:
         article: RawArticle = await scrape_web_article1(url)
 
+        if isinstance(article, dict) and "error" in article:
+            return {"error": article["error"]}
+
         # Call LLM tool to enrich the resource/source metadata
         await update_progress(websocket, 10, "Retreiving Resource Metadata...")
         resource_response = _enrich_resource(

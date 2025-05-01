@@ -21,3 +21,4 @@ class RawArticle:
     source_url: Optional[str] = None        # URL of the source of the article
     summary: Optional[str] = None           # Summary of the article
     tags: Optional[str] = None              # e.g., "AI", "Machine Learning"
+    error: Optional[str] = None             # Error message if the article is not found or cannot be scraped

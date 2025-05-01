@@ -13,6 +13,7 @@ class Resource(SQLModel, table=True):
     resourcetype_id: Optional[int] = Field(foreign_key="resourcetype.id")
     url: Optional[str]
     source_id: Optional[int] = Field(foreign_key="source.id")
+    publication_id: Optional[int] = Field(foreign_key="publication.id")
 
 
 """

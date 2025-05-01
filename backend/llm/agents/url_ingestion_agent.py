@@ -1,3 +1,4 @@
+from fastapi import WebSocket
 from langchain.agents import initialize_agent, AgentType
 from langchain.chat_models import ChatOpenAI
 from langchain.tools import Tool
@@ -17,6 +18,7 @@ from backend.routers.lessons import get_taxonomy
 from backend.utils.web_scraper_util import extract_article_metadata
 from backend.llm.schemas.article import RawArticle
 from backend.llm.schemas.metadata import Metadata, ResourceMetadata, SourceMetadata, LessonMetadata, TaskMetadata, CategoryMetadata, TechnologyMetadata
+from backend.utils.websocket_util import update_progress
 
 llm = ChatOpenAI(model="gpt-4-turbo", temperature=0.2)
 
@@ -67,11 +69,12 @@ agent = initialize_agent(
     verbose=True
 )
 
-async def run_url_ingestion_pipeline(url: str, session: Session) -> Metadata:
+async def run_url_ingestion_pipeline(url: str, websocket: WebSocket, session: Session) -> Metadata:
     try:
         article: RawArticle = await scrape_web_article1(url)
 
         # Call LLM tool to enrich the resource/source metadata
+        await update_progress(websocket, 10, "Retreiving Resource Metadata...")
         resource_response = _enrich_resource(
             url = article.url,
             title = article.title,
@@ -79,20 +82,22 @@ async def run_url_ingestion_pipeline(url: str, session: Session) -> Metadata:
         )
 
         # Call LLM tool to enrich and classify the lesson metadata
+        await update_progress(websocket, 33, "Constructing Lesson Metadata...")
         lesson_response = _enrich_lesson(
             title=article.title,
             text=article.text,
             taxonomy=get_taxonomy(session)
         )
 
-        # Call LLM tool to enrich the task metadata
+        # Call LLM tool to enrich the task metadata 
+        await update_progress(websocket, 84, "Constructing Task Metadata...")
         task_response = _generate_task(
             resource_title=article.title,
             resource_type=resource_response.resource_type,
             lesson_description=lesson_response.lesson_description
         )
 
-        # 4. Compose the final JSON structure
+        # Compose the final JSON structure
         return Metadata(
             resource=ResourceMetadata(
                 title=resource_response.resource_title,
@@ -126,26 +131,6 @@ async def run_url_ingestion_pipeline(url: str, session: Session) -> Metadata:
                 priority=task_response.task_priority
             )
         )
-    
-        """
-        return {
-            "source_type": json.loads(resource_result)["source_type"],
-            "source": json.loads(resource_result)["source_name"],
-            "author": raw.author,
-            "resource_type": json.loads(resource_result)["resource_type"],
-            "resource": {
-                "title": json.loads(resource_result)["resource_title"],
-                "description": json.loads(resource_result)["resource_description"],
-                "url": raw.url
-            },
-            "lesson": {
-                "title": json.loads(lesson_result)["lesson_title"],
-                "description": json.loads(lesson_result)["lesson_description"],
-                "estimated_duration": json.loads(lesson_result)["estimated_duration"],
-                "level": json.loads(lesson_result)["level"]
-            },
-            "task": json.loads(task_result)
-        }
-        """
+
     except Exception as e:
         return {"error": str(e)}

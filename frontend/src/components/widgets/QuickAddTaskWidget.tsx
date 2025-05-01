@@ -29,7 +29,7 @@ export function QuickAddTaskWidget({ onClose }: QuickAddTaskWidgetProps) {
     
       socket.onopen = () => {
         setIsLoading(true);
-        setProgress(8);
+        //setProgress(8);
         setStage("Starting...");
         socket.send(JSON.stringify({ resourceUrl }));
       };

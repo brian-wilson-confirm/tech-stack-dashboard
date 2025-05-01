@@ -35,7 +35,7 @@ from backend.routers.resources import get_resource_id, get_resourcetype_id, crea
 from backend.routers.subcategories import get_subcategory_id
 from backend.routers.technologies import get_technology_id
 from backend.routers.topics import get_topic_id, get_topic_ids
-from backend.routers.sources import get_source_id, get_sourcetype_id, create_source_authors
+from backend.routers.sources import get_publication_id, get_source_id, get_sourcetype_id, create_source_authors
 from backend.utils.web_scraper_util import extract_article_metadata
 from backend.llm.agents.url_ingestion_agent import run_url_ingestion_pipeline
 from backend.utils.websocket_util import update_progress
@@ -247,67 +247,71 @@ async def websocket_endpoint2(websocket: WebSocket, session: Session = Depends(g
     print(f"\n\nmetadata: {metadata}\n\n")
 
     # 3. Get/Create the Person id(s)
-    await update_progress(websocket, 86, "Fetching IDs...")
+    await update_progress(websocket, 85, "Fetching IDs...")
     person_ids = get_person_ids(metadata.resource.authors, session)
     sourcetype_id = get_sourcetype_id(metadata.source.type, session)
 
     # 4. Get/Create the Source
-    await update_progress(websocket, 87, "Creating the Source...")
+    await update_progress(websocket, 86, "Creating the Source...")
     source_id = get_source_id(metadata.source.name, sourcetype_id, session)
 
-    # 5. Get/Create the ResourceType
+    # 5. Get/Create the Publication
+    await update_progress(websocket, 87, "Creating the Publication...")
+    publication_id = get_publication_id(metadata.source.publication_name, source_id, session)
+
+    # 6. Get/Create the ResourceType
     await update_progress(websocket, 88, "Creating the Resource Type...")
     resourcetype_id = get_resourcetype_id(metadata.resource.type, session)
 
-    # 6. Get/Create the Resource
+    # 7. Get/Create the Resource
     await update_progress(websocket, 89, "Creating the Resource...")
-    resource_id = get_resource_id(resourcetype_id, source_id, metadata.resource.title, metadata.resource.description, metadata.resource.url, session)
+    resource_id = get_resource_id(resourcetype_id, source_id, publication_id, metadata.resource.title, metadata.resource.description, metadata.resource.url, session)
 
-    # 7. Create the resource_author relationship(s) if it doesn't already exist
+    # 8. Create the resource_author relationship(s) if it doesn't already exist
     await update_progress(websocket, 90, "Mapping the Author(s) to the Resource...")
     create_resource_authors(resource_id, person_ids, session)
 
-    # 8. Get the Level
+    # 9. Get the Level
     await update_progress(websocket, 91, "Creating the Level...")
     level_id = get_level_id(metadata.lesson.level, session)
 
-    # 9. Get/Create the Lesson
+    # 10. Get/Create the Lesson
     await update_progress(websocket, 92, "Creating the Lesson...")
     lesson_id = get_lesson_id(metadata.lesson.title, metadata.lesson.description, metadata.lesson.content, level_id, resource_id, metadata.lesson.estimated_duration, session)
 
-    # 10. Update the lesson_category relationships
+    # 11. Update the lesson_category relationships
     await update_progress(websocket, 93, "Mapping the Category(ies) to the Lesson...")
     category_ids = [get_category_id(category_data["category"], session) for category_data in metadata.lesson.categories]
     create_lesson_categories(lesson_id, category_ids, session)
 
-    # 11. Update the lesson_subcategory relationships
+    # 12. Update the lesson_subcategory relationships
     await update_progress(websocket, 94, "Mapping the Subcategory(ies) to the Lesson...")
     for category_data in metadata.lesson.categories:
         subcategories = category_data["subcategories"]
         subcategory_ids = [get_subcategory_id(subcategory, session) for subcategory in subcategories]
         create_lesson_subcategories(lesson_id, subcategory_ids, session)
 
-    # 12. Get/Create the Technology(ies)
+    # 13. Get/Create the Technology(ies)
     await update_progress(websocket, 95, "Categorizing the Technology(ies)...")
     technology_ids = [get_technology_id(technology_data["technology"], session) for technology_data in metadata.lesson.technologies]
 
-    # 13. Update the lesson_technology relationships
+    # 14. Update the lesson_technology relationships
     await update_progress(websocket, 96, "Mapping the Technology(ies) to the Lesson...")
     create_lesson_technologies(lesson_id, technology_ids, session)
 
-    # 14. Update the technology_subcategory relationships
+    # 15. Update the technology_subcategory relationships
     await update_progress(websocket, 97, "Mapping the Technology(ies) to the Subcategory(ies)...")
     for technology_data in metadata.lesson.technologies:
         technology_id = get_technology_id(technology_data["technology"], session)
         subcategory_ids = [get_subcategory_id(subcategory, session) for subcategory in technology_data["subcategories"]]
         create_technology_subcategories(technology_id, subcategory_ids, session)
     
-    # 15. Update the lesson_topic relationships
+    # 16. Update the lesson_topic relationships
     await update_progress(websocket, 98, "Mapping the Topic(s) to the Lesson...")
     topic_ids = [get_topic_id(topic, session) for topic in metadata.lesson.topics]
     create_lesson_topics(lesson_id, topic_ids, session)
 
-    # 16. Create the Task
+    # 17. Create the Task
     await update_progress(websocket, 99, "Creating the Task...")
     task = create_task(lesson_id, metadata.task, metadata.lesson.estimated_duration, session)
     print(f"\n\ntask: {task}\n\n")

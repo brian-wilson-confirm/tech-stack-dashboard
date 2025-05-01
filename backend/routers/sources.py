@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import func
 from sqlmodel import Session, select
 from backend.database.connection import get_session
+from backend.database.models.publication_models import Publication
 from backend.database.models.source_models import Source, SourceAuthor
 from backend.database.models.sourcetype_models import SourceType
 from backend.database.views.source_schemas import SourceCreate, SourceRead
@@ -113,3 +114,17 @@ def get_sourcetype_id(sourcetype_name: str, session: Session):
         sourcetype = create_sourcetype(sourcetype_name, session)
     return sourcetype.id
 
+
+def get_publication_id(publication_name: str, source_id: int, session: Session):
+    publication = session.exec(select(Publication).where(Publication.name == publication_name, Publication.source_id == source_id)).first()
+    if not publication:
+        publication = create_publication(publication_name, source_id, session)
+    return publication.id
+
+
+def create_publication(publication_name: str, source_id: int, session: Session):
+    new_publication = Publication(name=publication_name, source_id=source_id)
+    session.add(new_publication)
+    session.commit()
+    session.refresh(new_publication)
+    return new_publication  

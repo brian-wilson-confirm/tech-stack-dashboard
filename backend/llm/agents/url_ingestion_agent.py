@@ -111,7 +111,8 @@ async def run_url_ingestion_pipeline(url: str, websocket: WebSocket, session: Se
                 name=resource_response.source_name,
                 type=resource_response.source_type,
                 website=resource_response.source_url,
-                image_url=article.favicon_url if article.favicon_url else resource_response.source_image_url
+                image_url=article.favicon_url if article.favicon_url else resource_response.source_image_url,
+                publication_name=resource_response.publication_name
             ),
             lesson=LessonMetadata(
                 title=article.title,

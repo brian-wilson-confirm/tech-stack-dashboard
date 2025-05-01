@@ -11,6 +11,7 @@ class ResourceResponse:
     source_name: str
     source_type: str
     source_url: str
+    publication_name: Optional[str] = None
     resource_image_url: Optional[str] = None
     resource_authors: Optional[List[str]] = None
     source_image_url: Optional[str] = None

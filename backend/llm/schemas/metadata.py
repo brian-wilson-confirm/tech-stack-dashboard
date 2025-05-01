@@ -18,6 +18,7 @@ class SourceMetadata:
     type: str
     website: str
     image_url: Optional[str] = None
+    publication_name: Optional[str] = None
 
 
 @dataclass

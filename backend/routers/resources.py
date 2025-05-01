@@ -59,8 +59,8 @@ def serialize_resource(resource: Resource, session: Session) -> ResourceRead:
             )
 
 
-def create_resource(title: str, description: str, url: str, resourcetype_id: int, source_id: int, session: Session):
-    new_resource = Resource(title=title, description=description, url=url, resourcetype_id=resourcetype_id, source_id=source_id)
+def create_resource(title: str, description: str, url: str, resourcetype_id: int, source_id: int, publication_id: int, session: Session):
+    new_resource = Resource(title=title, description=description, url=url, resourcetype_id=resourcetype_id, source_id=source_id, publication_id=publication_id)
     session.add(new_resource)
     session.commit()
     session.refresh(new_resource)
@@ -75,13 +75,13 @@ def create_resourcetype(resourcetype_name: str, session: Session):
     return new_resourcetype
 
 
-def get_resource_id(resourcetype_id: int, source_id: int, resourcetitle: str, resourcedescription: str, resourceurl: str, session: Session):
+def get_resource_id(resourcetype_id: int, source_id: int, publication_id: int, resourcetitle: str, resourcedescription: str, resourceurl: str, session: Session):
     resource = session.exec(select(Resource)
                             .where(Resource.title == resourcetitle)
                             .where(Resource.resourcetype_id == resourcetype_id)
                             .where(Resource.source_id == source_id)).first()
     if not resource:
-        resource = create_resource(resourcetitle, resourcedescription, resourceurl, resourcetype_id, source_id, session)
+        resource = create_resource(resourcetitle, resourcedescription, resourceurl, resourcetype_id, source_id, publication_id, session)
     return resource.id
 
 

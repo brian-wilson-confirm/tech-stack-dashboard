@@ -26,12 +26,12 @@ from backend.database.views.subcategory_schemas import SubcategoryRead
 from backend.database.views.category_schemas import CategoryRead
 from sqlalchemy import text
 
-from backend.routers.lessons import enrich_lesson, get_lesson_id
+from backend.routers.lessons import create_lesson_topics, enrich_lesson, get_lesson_id
 from backend.routers.levels import get_level_id
 from backend.routers.people import get_person_ids
-from backend.routers.resources import get_resource_id, get_resourcetype_id
-from backend.routers.topics import get_topic_ids
-from backend.routers.sources import create_source_authors, get_source_id, get_sourcetype_id
+from backend.routers.resources import get_resource_id, get_resourcetype_id, create_resource_authors
+from backend.routers.topics import get_topic_id, get_topic_ids
+from backend.routers.sources import get_source_id, get_sourcetype_id, create_source_authors
 from backend.utils.web_scraper_util import extract_article_metadata
 from backend.llm.agents.url_ingest_agent import run_url_ingestion_pipeline
 import asyncio
@@ -240,8 +240,50 @@ async def websocket_endpoint2(websocket: WebSocket, session: Session = Depends(g
     # 2. Scrape the HTML at the URL
     await websocket.send_json({"progress": 18, "stage": "Scraping URL..."})
     await asyncio.sleep(0)
-    metadata = await run_url_ingestion_pipeline(url)
+    metadata = await run_url_ingestion_pipeline(url, session)
     print(f"\n\nmetadata: {metadata}\n\n")
+
+    # 3. Get/Create the Person id(s)
+    await websocket.send_json({"progress": 24, "stage": "Fetching IDs..."})
+    await asyncio.sleep(0)
+    person_ids = get_person_ids(metadata.resource.authors, session)
+    sourcetype_id = get_sourcetype_id(metadata.source.type, session)
+
+    # 4. Get/Create the Source
+    await websocket.send_json({"progress": 30, "stage": "Creating Source..."})
+    await asyncio.sleep(0)
+    source_id = get_source_id(metadata.source.name, sourcetype_id, session)
+
+    # 5. Get/Create the ResourceType
+    await websocket.send_json({"progress": 36, "stage": "Creating Resource Type..."})
+    await asyncio.sleep(0)
+    resourcetype_id = get_resourcetype_id(metadata.resource.type, session)
+
+    # 6. Get/Create the Resource
+    await websocket.send_json({"progress": 42, "stage": "Creating Resource..."})
+    await asyncio.sleep(0)
+    resource_id = get_resource_id(resourcetype_id, source_id, metadata.resource.title, metadata.resource.description, metadata.resource.url, session)
+
+    # 7. Create the source_author relationship(s) if it doesn't already exist
+    await websocket.send_json({"progress": 48, "stage": "Creating Source Authors..."})
+    await asyncio.sleep(0)
+    create_resource_authors(resource_id, person_ids, session)
+
+    # 8. Get the Level
+    await websocket.send_json({"progress": 54, "stage": "Creating Level..."})
+    await asyncio.sleep(0)
+    level_id = get_level_id(metadata.lesson.level, session)
+
+    # 9. Get/Create the Lesson
+    await websocket.send_json({"progress": 60, "stage": "Creating Lesson..."})
+    await asyncio.sleep(0)
+    lesson_id = get_lesson_id(metadata.lesson.title, metadata.lesson.description, metadata.lesson.content, level_id, resource_id, metadata.lesson.estimated_duration, session)
+
+    # 10. Update the lesson_topic relationships
+    topic_ids = [get_topic_id(topic, session) for topic in metadata.lesson.topics]
+    create_lesson_topics(lesson_id, topic_ids, session)
+    print(f"\n\nlesson_id: {lesson_id}\n\n")
+
     
     # 3. Create the Task
     await websocket.send_json({"progress": 100, "stage": "Task Created!"})

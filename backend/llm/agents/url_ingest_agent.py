@@ -3,32 +3,34 @@ from langchain.chat_models import ChatOpenAI
 from langchain.tools import Tool
 from typing import Optional
 import json
-
+from sqlmodel import Session
 # Import your async article scraper
-from backend.llm.tools.resource_classifier_tool import _classify_resource
-from backend.llm.tools.lesson_classifier_tool import _classify_lesson
+from backend.database.connection import get_session
+from backend.llm.tools.resource_classifier_tool import _enrich_resource
+from backend.llm.tools.lesson_classifier_tool import _enrich_lesson
 from backend.llm.tools.task_generator_tool import _generate_task
 from backend.llm.tools.taxonomy_search_tool import taxonomy_search
 from backend.llm.tools.pdf_reader_tool import extract_pdf_text
 from backend.llm.tools.web_scraper_tool import scrape_web_article1
 from backend.llm.tools.youtube_tool import extract_youtube_metadata
+from backend.routers.lessons import get_taxonomy
 from backend.utils.web_scraper_util import extract_article_metadata
 from backend.llm.schemas.article import RawArticle
-
+from backend.llm.schemas.metadata import Metadata, ResourceMetadata, SourceMetadata, LessonMetadata, TaskMetadata, CategoryMetadata, TechnologyMetadata
 
 llm = ChatOpenAI(model="gpt-4-turbo", temperature=0.2)
 
 # Define tools
 tools = [
     Tool.from_function(
-        func=_classify_resource,
-        name="classify_resource",
-        description="Classify the resource as a video, article, or other"
+        func=_enrich_resource,
+        name="enrich_resource",
+        description="Enrich the resource metadata"
     ),
     Tool.from_function(
-        func=_classify_lesson,
-        name="classify_lesson",
-        description="Classify the lesson as a video, article, or other"
+        func=_enrich_lesson,
+        name="enrich_lesson",
+        description="Enrich the lesson metadata"
     ),
     Tool.from_function(
         func=_generate_task,
@@ -65,31 +67,67 @@ agent = initialize_agent(
     verbose=True
 )
 
-async def run_url_ingestion_pipeline(url: str) -> Optional[dict]:
+async def run_url_ingestion_pipeline(url: str, session: Session) -> Metadata:
     try:
-        raw: RawArticle = await scrape_web_article1(url)
+        article: RawArticle = await scrape_web_article1(url)
 
-        # 1. Classify the resource
-        resource_result = _classify_resource(
-            article_text=raw.text,
-            article_url=raw.url,
-            article_title=raw.title
+        # Call LLM tool to enrich the resource/source metadata
+        resource_response = _enrich_resource(
+            url = article.url,
+            title = article.title,
+            text = article.text
         )
 
-        # 2. Extract lesson metadata
-        lesson_result = _classify_lesson(
-            text=raw.text,
-            title=raw.title
+        # Call LLM tool to enrich and classify the lesson metadata
+        lesson_response = _enrich_lesson(
+            title=article.title,
+            text=article.text,
+            taxonomy=get_taxonomy(session)
         )
 
-        # 3. Generate task metadata
-        task_result = _generate_task(
-            lesson_title=raw.title,
-            resource_type=json.loads(resource_result)["resource_type"],
-            lesson_description=json.loads(lesson_result)["lesson_description"]
+        # Call LLM tool to enrich the task metadata
+        task_response = _generate_task(
+            resource_title=article.title,
+            resource_type=resource_response.resource_type,
+            lesson_description=lesson_response.lesson_description
         )
 
         # 4. Compose the final JSON structure
+        return Metadata(
+            resource=ResourceMetadata(
+                title=resource_response.resource_title,
+                description=resource_response.resource_description,
+                url=article.url,
+                type=article.resource_type if article.resource_type else resource_response.resource_type,
+                image_url=article.img_url if article.img_url else resource_response.resource_image_url,
+                authors=article.authors if article.authors else resource_response.resource_authors
+            ),
+            source=SourceMetadata(
+                name=resource_response.source_name,
+                type=resource_response.source_type,
+                website=resource_response.source_url,
+                image_url=article.favicon_url if article.favicon_url else resource_response.source_image_url
+            ),
+            lesson=LessonMetadata(
+                title=article.title,
+                description=lesson_response.lesson_description,
+                content=article.text,
+                estimated_duration=lesson_response.estimated_duration,
+                level=lesson_response.level,
+                topics=lesson_response.topics,
+                categories=lesson_response.categories,
+                technologies=lesson_response.technologies
+            ),  
+            task=TaskMetadata(
+                name=task_response.task_name,
+                description=task_response.task_description,
+                type=task_response.task_type,
+                status=task_response.task_status,
+                priority=task_response.task_priority
+            )
+        )
+    
+        """
         return {
             "source_type": json.loads(resource_result)["source_type"],
             "source": json.loads(resource_result)["source_name"],
@@ -108,6 +146,6 @@ async def run_url_ingestion_pipeline(url: str) -> Optional[dict]:
             },
             "task": json.loads(task_result)
         }
-
+        """
     except Exception as e:
         return {"error": str(e)}

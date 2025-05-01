@@ -17,9 +17,9 @@ async def scrape_web_article1(url: str) -> dict:
         raw_html = requests.get(url).text
         soup = BeautifulSoup(raw_html, "html.parser")
         site_name_tag = soup.find("meta", attrs={"property": "og:site_name"})
-        site_name = site_name_tag.get("content") if site_name_tag else None
+        source_name = site_name_tag.get("content") if site_name_tag else None
         site_type_tag = soup.find("meta", attrs={"property": "og:type"})
-        site_type = site_type_tag.get("content") if site_type_tag else None
+        resource_type = site_type_tag.get("content") if site_type_tag else None
 
 
         # Step 2: Parse with newspaper
@@ -31,9 +31,17 @@ async def scrape_web_article1(url: str) -> dict:
             url=url,
             title=article.title,
             text=article.text,
-            author=article.authors,
-            publish_date=article.publish_date,
-            html=article.html
+            authors=article.authors if article.authors else None,
+            favicon_url=article.meta_favicon if article.meta_favicon else None,
+            html=article.html if article.html else None,
+            img_url=article.top_image if article.top_image else None,
+            publish_date=article.publish_date if article.publish_date else None,
+            resource_type=resource_type if resource_type else None,
+            source_name=source_name if source_name else None,
+            source_type=None,
+            source_url=article.source_url if article.source_url else None,
+            summary=article.summary if article.summary else None,
+            tags=article.tags if article.tags else None
         )
     
     except Exception as e:

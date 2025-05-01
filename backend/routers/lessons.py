@@ -165,12 +165,30 @@ def create_lesson(title: str, description: str, content: str, level_id: int, res
     return new_lesson
 
 
+def create_lesson(title: str, description: str, content: str, level_id: int, resource_id: int, estimated_duration: str, session: Session):
+    lesson_id = generate_unique_lesson_id(session)
+    new_lesson = Lesson(lesson_id=lesson_id, title=title, description=description, content=content, level_id=level_id, resource_id=resource_id, estimated_duration=estimated_duration)
+    session.add(new_lesson)
+    session.commit()
+    session.refresh(new_lesson)
+    return new_lesson
+
+
 def get_lesson_id(title: str, description: str, content: str, level_id: int, resource_id: int, session: Session):
     lesson = session.exec(select(Lesson)
                             .where(Lesson.title == title)
                             .where(Lesson.resource_id == resource_id)).first()
     if not lesson:
         lesson = create_lesson(title, description, content, level_id, resource_id, session)
+    return lesson.id
+
+
+def get_lesson_id(title: str, description: str, content: str, level_id: int, resource_id: int, estimated_duration: str, session: Session):
+    lesson = session.exec(select(Lesson)
+                            .where(Lesson.title == title)
+                            .where(Lesson.resource_id == resource_id)).first()
+    if not lesson:
+        lesson = create_lesson(title, description, content, level_id, resource_id, estimated_duration, session)
     return lesson.id
 
 
@@ -259,6 +277,22 @@ def get_category_subcategory_map(session: Session):
         category_subcategory_map[category.name] = [subcategory.name for subcategory in subcategories]
 
     return category_subcategory_map
+
+
+def get_taxonomy(session: Session):
+        # Get list of categories
+        categories = session.exec(select(Category)).all()
+
+        # Create a dictionary to map categories to their subcategories
+        category_subcategory_map = {}
+
+        # For every category, get the list of subcategories and add to map
+        for category in categories:
+            subcategories = session.exec(select(Subcategory).where(Subcategory.category_id == category.id)).all()
+            category_subcategory_map[category.name] = [subcategory.name for subcategory in subcategories]
+
+        return category_subcategory_map
+
 
 
 def get_lesson_details(lesson_id: int, session: Session):

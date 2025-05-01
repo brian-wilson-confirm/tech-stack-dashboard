@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import func
 from sqlmodel import Session, select
 from backend.database.connection import get_session
-from backend.database.models.resource_models import Resource
+from backend.database.models.resource_models import Resource, ResourceAuthor
 from backend.database.models.resourcetype_models import ResourceType
 from backend.database.views.resource_schemas import ResourceCreate, ResourceRead
 
@@ -91,3 +91,25 @@ def get_resourcetype_id(resourcetype_name: str, session: Session):
         resourcetype = create_resourcetype(resourcetype_name, session)
     return resourcetype.id
 
+
+def create_resource_authors(resource_id: int, person_ids: List[int], session: Session):
+    for person_id in person_ids:
+        # Check if the course_category relationship already exists
+        existing_relation = session.exec(
+            select(ResourceAuthor).where(
+                ResourceAuthor.resource_id == resource_id,
+                ResourceAuthor.person_id == person_id
+            )
+        ).first()
+        
+        # If the relationship doesn't exist, create it
+        if not existing_relation:
+            create_resource_author(resource_id, person_id, session)
+
+
+def create_resource_author(resource_id: int, person_id: int, session: Session):
+    resource_author = ResourceAuthor(resource_id=resource_id, person_id=person_id)
+    session.add(resource_author)
+    session.commit()
+    session.refresh(resource_author)
+    return resource_author

@@ -59,8 +59,8 @@ def serialize_source(source: Source, session: Session) -> SourceRead:
             )
 
 
-def create_source(source_name: str, session: Session):
-    new_source = Source(name=source_name)
+def create_source(source_name: str, sourcetype_id: int, session: Session):
+    new_source = Source(name=source_name, sourcetype_id=sourcetype_id)
     session.add(new_source)
     session.commit()
     session.refresh(new_source)
@@ -75,6 +75,7 @@ def create_sourcetype(sourcetype_name: str, session: Session):
     return new_sourcetype
 
 
+# NO LONGER NEEDED! 4/30/25
 def create_source_authors(source_id: int, person_ids: List[int], session: Session):
     for person_id in person_ids:
         # Check if the course_category relationship already exists
@@ -90,6 +91,7 @@ def create_source_authors(source_id: int, person_ids: List[int], session: Sessio
             create_source_author(source_id, person_id, session)
 
 
+# NO LONGER NEEDED! 4/30/25
 def create_source_author(source_id: int, person_id: int, session: Session):
     source_author = SourceAuthor(source_id=source_id, person_id=person_id)
     session.add(source_author)
@@ -98,10 +100,10 @@ def create_source_author(source_id: int, person_id: int, session: Session):
     return source_author
 
 
-def get_source_id(source_name: str, session: Session):
+def get_source_id(source_name: str, sourcetype_id: int, session: Session):
     source = session.exec(select(Source).where(Source.name == source_name)).first()
     if not source:
-        source = create_source(source_name, session)
+        source = create_source(source_name, sourcetype_id,session)
     return source.id
 
 

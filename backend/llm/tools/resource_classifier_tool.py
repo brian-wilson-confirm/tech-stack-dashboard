@@ -2,40 +2,44 @@ from langchain.tools import tool
 from langchain.chat_models import ChatOpenAI
 from langchain.schema import HumanMessage, SystemMessage
 import json
+from backend.llm.schemas.response import ResourceResponse
+
 
 # Instantiate the LLM
 llm = ChatOpenAI(model="gpt-4-turbo", temperature=0.2)
 
 SYSTEM_INSTRUCTION = """
-You are an intelligent assistant for a Learning Management System (LMS).
-Given raw content extracted from a URL (such as an article, video, PDF, etc.), your job is to classify:
-- the source type (e.g., Blog, Documentation, Course, YouTube Channel, News, GitHub, etc.)
-- the source name (e.g., Medium, RealPython, YouTube, Towards Data Science, Mozilla Docs)
-- the resource type (e.g., Article, PDF, Video, Tweet, Book)
-- the cleaned resource title and a 1–2 sentence description of the content
+You are an intelligent assistant for a tech Learning Management System (LMS).
+Given raw content extracted from a URL (such as an article, video, PDF, etc.), your job is to identity the following metadata and return it strictly as a JSON object with the following keys:
+{{
+    "resource_title": "<Cleaned Resource Title>",
+    "resource_description": "<1–2 Sentence Description of the Content>",
+    "resource_type": "<Resource Type (e.g., article, pdf, video, tweet, book)>",
+    "resource_url": "<Resource URL (e.g., https://medium.com/@john_doe/my-article, https://www.youtube.com/watch?v=1234567890)>",
+    "resource_image_url": "<Primary Image URL for the Resource (if available)>",
+    "resource_authors": "<List of Authors (e.g., [\"John Doe\", \"Jane Smith\"]))",
+    "source_name": "<Source Name (e.g., Medium, RealPython, YouTube, Towards Data Science, Mozilla Docs)>",
+    "source_type": "<Source Type (e.g., blog, documentation, course, YouTube channel, news, github, online platform, etc.)>",
+    "source_url": "<Source URL (e.g., https://medium.com/@john_doe, https://www.youtube.com/@channel_name, https://towardsdatascience.com/category/machine-learning)>",
+    "source_image_url": "<Primary Image URL for the Source (if available)>",
+}}
 
-Return your response as a strict JSON object with keys:
-- source_type
-- source_name
-- resource_type
-- resource_title
-- resource_description
 
 Only include those fields. Do not explain or include anything else.
 """
 
 #@tool
-def _classify_resource(article_text: str, article_url: str, article_title: str) -> str:
+def _enrich_resource(url: str, title: str, text: str) -> ResourceResponse:
     """
     Classifies the resource metadata from scraped article content.
     Returns a JSON string.
     """
     user_prompt = f"""
-                    Article Title: {article_title}
-                    Article URL: {article_url}
+                    Article Title: {title}
+                    Article URL: {url}
 
                     Full Text:
-                    {article_text[:3000]}  # limit to first ~3000 characters to stay within token limits
+                    {text[:3000]}  # limit to first ~3000 characters to stay within token limits
     """
 
     messages = [
@@ -47,9 +51,10 @@ def _classify_resource(article_text: str, article_url: str, article_title: str) 
     try:
         result = json.loads(response.content)
         print(f"\n\nresult: {result}\n\n")
-        return json.dumps(result, indent=2)
+        #return json.dumps(result, indent=2)
+        return ResourceResponse(**result)
     except Exception as e:
         return json.dumps({"error": f"Failed to parse JSON: {str(e)}", "raw": response.content})
     
     # ✅ LangChain-compatible tool for agent use
-    classify_resource = tool(_classify_resource_impl)
+    enrich_resource = tool(_enrich_resource_impl)

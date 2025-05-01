@@ -26,10 +26,13 @@ from backend.database.views.subcategory_schemas import SubcategoryRead
 from backend.database.views.category_schemas import CategoryRead
 from sqlalchemy import text
 
-from backend.routers.lessons import create_lesson_topics, enrich_lesson, get_lesson_id
+from backend.routers.categories import get_category_id
+from backend.routers.lessons import create_lesson_topics, enrich_lesson, get_lesson_id, create_lesson_categories, create_lesson_subcategories, create_lesson_technologies, create_technology_subcategories
 from backend.routers.levels import get_level_id
 from backend.routers.people import get_person_ids
 from backend.routers.resources import get_resource_id, get_resourcetype_id, create_resource_authors
+from backend.routers.subcategories import get_subcategory_id
+from backend.routers.technologies import get_technology_id
 from backend.routers.topics import get_topic_id, get_topic_ids
 from backend.routers.sources import get_source_id, get_sourcetype_id, create_source_authors
 from backend.utils.web_scraper_util import extract_article_metadata
@@ -279,10 +282,34 @@ async def websocket_endpoint2(websocket: WebSocket, session: Session = Depends(g
     await asyncio.sleep(0)
     lesson_id = get_lesson_id(metadata.lesson.title, metadata.lesson.description, metadata.lesson.content, level_id, resource_id, metadata.lesson.estimated_duration, session)
 
-    # 10. Update the lesson_topic relationships
+    # 10. Update the lesson_category relationships
+    category_ids = [get_category_id(category_data["category"], session) for category_data in metadata.lesson.categories]
+    create_lesson_categories(lesson_id, category_ids, session)
+
+    # 11. Update the lesson_subcategory relationships
+    for category_data in metadata.lesson.categories:
+        subcategories = category_data["subcategories"]
+        subcategory_ids = [get_subcategory_id(subcategory, session) for subcategory in subcategories]
+        create_lesson_subcategories(lesson_id, subcategory_ids, session)
+
+    # 12. Get/Create the Technology(ies)
+    technology_ids = [get_technology_id(technology_data["technology"], session) for technology_data in metadata.lesson.technologies]
+
+    # 13. Update the lesson_technology relationships
+    create_lesson_technologies(lesson_id, technology_ids, session)
+
+    # 14. Update the technology_subcategory relationships
+    for technology_data in metadata.lesson.technologies:
+        technology_id = get_technology_id(technology_data["technology"], session)
+        subcategory_ids = [get_subcategory_id(subcategory, session) for subcategory in technology_data["subcategories"]]
+        create_technology_subcategories(technology_id, subcategory_ids, session)
+    
+    # 15. Update the lesson_topic relationships
     topic_ids = [get_topic_id(topic, session) for topic in metadata.lesson.topics]
     create_lesson_topics(lesson_id, topic_ids, session)
-    print(f"\n\nlesson_id: {lesson_id}\n\n")
+    print(f"\n\ntechnology_ids: {technology_ids}\n\n")
+
+
 
     
     # 3. Create the Task

@@ -321,6 +321,9 @@ async def websocket_endpoint2(websocket: WebSocket, session: Session = Depends(g
     task = create_task(lesson_id, metadata.task, metadata.lesson.estimated_duration, session)
     #print(f"\n\ntask: {task}\n\n")
     print(f"\n\nmetadata: {metadata}\n\n")
+    print(f"\n\nresource: {metadata.resource}\n\n")
+    print(f"\n\nsource: {metadata.source}\n\n")
+    print(f"\n\ntopics: {metadata.lesson.topics}\n\n")
     print(f"\n\ntechnologies: {metadata.lesson.technologies}\n\n")
     print(f"\n\ncategories: {metadata.lesson.categories}\n\n")
 

@@ -62,8 +62,18 @@ SYSTEM_PROMPT = """
             Additional constraints on technologies:
             - Each technology must have 1 or more **subcategories** associated with it.
             - If a lesson discusses general types of tools like "SQL Database", treat that as a **topic**, not a technology.
-            - Identify technologies relevant to the lesson, if appropriate.
-            - If no specific, named technology is clearly covered in the lesson, return **technologies** as an empty list.
+            - Identify technologies that are central to the **main purpose or learning outcome** of the lesson.
+
+            A relevant technology is one that:
+            - Is the primary tool, platform, or system being taught, analyzed, reviewed, or used in the lesson
+            - Is the focus of the lesson's goals, not just mentioned in passing
+            - Is essential to completing or understanding the lesson
+
+            ❌ Do NOT include tools or services that are only mentioned briefly (e.g., integrations, comparisons, or example references) unless the lesson directly teaches or depends on them.
+
+            ✅ For example, if an article is about using Claude with Zapier, only include Claude as the technology — and not Zapier — unless the article teaches how to configure Zapier specifically.
+
+            If no such focused technologies are found, return an empty list for `technologies`.
 
             ---
 
@@ -96,6 +106,8 @@ SYSTEM_PROMPT = """
             -- DO NOT return generic technology types (e.g., "SQL Database", "Blob Storage").
             -- If the lesson covers a class of tools (e.g., "SQL Database") but does not mention a specific named product (e.g., "PostgreSQL", "MySQL"), do not list it as a technology.
             -- Instead, include it under `topics`, or omit it entirely if it's too vague.
+            -- Do not treat every brand, product, or integration mentioned as a technology.
+            -- Only include technologies that are central to what the lesson is teaching or demonstrating.
             
             - If applicable, suggest one or more topics associated with the lesson.
 

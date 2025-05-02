@@ -416,9 +416,18 @@ export default function LessonsPage() {
         const technologies = row.original.technologies;
         if (!Array.isArray(technologies) || technologies.length === 0) return <span>--</span>;
 
-        const names = technologies.map(tech => tech.name).join(", ");
-
-        return <div>{names}</div>
+        return (
+          <div className="flex flex-wrap gap-1">
+            {technologies.map((tech, index) => (
+              <span
+                key={index}
+                className="px-1 py-1 text-xs rounded-full bg-indigo-50 text-indigo-700"
+              >
+                {tech.name}
+              </span>
+            ))}
+          </div>
+        );
       }
     },
     { accessorKey: "subcategories", header: "Subcategories",
@@ -426,9 +435,18 @@ export default function LessonsPage() {
         const subcategories = row.original.subcategories;
         if (!Array.isArray(subcategories)) return null;
 
-        const names = subcategories.map(sub => sub.name).join(", ");
-
-        return <div>{names}</div>
+        return (
+          <div className="flex flex-wrap gap-1">
+            {subcategories.map((sub, index) => (
+              <span
+                key={index}
+                className="px-1 py-1 text-xs rounded-full bg-indigo-50 text-indigo-700"
+              >
+                {sub.name}
+              </span>
+            ))}
+          </div>
+        );
       }
     },
     { accessorKey: "categories", header: "Categories",
@@ -436,9 +454,18 @@ export default function LessonsPage() {
         const categories = row.original.categories;
         if (!Array.isArray(categories)) return null;
 
-        const names = categories.map(cat => cat.name).join(", ");
-
-        return <div>{names}</div>
+        return (
+          <div className="flex flex-wrap gap-1">
+            {categories.map((cat, index) => (
+              <span
+                key={index}
+                className="px-1 py-1 text-xs rounded-full bg-indigo-50 text-indigo-700"
+              >
+                {cat.name}
+              </span>
+            ))}
+          </div>
+        );
       }
     },
     { accessorKey: "topics", header: "Topics", 

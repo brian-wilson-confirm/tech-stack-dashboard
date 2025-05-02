@@ -2,9 +2,8 @@ from fastapi import WebSocket
 from langchain.agents import initialize_agent, AgentType
 from langchain.chat_models import ChatOpenAI
 from langchain.tools import Tool
-from typing import Optional
-import json
 from sqlmodel import Session
+
 # Import your async article scraper
 from backend.database.connection import get_session
 from backend.llm.tools.resource_classifier_tool import _enrich_resource
@@ -12,7 +11,7 @@ from backend.llm.tools.lesson_classifier_tool import _enrich_lesson
 from backend.llm.tools.task_generator_tool import _generate_task
 from backend.llm.tools.taxonomy_search_tool import taxonomy_search
 from backend.llm.tools.pdf_reader_tool import extract_pdf_text
-from backend.llm.tools.web_scraper_tool import scrape_web_article1
+from backend.llm.tools.web_scraper_tool import scrape_web_article
 from backend.llm.tools.youtube_tool import extract_youtube_metadata
 from backend.routers.lessons import get_taxonomy
 from backend.utils.web_scraper_util import extract_article_metadata
@@ -71,7 +70,7 @@ agent = initialize_agent(
 
 async def run_url_ingestion_pipeline(url: str, websocket: WebSocket, session: Session) -> Metadata:
     try:
-        article: RawArticle = await scrape_web_article1(url)
+        article: RawArticle = await scrape_web_article(url)
 
         if isinstance(article, dict) and "error" in article:
             return {"error": article["error"]}

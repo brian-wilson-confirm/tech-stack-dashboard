@@ -80,7 +80,8 @@ async def run_url_ingestion_pipeline(url: str, websocket: WebSocket, session: Se
         resource_response = _enrich_resource(
             url = article.url,
             title = article.title,
-            text = article.text
+            text = article.text,
+            html = article.html
         )
 
         # Call LLM tool to enrich and classify the lesson metadata

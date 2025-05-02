@@ -421,7 +421,7 @@ export default function LessonsPage() {
             {technologies.map((tech, index) => (
               <span
                 key={index}
-                className="px-1 py-1 text-xs rounded-full bg-indigo-50 text-indigo-700"
+                className="px-1 py-1 text-xs rounded-full bg-blue-50 text-blue-700"
               >
                 {tech.name}
               </span>
@@ -440,7 +440,7 @@ export default function LessonsPage() {
             {subcategories.map((sub, index) => (
               <span
                 key={index}
-                className="px-1 py-1 text-xs rounded-full bg-indigo-50 text-indigo-700"
+                className="px-1 py-1 text-xs rounded-full bg-sky-50 text-sky-700"
               >
                 {sub.name}
               </span>
@@ -459,7 +459,7 @@ export default function LessonsPage() {
             {categories.map((cat, index) => (
               <span
                 key={index}
-                className="px-1 py-1 text-xs rounded-full bg-indigo-50 text-indigo-700"
+                className="px-1 py-1 text-xs rounded-full bg-amber-50 text-amber-700"
               >
                 {cat.name}
               </span>

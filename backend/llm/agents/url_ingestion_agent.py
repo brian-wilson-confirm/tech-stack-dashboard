@@ -73,7 +73,7 @@ async def run_url_ingestion_pipeline(url: str, websocket: WebSocket, session: Se
         article: RawArticle = await scrape_web_article(url)
 
         if isinstance(article, dict) and "error" in article:
-            return {"error": article["error"]}
+            return {"error": article["error"] + " article"}
 
         # Call LLM tool to enrich the resource/source metadata
         await update_progress(websocket, 10, "Retreiving Resource Metadata...")
@@ -137,4 +137,4 @@ async def run_url_ingestion_pipeline(url: str, websocket: WebSocket, session: Se
         )
 
     except Exception as e:
-        return {"error": str(e)}
+        return {"error": str(e) + " url"}

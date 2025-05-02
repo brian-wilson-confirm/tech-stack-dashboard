@@ -59,6 +59,7 @@ Return your result strictly in the following JSON format:
 
 
 Only include those fields and return valid JSON. Do not explain or include anything else.
+Ensure the output can be parsed successfully using `json.loads()`.
 """
 
 #@tool

@@ -116,6 +116,8 @@ def get_sourcetype_id(sourcetype_name: str, session: Session):
 
 
 def get_publication_id(publication_name: str, source_id: int, session: Session):
+    if publication_name == "" or publication_name == None:
+        return None
     publication = session.exec(select(Publication).where(Publication.name == publication_name, Publication.source_id == source_id)).first()
     if not publication:
         publication = create_publication(publication_name, source_id, session)

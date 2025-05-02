@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from fastapi import APIRouter, Depends
 from sqlalchemy import func
 from sqlmodel import Session, select
@@ -76,7 +76,7 @@ def create_resourcetype(resourcetype_name: str, session: Session):
     return new_resourcetype
 
 
-def get_resource_id(resourcetype_id: int, source_id: int, publication_id: int, resource_metadata: ResourceMetadata, session: Session):
+def get_resource_id(resourcetype_id: int, source_id: int, publication_id: Optional[int], resource_metadata: ResourceMetadata, session: Session):
     resource = session.exec(select(Resource)
                             .where(Resource.title == resource_metadata.title)
                             .where(Resource.resourcetype_id == resourcetype_id)

@@ -14,11 +14,8 @@ SYSTEM_PROMPT = """
             A **Lesson** is the smallest structured unit of learning content within the platform I am building.
             It delivers a focused concept or skill, often as part of a broader Module and Course, but can also be standalone.
 
-            A **Technology** is a practical, real-world tool, framework, or service that helps design, develop, build, manage, deploy, or secure systems.
-
-            A **Topic** is a focused, reusable concept, skill, best practice, or architectural pattern (such as "Authentication", "Unit Testing", or "Caching") that a Lesson covers or applies. 
-            Topics are more granular than subcategories and may be relevant across multiple categories, subcategories, or technologies.
-
+            ---
+            
             ### 📚 Taxonomy
 
             Use the following predefined taxonomy when making your selections.
@@ -29,11 +26,24 @@ SYSTEM_PROMPT = """
 
             ---
        
-            ### 🛠 Available Technologies (Examples)
+            ### 🛠 Available Technologies
 
-            Each technology has a **Category** and **Subcategory** associated with it. 
-            There is no strict list of technologies, but every technology must map to 1 or more subcategories.
-            Identify technologies relevant to the lesson if appropriate.
+            A **Technology** must be a standalone, installable, deployable, or integratable named product, tool, framework, or service — not a general concept or category.
+            It should be something a person or team can choose to adopt or implement directly.
+            If the name refers to a category or concept, not a specific branded or concrete tool, it is not a valid technology.
+            
+            ❌ DO NOT return technologies that are vague, descriptive categories or families of tools:
+            - SQL Database → This is a subcategory, not a technology
+            - Blob Storage → This is too vague, not a specific technology
+            - Web Server → This is not a specific technology
+            - Container Platform → Too broad, not actionable
+    
+            ✅ DO return specific technologies like:
+            - PostgreSQL (instead of SQL Database)
+            - AWS S3 (instead of Blob Storage)
+            - NGINX (instead of Web Server)
+            - Docker or Kubernetes (instead of Container Platform)
+
             Some examples of technologies include:
             - Python
             - JavaScript
@@ -49,9 +59,18 @@ SYSTEM_PROMPT = """
             - Cloudflare
             - Apache Kafka
 
+            Additional constraints on technologies:
+            - Each technology must have 1 or more **subcategories** associated with it.
+            - If a lesson discusses general types of tools like "SQL Database", treat that as a **topic**, not a technology.
+            - Identify technologies relevant to the lesson, if appropriate.
+            - If no specific, named technology is clearly covered in the lesson, return **technologies** as an empty list.
+
             ---
 
             ### 📚 Available Topics
+
+            A **Topic** is a focused, reusable concept, skill, best practice, or architectural pattern (such as "Authentication", "Unit Testing", or "Caching") that a Lesson covers or applies. 
+            Topics are more granular than subcategories and may be relevant across multiple categories, subcategories, or technologies.
 
             Suggest a topic or topics if you believe it is highly relevant and applicable to the lesson. There is no strict list of topics.
 
@@ -72,8 +91,11 @@ SYSTEM_PROMPT = """
             - Only choose categories and subcategories from the predefined taxonomy provided.
             - Only include the most relevant categories (1–3 max)
 
-            - If applicable, suggest one or more technologies associated with the lesson:
+            - If applicable, suggest one or more **specific, named technologies** associated with the lesson:
             -- For each technology identified, list which subcategories it is associated with.
+            -- DO NOT return generic technology types (e.g., "SQL Database", "Blob Storage").
+            -- If the lesson covers a class of tools (e.g., "SQL Database") but does not mention a specific named product (e.g., "PostgreSQL", "MySQL"), do not list it as a technology.
+            -- Instead, include it under `topics`, or omit it entirely if it's too vague.
             
             - If applicable, suggest one or more topics associated with the lesson.
 
@@ -134,7 +156,7 @@ def _enrich_lesson(title: str, text: str, taxonomy: str) -> LessonResponse:
         HumanMessage(content=user_prompt)
     ]
 
-    
+
     response = llm(messages)
     try:
         result = json.loads(response.content)

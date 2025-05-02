@@ -253,8 +253,8 @@ async def websocket_endpoint2(websocket: WebSocket, session: Session = Depends(g
 
     # 3. Get/Create the Person id(s)
     await update_progress(websocket, 85, "Fetching IDs...")
-    person_ids = get_person_ids(metadata["resource"]["authors"], session)
-    sourcetype_id = get_sourcetype_id(metadata["source"]["type"], session)
+    person_ids = get_person_ids(metadata.resource.authors, session)
+    sourcetype_id = get_sourcetype_id(metadata.source.type, session)
 
     # 4. Get/Create the Source
     await update_progress(websocket, 86, "Creating the Source...")
@@ -270,7 +270,7 @@ async def websocket_endpoint2(websocket: WebSocket, session: Session = Depends(g
 
     # 7. Get/Create the Resource
     await update_progress(websocket, 89, "Creating the Resource...")
-    resource_id = get_resource_id(resourcetype_id, source_id, publication_id, metadata.resource.title, metadata.resource.description, metadata.resource.url, session)
+    resource_id = get_resource_id(resourcetype_id, source_id, publication_id, metadata.resource, session)
 
     # 8. Create the resource_author relationship(s) if it doesn't already exist
     await update_progress(websocket, 90, "Mapping the Author(s) to the Resource...")
@@ -282,7 +282,7 @@ async def websocket_endpoint2(websocket: WebSocket, session: Session = Depends(g
 
     # 10. Get/Create the Lesson
     await update_progress(websocket, 92, "Creating the Lesson...")
-    lesson_id = get_lesson_id(metadata.lesson.title, metadata.lesson.description, metadata.lesson.content, level_id, resource_id, metadata.lesson.estimated_duration, session)
+    lesson_id = get_lesson_id(metadata.lesson, level_id, resource_id, session)
 
     # 11. Update the lesson_category relationships
     await update_progress(websocket, 93, "Mapping the Category(ies) to the Lesson...")
@@ -319,7 +319,10 @@ async def websocket_endpoint2(websocket: WebSocket, session: Session = Depends(g
     # 17. Create the Task
     await update_progress(websocket, 99, "Creating the Task...")
     task = create_task(lesson_id, metadata.task, metadata.lesson.estimated_duration, session)
-    print(f"\n\ntask: {task}\n\n")
+    #print(f"\n\ntask: {task}\n\n")
+    print(f"\n\nmetadata: {metadata}\n\n")
+    print(f"\n\ntechnologies: {metadata.lesson.technologies}\n\n")
+    print(f"\n\ncategories: {metadata.lesson.categories}\n\n")
 
     await update_progress(websocket, 100, "Task has been created!")
     await websocket.close()

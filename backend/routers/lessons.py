@@ -20,6 +20,7 @@ from backend.database.views.source_schemas import SourceRequest, SourceTypeReque
 from backend.database.views.subcategory_schemas import SubcategoryRead
 from backend.database.views.technology_schemas import TechnologyRead
 from backend.database.views.topic_schemas import TopicRead
+from backend.llm.schemas.metadata import LessonMetadata
 from backend.llm.templates.prompt_templates import build_lesson_prompt
 from backend.routers.categories import get_category_id
 from backend.routers.levels import get_level_id
@@ -183,12 +184,12 @@ def get_lesson_id(title: str, description: str, content: str, level_id: int, res
     return lesson.id
 
 
-def get_lesson_id(title: str, description: str, content: str, level_id: int, resource_id: int, estimated_duration: str, session: Session):
+def get_lesson_id(lesson_metadata: LessonMetadata, level_id: int, resource_id: int, session: Session):
     lesson = session.exec(select(Lesson)
-                            .where(Lesson.title == title)
+                            .where(Lesson.title == lesson_metadata.title)
                             .where(Lesson.resource_id == resource_id)).first()
     if not lesson:
-        lesson = create_lesson(title, description, content, level_id, resource_id, estimated_duration, session)
+        lesson = create_lesson(lesson_metadata.title, lesson_metadata.description, lesson_metadata.content, level_id, resource_id, lesson_metadata.estimated_duration, session)
     return lesson.id
 
 

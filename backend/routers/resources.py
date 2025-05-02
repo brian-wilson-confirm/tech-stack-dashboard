@@ -6,6 +6,7 @@ from backend.database.connection import get_session
 from backend.database.models.resource_models import Resource, ResourceAuthor
 from backend.database.models.resourcetype_models import ResourceType
 from backend.database.views.resource_schemas import ResourceCreate, ResourceRead
+from backend.llm.schemas.metadata import ResourceMetadata
 
 router = APIRouter(prefix="/resources")
 
@@ -75,13 +76,13 @@ def create_resourcetype(resourcetype_name: str, session: Session):
     return new_resourcetype
 
 
-def get_resource_id(resourcetype_id: int, source_id: int, publication_id: int, resourcetitle: str, resourcedescription: str, resourceurl: str, session: Session):
+def get_resource_id(resourcetype_id: int, source_id: int, publication_id: int, resource_metadata: ResourceMetadata, session: Session):
     resource = session.exec(select(Resource)
-                            .where(Resource.title == resourcetitle)
+                            .where(Resource.title == resource_metadata.title)
                             .where(Resource.resourcetype_id == resourcetype_id)
                             .where(Resource.source_id == source_id)).first()
     if not resource:
-        resource = create_resource(resourcetitle, resourcedescription, resourceurl, resourcetype_id, source_id, publication_id, session)
+        resource = create_resource(resource_metadata.title, resource_metadata.description, resource_metadata.url, resourcetype_id, source_id, publication_id, session)
     return resource.id
 
 

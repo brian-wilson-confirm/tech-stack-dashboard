@@ -1,12 +1,11 @@
 from pydantic import BaseModel
-
+from typing import Optional
 
 class TechnologyCreate(BaseModel):
     name: str
-    subcategory_id: int
+    description: Optional[str] = None
 
 class TechnologyRead(BaseModel):
     id: int
     name: str
-    subcategory: str
-    category: str
+    description: Optional[str] = None

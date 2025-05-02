@@ -3,13 +3,13 @@ import { useState, useEffect, useCallback } from "react"
 import { ColumnDef, SortingState, VisibilityState, FilterFn, ColumnFiltersState, OnChangeFn, PaginationState } from "@tanstack/react-table"
 import { DataTableWidget, EditModeRenderer } from "@/components/widgets/DataTableWidget"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { BookOpen, CheckSquare, Clock, Plus } from "lucide-react"
+import { BookOpen, Clock, Plus } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { capitalizeWords } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { toast } from "@/components/ui/use-toast"
-import { Lesson, LessonForm, lessonFormSchema } from "@/components/data/schema"
+import { Lesson, LessonForm, lessonFormSchema, LessonTable } from "@/components/data/schema"
 import React from "react"
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useForm } from "react-hook-form"
@@ -116,65 +116,6 @@ function ShowAddLessonDialog({ onAddItem, disabled }: { onAddItem: (item: Lesson
       fetchOptions()
     }
   }, [open])
-
-  // Fetch subcategories when category changes
-  useEffect(() => {
-    const categoryId = form.watch('category_id')
-    if (categoryId) {
-      const fetchSubcategories = async () => {
-        try {
-          const response = await fetch(`/api/tasks/subcategories/${categoryId}`)
-          if (!response.ok) {
-            throw new Error('Failed to fetch subcategories')
-          }
-          const data = await response.json()
-          setSubcategoryOptions(data)
-          // Reset subcategory and technology when category changes
-          form.setValue('subcategory_id', '')
-          form.setValue('technology_id', '')
-        } catch (error) {
-          console.error('Error fetching subcategories:', error)
-          toast({
-            title: "Error",
-            description: "Failed to load subcategories.",
-            variant: "destructive",
-          })
-        }
-      }
-      fetchSubcategories()
-    } else {
-      setSubcategoryOptions([])
-    }
-  }, [form.watch('category_id')])
-
-  // Fetch technologies when subcategory changes
-  useEffect(() => {
-    const subcategoryId = form.watch('subcategory_id')
-    if (subcategoryId) {
-      const fetchTechnologies = async () => {
-        try {
-          const response = await fetch(`/api/tasks/technologies/${subcategoryId}`)
-          if (!response.ok) {
-            throw new Error('Failed to fetch technologies')
-          }
-          const data = await response.json()
-          setTechnologyOptions(data)
-          // Reset technology when subcategory changes
-          form.setValue('technology_id', '')
-        } catch (error) {
-          console.error('Error fetching technologies:', error)
-          toast({
-            title: "Error",
-            description: "Failed to load technologies.",
-            variant: "destructive",
-          })
-        }
-      }
-      fetchTechnologies()
-    } else {
-      setTechnologyOptions([])
-    }
-  }, [form.watch('subcategory_id')])
 
   const onSubmit = async (data: LessonForm) => {
     setIsSubmitting(true)
@@ -382,11 +323,16 @@ const initialVisibleColumns = {
   lesson_id: true,
   title: true,
   description: false,
-  module: true,
-  course: true,
+  technologies: true,
+  subcategories: true,
+  categories: true,
+  topics: true,
+  level: true,
+  module: false,
+  course: false,
   content: false,
   video_url: false,
-  order: true,
+  order: false,
   estimated_duration: true
 }
 
@@ -408,7 +354,7 @@ export default function LessonsPage() {
   const [visibleColumns, setVisibleColumns] = useState<VisibilityState>(initialVisibleColumns);
 
   // Table Pagination
-  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 15 });
 
   // Row Filter
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -446,8 +392,9 @@ export default function LessonsPage() {
   /*******************
     COLUMN DEFINITIONS
   ********************/
-  const columns: ColumnDef<Lesson>[] = [
-    { accessorKey: "lesson_id", header: "Lesson ID", cell: ({ row }) => (
+  const columns: ColumnDef<LessonTable>[] = [
+    { accessorKey: "lesson_id", header: "Lesson ID", 
+      cell: ({ row }) => (
         <Button
           variant="link"
           className="p-0 h-auto font-normal"
@@ -456,23 +403,99 @@ export default function LessonsPage() {
           {row.original.lesson_id}
         </Button>
     )},
-    { accessorKey: "title", header: "Title" },
+    { accessorKey: "title", header: "Title", 
+      cell: ({ row }) => (
+        <div className="max-w-[300px] truncate">
+          {row.original.title}
+        </div>
+      )
+    },
     { accessorKey: "description", header: "Description" },
+    { accessorKey: "technologies", header: "Technologies", 
+      cell: ({ row }) => {
+        const technologies = row.original.technologies;
+        if (!Array.isArray(technologies) || technologies.length === 0) return <span>--</span>;
+
+        const names = technologies.map(tech => tech.name).join(", ");
+
+        return <div>{names}</div>
+      }
+    },
+    { accessorKey: "subcategories", header: "Subcategories",
+      cell: ({ row }) => {
+        const subcategories = row.original.subcategories;
+        if (!Array.isArray(subcategories)) return null;
+
+        const names = subcategories.map(sub => sub.name).join(", ");
+
+        return <div>{names}</div>
+      }
+    },
+    { accessorKey: "categories", header: "Categories",
+      cell: ({ row }) => {
+        const categories = row.original.categories;
+        if (!Array.isArray(categories)) return null;
+
+        const names = categories.map(cat => cat.name).join(", ");
+
+        return <div>{names}</div>
+      }
+    },
+    { accessorKey: "topics", header: "Topics", 
+      cell: ({ row }) => {
+        const topics = row.original.topics;
+        if (!Array.isArray(topics)) return null;
+      
+        return (
+          <div className="flex flex-wrap gap-2">
+            {topics.map((topic, index) => (
+              <Badge
+                key={index}
+                variant="secondary"
+                className="bg-gray-200 text-gray-800"
+              >
+                {topic.name}
+              </Badge>
+            ))}
+          </div>
+        );
+      }
+    },
+    { accessorKey: "level", header: "Level",
+      enableSorting: true,
+      cell: ({ row }) => (
+        <span>{capitalizeWords(row.original.level)}</span>
+      ),
+    },
     { accessorKey: "module", header: "Module" },
     { accessorKey: "course", header: "Course" },
     { accessorKey: "content", header: "Content" },
     { accessorKey: "video_url", header: "Video URL" },
     { accessorKey: "order", header: "Order" },
-    {
-      accessorKey: "estimated_duration",
-      header: "Est. Duration",
+    { accessorKey: "estimated_duration", header: "Est. Duration",
       enableSorting: true,
-      cell: ({ row }) => (
-        <div className="flex items-center gap-1">
-          <Clock className="h-4 w-4" />
-          <span>{row.original.estimated_duration}h</span>
-        </div>
-      ),
+      cell: ({ row }) => {
+        const duration = row.original.estimated_duration; // example: "PT2H30M"
+        if (!duration) return null;
+    
+        const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?/);
+    
+        if (!match) return null;
+    
+        const hours = match[1] ? parseInt(match[1], 10) : 0;
+        const minutes = match[2] ? parseInt(match[2], 10) : 0;
+    
+        let display = "";
+        if (hours > 0) display += `${hours} h `;
+        if (minutes > 0) display += `${minutes} m`;
+    
+        return (
+          <div className="flex items-center gap-1">
+            <Clock className="h-4 w-4" />
+            <span>{display.trim() || "0 m"}</span>
+          </div>
+        );
+      }
     }
   ]
 
@@ -599,7 +622,7 @@ export default function LessonsPage() {
   const fetchRows = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/lessons');
+      const response = await fetch('/api/lessons/detailed');
       if (!response.ok) {
         throw new Error('Failed to fetch lessons');
       }
@@ -1247,7 +1270,7 @@ export default function LessonsPage() {
           onRowSelectionChange={setRowSelection}
           editForm={editForm}
           editModeRenderers={editModeRenderers}
-          nonEditableColumns={['lesson_id']}
+          nonEditableColumns={['lesson_id', 'title', 'description', 'technologies', 'subcategories', 'categories', 'topics', 'estimated_duration']}
           onStartEdit={startEditing}
           onEditChange={onEditChange}
           editingRow={editingRow}

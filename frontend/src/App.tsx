@@ -56,6 +56,13 @@ import AssessmentsPage from './pages/AssessmentsPage'
 import { Toaster } from './components/ui/toaster'
 import SettingsPage from './pages/SettingsPage'
 import LessonsPage from './pages/LessonsPage'
+import TasksOldPage from './pages/TasksOldPage'
+import CoursesPage from './pages/CoursesPage'
+
+// New pages
+import ResourcesPage from './pages/ResourcesPage'
+import CalendarPage from './pages/CalendarPage'
+import ProfilePage from './pages/ProfilePage'
 
 function App() {
   return (
@@ -66,6 +73,15 @@ function App() {
         <main className="flex-1 overflow-y-auto">
           <Routes>
             <Route path="/" element={<TechStack />} />
+            
+            {/* Analytics routes */}
+            <Route path="/tasks" element={<TasksPage />} />
+            <Route path="/tasksold" element={<TasksOldPage />} />
+            <Route path="/lessons" element={<LessonsPage />} />
+            <Route path="/courses" element={<CoursesPage />} />
+            <Route path="/resources" element={<ResourcesPage />} />
+            <Route path="/assessments" element={<AssessmentsPage />} />
+            <Route path="/calendar" element={<CalendarPage />} />
             
             {/* Frontend routes */}
             <Route path="/frontend/runtime" element={<RuntimeEnvPage />} />
@@ -114,11 +130,10 @@ function App() {
             <Route path="/monitoring/tracing" element={<TracingPage />} />
             <Route path="/monitoring/alerting" element={<AlertingPage />} />
             
-            {/* Other routes */}
-            <Route path="/assessments" element={<AssessmentsPage />} />
-            <Route path="/lessons" element={<LessonsPage />} />
+            {/* Administration routes */}
+            <Route path="/profile" element={<ProfilePage />} />
             <Route path="/settings" element={<SettingsPage />} />
-            <Route path="/tasks" element={<TasksPage />} />
+            
           </Routes>
           <Toaster />
         </main>

@@ -79,3 +79,11 @@ class TaskDetailsRead(BaseModel):
     estimated_duration: Optional[timedelta]
     actual_duration: Optional[int]
     done: bool = False
+
+
+"""
+    TASK COUNT BY CATEGORY
+"""
+class TaskCountByCategory(BaseModel):
+    category: str
+    tasks: int

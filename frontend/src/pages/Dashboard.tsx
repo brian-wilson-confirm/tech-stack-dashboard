@@ -25,7 +25,7 @@ import { Input } from '@/components/ui/input'
 import { TaskSheet } from '@/components/ui/task-sheet'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { QuickAddTaskWidget } from '@/components/widgets/QuickAddTaskWidget'
-import BarChartComponent from '@/components/charts/bar-chart'
+import BarChartHorizontal from '@/components/charts/bar-chart-horizontal'
 
 
 
@@ -861,7 +861,7 @@ export default function Dashboard() {
 
       {/* Task Distribution Bar Chart (by category) */}
       <div className="grid grid-cols-3 gap-6 mb-8">
-        <BarChartComponent />
+        <BarChartHorizontal />
       </div>
 
 

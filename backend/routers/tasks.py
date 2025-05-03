@@ -15,8 +15,9 @@ from backend.database.models.subcategory_models import Subcategory
 from backend.database.models.technology_models import Technology
 from backend.database.models.task_models import TaskTopicLink, Task, TaskPriority, TaskStatus, TaskType, TechnologyWithSubcatAndCat
 from backend.database.models.topic_models import Topic
+
 from backend.database.views.lesson_schemas import LessonDetailsRead
-from backend.database.views.task_schemas import QuickAddTaskRequest, TaskCreate, TaskDetailsRead, TaskRead, TaskResponse, TaskUpdate
+from backend.database.views.task_schemas import QuickAddTaskRequest, TaskCountByCategory, TaskCreate, TaskDetailsRead, TaskRead, TaskResponse, TaskUpdate
 from backend.database.views.taskpriority_schemas import TaskPriorityRead
 from backend.database.views.taskstatus_schemas import TaskStatusRead
 from backend.database.views.tasktype_schemas import TaskTypeRead
@@ -32,8 +33,10 @@ from backend.routers.people import get_person_ids
 from backend.routers.resources import get_resource_id, get_resourcetype_id
 from backend.routers.topics import get_topic_ids
 from backend.routers.sources import create_source_authors, get_source_id, get_sourcetype_id
-from backend.utils.web_scraper_util import extract_article_metadata, scrape_article
+from backend.utils.web_scraper_util import extract_article_metadata
 import asyncio
+
+
 router = APIRouter(prefix="/tasks")
 
 """
@@ -73,6 +76,24 @@ async def get_tasks_detailed(session: Session = Depends(get_session)):
 async def get_num_tasks(session: Session = Depends(get_session)):
     """Get the total number of tasks in the database."""
     return session.exec(select(func.count()).select_from(Task)).one()
+
+
+
+@router.get("/count-by-category", response_model=List[TaskCountByCategory])
+async def get_num_tasks_by_category(session: Session = Depends(get_session)):
+    """Get the total number of tasks in the database by category (via task -> lesson -> lesson_category -> category)."""
+
+    # Join Task -> Lesson -> LessonCategory -> Category
+    stmt = (
+        select(Category.name, func.count(Task.id))
+        .join(Lesson, Lesson.id == Task.lesson_id)
+        .join(LessonCategory, LessonCategory.lesson_id == Lesson.id)
+        .join(Category, Category.id == LessonCategory.category_id)
+        .group_by(Category.name)
+        #.order_by(Category.name)
+    )
+    results = session.exec(stmt).all()
+    return [TaskCountByCategory(category=cat, tasks=count) for cat, count in results]
 
 
 

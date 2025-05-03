@@ -1,27 +1,9 @@
+import { useEffect, useState } from "react"
 import { TrendingUp } from "lucide-react"
 import { Bar, BarChart, CartesianGrid, LabelList, XAxis, YAxis, Tooltip, TooltipProps } from "recharts"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer } from "@/components/ui/chart"
 import { ValueType, NameType } from 'recharts/types/component/DefaultTooltipContent';
-
-const chartData = [
-  { category: "Frontend", tasks: 186 },
-  { category: "Middleware", tasks: 305 },
-  { category: "Backend", tasks: 237 },
-  { category: "Messaging", tasks: 73 },
-  { category: "DevOps", tasks: 209 },
-  { category: "Security", tasks: 84 },
-  { category: "Monitoring", tasks: 114 },
-  { category: "Dev Tooling", tasks: 133 },
-  { category: "AI/ML", tasks: 121 },
-]
-
-const chartConfig = {
-  data: chartData,
-  xAxisKey: "tasks",
-  yAxisKey: "category",
-  color: "hsl(var(--chart-1))",
-}
 
 // Custom Tooltip matching the screenshot
 function CustomTooltip({ active, payload, label }: TooltipProps<ValueType, NameType>) {
@@ -41,65 +23,96 @@ function CustomTooltip({ active, payload, label }: TooltipProps<ValueType, NameT
 }
 
 export function BarChartHorizontal() {
+  const [chartData, setChartData] = useState<{ category: string; tasks: number }[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    setLoading(true)
+    setError(null)
+    fetch("/api/tasks/count-by-category")
+      .then(res => {
+        if (!res.ok) throw new Error("Failed to fetch data")
+        return res.json()
+      })
+      .then(data => {
+        setChartData(data)
+        setLoading(false)
+      })
+      .catch(err => {
+        setError(err.message || "Error fetching data")
+        setLoading(false)
+      })
+  }, [])
+
+  const chartConfig = {
+    data: chartData,
+    xAxisKey: "tasks",
+    yAxisKey: "category",
+    color: "hsl(var(--chart-1))",
+  }
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Task Distribution by Category</CardTitle>
-        <CardDescription>Open Tasks</CardDescription>
+        <CardDescription>All Tasks</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig}>
-          <BarChart
-            data={chartData}
-            layout="vertical"
-            margin={{ right: 16 }}
-            width={400}
-            height={350}
-          >
-            <CartesianGrid horizontal={false} />
-            {/* @ts-ignore */}
-            <YAxis
-              dataKey="category"
-              type="category"
-              tick={false}
-              tickLine={false}
-              axisLine={false}
-            />
-            {/* @ts-ignore */}
-            <XAxis dataKey="tasks" type="number" hide />
-            {/* @ts-ignore */}
-            <Tooltip content={<CustomTooltip />} cursor={false} />
-            {/* @ts-ignore */}
-            <Bar
-              dataKey="tasks"
+        {loading ? (
+          <div className="py-12 text-center text-gray-400">Loading...</div>
+        ) : error ? (
+          <div className="py-12 text-center text-red-500">{error}</div>
+        ) : (
+          <ChartContainer config={chartConfig}>
+            <BarChart
+              data={chartData}
               layout="vertical"
-              fill="hsl(var(--chart-1))"
-              radius={4}
-              barSize={32}
-              gap={10}
-              //minPointSize={4}
+              margin={{ right: 16 }}
+              width={400}
+              height={350}
             >
-              {/* Category label inside bar */}
-              <LabelList
+              <CartesianGrid horizontal={false} />
+              {/* @ts-ignore */}
+              <YAxis
                 dataKey="category"
-                position="insideLeft"
-                offset={8}
-                className="fill-white"
-                //className="fill-white font-medium text-base"
-                fontSize={12}
+                type="category"
+                tick={false}
+                tickLine={false}
+                axisLine={false}
               />
-              {/* Value label outside bar */}
-              <LabelList
+              {/* @ts-ignore */}
+              <XAxis dataKey="tasks" type="number" hide />
+              {/* @ts-ignore */}
+              <Tooltip content={<CustomTooltip />} cursor={false} />
+              {/* @ts-ignore */}
+              <Bar
                 dataKey="tasks"
-                position="right"
-                offset={8}
-                className="fill-foreground"
-                //className="fill-gray-900 font-medium text-base"
-                fontSize={12}
-              />
-            </Bar>
-          </BarChart>
-        </ChartContainer>
+                layout="vertical"
+                fill="hsl(var(--chart-1))"
+                radius={4}
+                barSize={32}
+              >
+                {/* Category label inside bar */}
+                <LabelList
+                  dataKey="category"
+                  position="insideLeft"
+                  offset={8}
+                  className="fill-white"
+                  fontSize={12}
+                />
+                {/* Value label outside bar */}
+                <LabelList
+                  dataKey="tasks"
+                  position="right"
+                  offset={8}
+                  className="fill-foreground"
+                  fontSize={12}
+                />
+              </Bar>
+            </BarChart>
+          </ChartContainer>
+        )}
       </CardContent>
       <CardFooter className="flex-col items-start gap-2 text-sm">
         <div className="flex gap-2 font-medium leading-none">

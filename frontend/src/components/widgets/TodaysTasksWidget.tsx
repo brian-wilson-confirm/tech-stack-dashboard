@@ -131,9 +131,6 @@ export default function TodaysTasksWidget() {
     },
     { accessorKey: "status", header: "Status",
         enableSorting: true,
-        filterFn: ((row, columnId, filterValue) => {
-          return filterValue.includes(row.getValue(columnId));
-        }) as FilterFn<Task>,
         cell: ({ row }) => (
           <Badge variant="secondary" className={`${getStatusColor(row.original.status.name as StatusEnum)} text-white`}>
             {capitalizeWords((row.original.status.name ?? '').replace('_', ' '))}

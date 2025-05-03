@@ -115,7 +115,13 @@ export default function Dashboard() {
           {row.original.task_id}
         </Button>
     )},
-    { accessorKey: "task", header: "Task", minSize: 200, size: 275, maxSize: 325 },
+    { accessorKey: "task", header: "Task", minSize: 200, size: 275, maxSize: 325, 
+      cell: ({ row }) => (
+        <div className="max-w-[300px] truncate">
+          {row.original.task}
+        </div>
+      )
+    },
     { accessorKey: "technology", header: "Technology", minSize: 75, size: 100, maxSize: 125 },
     { accessorKey: "subcategory", header: "Subcategory", minSize: 100, size: 175, maxSize: 175 },
     { accessorKey: "category", header: "Category" },

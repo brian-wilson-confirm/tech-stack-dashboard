@@ -847,7 +847,7 @@ export default function Dashboard() {
   return (
     <div className="p-8">   
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold">Tech Stack Dashboard</h1>
+        <h1 className="text-3xl font-bold">Personal AI Learning Management System</h1>
         <Button 
           onClick={fetchCategoryData}
           variant="outline"
@@ -862,7 +862,6 @@ export default function Dashboard() {
       {/* Task Distribution Bar Chart (by category) */}
       <div className="grid grid-cols-3 gap-6 mb-8">
         <BarChartComponent />
-        Task Distribution Bar/Pie Chart (by priority)
       </div>
 
 
@@ -945,6 +944,10 @@ export default function Dashboard() {
             recentUpdates={category.recentUpdates}
           />
         ))}
+      </div>
+
+      <div>
+        Task Distribution Bar/Pie Chart (by priority)
       </div>
       
     </div>

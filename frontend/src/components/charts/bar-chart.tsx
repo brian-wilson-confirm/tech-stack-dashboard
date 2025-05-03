@@ -16,18 +16,21 @@ import {
 // NOTE: Linter errors for Recharts JSX components (e.g., XAxis, Bar) are a known false positive in some TypeScript/ESLint setups. If the chart renders correctly, these can be safely ignored.
 
 const chartData = [
-  { month: "January", desktop: 186 },
-  { month: "February", desktop: 305 },
-  { month: "March", desktop: 237 },
-  { month: "April", desktop: 73 },
-  { month: "May", desktop: 209 },
-  { month: "June", desktop: 214 },
+  { category: "Frontend", tasks: 186 },
+  { category: "Middleware", tasks: 305 },
+  { category: "Backend", tasks: 237 },
+  { category: "Messaging", tasks: 73 },
+  { category: "DevOps", tasks: 209 },
+  { category: "Security", tasks: 14 },
+  { category: "Monitoring", tasks: 114 },
+  { category: "Dev Tooling", tasks: 133 },
+  { category: "AI/ML", tasks: 121 },
 ]
 
 const chartConfig = {
   data: chartData,
-  xAxisKey: "month",
-  yAxisKey: "desktop",
+  xAxisKey: "category",
+  yAxisKey: "tasks",
   color: "hsl(var(--chart-1))",
 }
 
@@ -35,7 +38,7 @@ export function BarChartComponent() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Bar Chart - Label</CardTitle>
+        <CardTitle>Task Distribution by Category</CardTitle>
         <CardDescription>January - June 2024</CardDescription>
       </CardHeader>
       <CardContent>
@@ -50,7 +53,7 @@ export function BarChartComponent() {
             <CartesianGrid vertical={false} />
             {/* @ts-ignore */}
             <XAxis
-              dataKey="month"
+              dataKey="category"
               tickLine={false}
               tickMargin={10}
               axisLine={false}
@@ -59,15 +62,15 @@ export function BarChartComponent() {
             {/* @ts-ignore */}
             <Tooltip
               cursor={false}
-              content={<ChartTooltipContent hideLabel label={""} value={""} />} // You may need to adjust ChartTooltipContent props
+                content={(props: any) => <ChartTooltipContent {...props} />}
             />
             {/* @ts-ignore */}
-            <Bar dataKey="desktop" fill="hsl(var(--chart-1))" radius={8}>
+            <Bar dataKey="tasks" fill="hsl(var(--chart-1))" radius={8}>
               <LabelList
                 position="top"
                 offset={12}
                 className="fill-foreground"
-                fontSize={12}
+                fontSize={10}
               />
             </Bar>
           </BarChart>

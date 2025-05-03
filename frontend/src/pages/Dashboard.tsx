@@ -875,56 +875,9 @@ export default function Dashboard() {
       {/* Today's Tasks and Quick Add Task side by side */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr,400px] gap-6 mb-8">
         <TodaysTasksWidget />
-      </div>
-
-
-
-      {/* Today's Tasks and Quick Add Task side by side */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr,400px] gap-6 mb-8">
-        <div>
-          <DataTableWidget
-            title="Today's Tasks"
-            data={tasks}
-            isLoading={isLoading}
-            columns={columns}
-            columnOptions={columnOptions}
-            visibleColumns={visibleColumns}
-            columnFilters={undefined}
-            onColumnVisibilityChange={setVisibleColumns}
-            onColumnFiltersChange={undefined}
-            pagination={undefined}
-            onPaginationChange={undefined}
-            filterConfigs={undefined}
-            searchQuery={undefined}
-            setSearchQuery={undefined}
-            sortConfigs={undefined}
-            onSortChange={undefined}
-            rowSelection={rowSelection}
-            onRowSelectionChange={setRowSelection}
-            editForm={editForm}
-            editModeRenderers={editModeRenderers}
-            nonEditableColumns={['task_id']}
-            onStartEdit={startEditing}
-            onEditChange={onEditChange}
-            editingRow={editingRow}
-            onSaveEdit={onSaveEdit}
-            onCancelEdit={onCancelEdit}
-            onDeleteRow={handleRowDelete}
-            showCheckboxes={false}
-            showActions={true}
-            showPagination={false}
-            AddItemDialog={undefined}
-            onAddItem={undefined}
-          />
-
-          <TaskSheet
-            task={selectedRow}
-            open={sheetOpen}
-            onOpenChange={setSheetOpen}
-          />
-        </div>
         <QuickAddTaskWidget />
       </div>
+
 
       {/* Coverage Widget */}
       <div className="grid grid-cols-1 gap-6 mb-8">
@@ -956,10 +909,6 @@ export default function Dashboard() {
             recentUpdates={category.recentUpdates}
           />
         ))}
-      </div>
-
-      <div>
-        Task Distribution Bar/Pie Chart (by priority)
       </div>
       
     </div>

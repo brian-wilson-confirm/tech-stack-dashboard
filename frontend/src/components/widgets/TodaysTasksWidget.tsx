@@ -74,7 +74,9 @@ export default function TodaysTasksWidget() {
     COLUMN DEFINITIONS
   ********************/
   const columns: ColumnDef<Task>[] = [
-    { accessorKey: "task_id", header: "Task ID", minSize: 85, size: 100, maxSize: 100, cell: ({ row }) => (
+    { accessorKey: "task_id", header: "Task ID", 
+        enableSorting: true,
+        cell: ({ row }) => (
         <Button
             variant="link"
             className="p-0 h-auto font-normal"
@@ -83,9 +85,10 @@ export default function TodaysTasksWidget() {
             {row.original.task_id}
         </Button>
     )},
-    { accessorKey: "task", header: "Task", minSize: 200, size: 275, maxSize: 325, 
+    { accessorKey: "task", header: "Task", 
+        enableSorting: true,
         cell: ({ row }) => (
-        <div className="max-w-[300px] truncate">
+        <div className="max-w-[250px] truncate">
             {row.original.task}
         </div>
         )
@@ -96,7 +99,9 @@ export default function TodaysTasksWidget() {
           <span>{capitalizeWords(row.original.lesson.level)}</span>
       ),
     },
-    { accessorKey: "type", header: "Type", cell: ({ row }) => (
+    { accessorKey: "type", header: "Type", 
+        enableSorting: true,
+        cell: ({ row }) => (
         <span>{capitalizeWords(row.original.type.name)}</span>
     )},
     { accessorKey: "estimated_duration", header: "Est. Duration",
@@ -146,14 +151,17 @@ export default function TodaysTasksWidget() {
           </Badge>
         ),
     },
-    { accessorKey: "progress", header: "Progress", cell: ({ row }) => (
+    { accessorKey: "progress", header: "Progress", 
+        enableSorting: true,
+        cell: ({ row }) => (
         <div className="flex items-center gap-2">
         <Progress value={row.original.progress} className="w-[60px]" />
         <span className="text-sm">{row.original.progress}%</span>
         </div>
     )},
-    { accessorKey: "order", header: "Order" },
-    { accessorKey: "due_date", header: "Due Date", cell: ({ row }) => {
+    { accessorKey: "due_date", header: "Due Date", 
+        enableSorting: true,
+        cell: ({ row }) => {
         const toLocalInputDate = (date: Date | string | null) => {
         if (!date) return '';
         const dateObj = date instanceof Date ? date : new Date(date);
@@ -162,7 +170,9 @@ export default function TodaysTasksWidget() {
         }
         return <span>{toLocalInputDate(row.original.due_date)}</span>
     }}, 
-    { accessorKey: "start_date", header: "Start Date", cell: ({ row }) => {
+    { accessorKey: "start_date", header: "Start Date", 
+        enableSorting: true,
+        cell: ({ row }) => {
         const toLocalInputDate = (date: Date | string | null) => {
         if (!date) return '';
         const dateObj = date instanceof Date ? date : new Date(date);
@@ -256,8 +266,8 @@ export default function TodaysTasksWidget() {
             filterConfigs={undefined}
             searchQuery={undefined}
             setSearchQuery={undefined}
-            sortConfigs={undefined}
-            onSortChange={undefined}
+            sortConfigs={sortConfigs}
+            onSortChange={setSortConfigs}
             rowSelection={rowSelection}
             onRowSelectionChange={setRowSelection}
             editForm={undefined}

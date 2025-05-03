@@ -2,14 +2,14 @@ import { useState, useEffect, useCallback } from 'react'
 import { Button } from "@/components/ui/button"
 import { Clock } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
-import { FilterFn, SortingState, VisibilityState } from '@tanstack/react-table'
+import { SortingState, VisibilityState } from '@tanstack/react-table'
 import { ColumnDef } from '@tanstack/react-table'
 import { Task } from '@/components/data/schema'
 import { getPriorityColor } from '@/styles/style'
+import { getLevelColor } from '@/styles/style'
 import { capitalizeWords } from '@/lib/utils'
 import { getStatusColor } from '@/styles/style'
-import { PriorityEnum, StatusEnum } from '@/types/enums'
-import { Progress } from '@/components/ui/progress'
+import { PriorityEnum, StatusEnum, LevelEnum } from '@/types/enums'
 import { toast } from '@/components/ui/use-toast'
 import { TaskSheet } from '@/components/ui/task-sheet'
 import { DataTableComponent } from '../tables/data-table'
@@ -72,22 +72,57 @@ export default function TodaysTasksWidget() {
   const [hoveredRowId, setHoveredRowId] = useState<string | null>(null);
   const [editingRowId, setEditingRowId] = useState<string | null>(null);
 
-  // Status options
-  const statusOptions = [
-    "Not Started",
-    "In Progress",
-    "On Hold",
-    "Completed",
-    "Unknown"
-  ];
+  // Status options fetched from API
+  const [statusOptions, setStatusOptions] = useState<{ id: string; name: string }[]>([]);
 
-  // Update function for status
-  const updateStatus = (rowId: string, newStatus: string) => {
-    setRows(prevRows => prevRows.map(row =>
-      row.id === rowId
-        ? { ...row, status: { ...row.status, name: newStatus } }
-        : row
-    ));
+  // Fetch status options on mount
+  useEffect(() => {
+    const fetchStatusOptions = async () => {
+      try {
+        const response = await fetch('/api/tasks/statuses');
+        if (!response.ok) throw new Error('Failed to fetch status options');
+        const data = await response.json();
+        setStatusOptions(data); // assuming data is [{ id, name }, ...]
+      } catch (err) {
+        toast({
+          title: "Error",
+          description: "Failed to fetch status options",
+          variant: "destructive",
+        });
+      }
+    };
+    fetchStatusOptions();
+  }, []);
+
+  // Update function for status (by id and name)
+  const updateStatus = async (rowId: string, newStatusId: string, newStatusName: string) => {
+    try {
+      console.log("Updating status for rowId:", rowId, "with newStatusId:", newStatusId, "and newStatusName:", newStatusName);
+      const response = await fetch(`/api/tasks/${rowId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status_id: newStatusId }),
+      });
+      if (!response.ok) throw new Error('Failed to update status');
+      setRows(prevRows => prevRows.map(row =>
+        row.id === rowId
+          ? { ...row, status: { id: newStatusId, name: newStatusName } }
+          : row
+      ));
+      toast({
+        title: 'Success',
+        description: 'Status updated successfully',
+        variant: 'default',
+      });
+    } catch (err) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update status',
+        variant: 'destructive',
+      });
+    }
   };
 
 
@@ -114,12 +149,6 @@ export default function TodaysTasksWidget() {
             {row.original.task}
         </div>
         )
-    },
-    { accessorKey: "level", header: "Level",
-      enableSorting: true,
-      cell: ({ row }) => (
-          <span>{capitalizeWords(row.original.lesson.level)}</span>
-      ),
     },
     { accessorKey: "type", header: "Type", 
         enableSorting: true,
@@ -151,14 +180,32 @@ export default function TodaysTasksWidget() {
           );
         }
     },
+    { accessorKey: "level", header: "Level",
+        enableSorting: true,
+        cell: ({ row }) => (
+            <Badge variant="secondary" className={`${getLevelColor(row.original.lesson.level as LevelEnum)} text-white`}>
+              {capitalizeWords(row.original.lesson.level)}
+            </Badge>
+          ),
+    },
+    { accessorKey: "priority", header: "Priority",
+        enableSorting: true,
+        cell: ({ row }) => (
+          <Badge variant="secondary" className={`${getPriorityColor(row.original.priority.name as PriorityEnum)} text-white`}>
+            {capitalizeWords(row.original.priority.name)}
+          </Badge>
+        ),
+    },
     { accessorKey: "status", header: "Status",
         enableSorting: true,
         cell: ({ row }) => {
           const isHovered = hoveredRowId === row.original.id;
           const isEditing = editingRowId === row.original.id;
-          const currentStatus = row.original.status.name;
+          const currentStatusId = row.original.status.id;
+          const currentStatusName = row.original.status.name;
           return (
             <div
+              className="w-24"
               onMouseEnter={() => setHoveredRowId(row.original.id)}
               onMouseLeave={() => {
                 setHoveredRowId(null);
@@ -169,9 +216,17 @@ export default function TodaysTasksWidget() {
             >
               {isEditing ? (
                 <select
-                  value={currentStatus}
-                  onChange={e => {
-                    updateStatus(row.original.id, e.target.value);
+                  value={currentStatusId}
+                  onChange={async e => {
+                    console.log('Dropdown changed!', e.target.value, statusOptions);
+                    // Ensure id types match
+                    const selected = statusOptions.find(opt => String(opt.id) === String(e.target.value));
+                    console.log('Selected option:', selected);
+                    if (selected) {
+                      await updateStatus(row.original.id, selected.id, selected.name);
+                    } else {
+                      console.warn('No matching status option found for value:', e.target.value);
+                    }
                     setEditingRowId(null);
                   }}
                   onBlur={() => setEditingRowId(null)}
@@ -179,42 +234,23 @@ export default function TodaysTasksWidget() {
                   className="border rounded px-2 py-1 text-xs"
                 >
                   {statusOptions.map(option => (
-                    <option key={option} value={option}>
-                      {option}
+                    <option key={option.id} value={option.id}>
+                      {capitalizeWords(option.name.replace('_', ' '))}
                     </option>
                   ))}
                 </select>
               ) : (
                 <Badge
                   variant="secondary"
-                  className={`${getStatusColor(currentStatus as StatusEnum)} text-white`}
+                  className={`${getStatusColor(currentStatusName as StatusEnum)} text-white`}
                 >
-                  {capitalizeWords((currentStatus ?? '').replace('_', ' '))}
+                  {capitalizeWords((currentStatusName ?? '').replace('_', ' '))}
                 </Badge>
               )}
             </div>
           );
         },
     },
-    { accessorKey: "priority", header: "Priority",
-        enableSorting: true,
-        filterFn: ((row, columnId, filterValue) => {
-          return filterValue.includes(row.getValue(columnId));
-        }) as FilterFn<Task>,
-        cell: ({ row }) => (
-          <Badge variant="secondary" className={`${getPriorityColor(row.original.priority.name as PriorityEnum)} text-white`}>
-            {capitalizeWords(row.original.priority.name)}
-          </Badge>
-        ),
-    },
-    { accessorKey: "progress", header: "Progress", 
-        enableSorting: true,
-        cell: ({ row }) => (
-        <div className="flex items-center gap-2">
-        <Progress value={row.original.progress} className="w-[60px]" />
-        <span className="text-sm">{row.original.progress}%</span>
-        </div>
-    )},
     { accessorKey: "due_date", header: "Due Date", 
         enableSorting: true,
         cell: ({ row }) => {

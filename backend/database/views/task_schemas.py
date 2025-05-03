@@ -45,6 +45,10 @@ class TaskUpdate(TaskCreate):
     task_id: str
 
 
+class TaskUpdateStatus(BaseModel):
+    status_id: int
+
+
 """
     QUICK ADD TASK
 """

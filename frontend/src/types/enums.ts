@@ -12,3 +12,10 @@ export enum PriorityEnum {
   high = "High",
   critical = "Critical",
 }
+
+export enum LevelEnum {
+  beginner = "Beginner",
+  intermediate = "Intermediate",
+  advanced = "Advanced",
+  expert = "Expert",
+}

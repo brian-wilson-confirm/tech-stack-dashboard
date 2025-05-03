@@ -17,7 +17,7 @@ from backend.database.models.task_models import TaskTopicLink, Task, TaskPriorit
 from backend.database.models.topic_models import Topic
 
 from backend.database.views.lesson_schemas import LessonDetailsRead
-from backend.database.views.task_schemas import QuickAddTaskRequest, TaskCountByCategory, TaskCreate, TaskDetailsRead, TaskRead, TaskResponse, TaskUpdate
+from backend.database.views.task_schemas import QuickAddTaskRequest, TaskCountByCategory, TaskCreate, TaskDetailsRead, TaskRead, TaskResponse, TaskUpdate, TaskUpdateStatus
 from backend.database.views.taskpriority_schemas import TaskPriorityRead
 from backend.database.views.taskstatus_schemas import TaskStatusRead
 from backend.database.views.tasktype_schemas import TaskTypeRead
@@ -249,6 +249,24 @@ async def websocket_endpoint(websocket: WebSocket, session: Session = Depends(ge
     PUT Operations
 """
 @router.put("/{id}", response_model=TaskRead)
+async def update_task_status(id: int, status_update: TaskUpdateStatus, session: Session = Depends(get_session)):
+    print(f"id: {id}, status_id: {status_update.status_id}")
+    task = session.exec(select(Task).where(Task.id == id)).first()
+    
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    task.status_id = status_update.status_id
+    session.add(task)
+    session.commit()
+    session.refresh(task)
+    
+    # ❗️Return a transformed response matching TaskRead structure
+    return serialize_task(task, session)
+
+
+
+@router.put("/{id}", response_model=TaskRead)
 async def update_task(id: int, task_update: TaskUpdate, session: Session = Depends(get_session)):
     print(f"id: {id}")
     task = session.exec(
@@ -276,17 +294,6 @@ async def update_task(id: int, task_update: TaskUpdate, session: Session = Depen
         if field == "topics":
             value = session.exec(select(Topic).where(Topic.name.in_(value))).all()
             updates[field] = value
-        #elif field == "section":
-        #    resp = session.exec(select(Section).where(Section.name == value)).first()
-        #    if not resp:
-        #        # Create a new section since it doesn't exist
-        #        print(f"Creating new section: {value}")
-        #        new_section = Section(name=value)
-        #        session.add(new_section)
-        #        session.commit()
-        #        session.refresh(new_section)
-        #        resp = new_section
-        #    updates["section_id"] = resp.id
         elif field in model_mappings:
             model_class, id_field = model_mappings[field]
             # Look up the ID for the string value

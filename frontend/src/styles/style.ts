@@ -1,4 +1,4 @@
-import { StatusEnum, PriorityEnum } from "@/types/enums";
+import { StatusEnum, PriorityEnum, LevelEnum } from "@/types/enums";
 import { capitalizeWords } from "@/lib/utils";
 
 export const getStatusColor = (status?: StatusEnum) => {
@@ -22,6 +22,18 @@ export const getPriorityColor = (priority?: PriorityEnum) => {
     [PriorityEnum.medium]: "bg-blue-500",
     [PriorityEnum.high]: "bg-yellow-500",
     [PriorityEnum.critical]: "bg-red-500"
+  }
+  return colors[normalized] || "bg-gray-500"
+}
+
+export const getLevelColor = (level?: LevelEnum) => {
+  if (!level) return "bg-gray-500"; // default/fallback
+  const normalized = capitalizeWords(level.replace('_', ' ')) as LevelEnum;
+  const colors: Record<LevelEnum, string> = {
+    [LevelEnum.beginner]: "bg-gray-500",
+    [LevelEnum.intermediate]: "bg-blue-500",
+    [LevelEnum.advanced]: "bg-yellow-500",
+    [LevelEnum.expert]: "bg-red-500"
   }
   return colors[normalized] || "bg-gray-500"
 }

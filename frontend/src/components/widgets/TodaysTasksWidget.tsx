@@ -67,7 +67,29 @@ export default function TodaysTasksWidget() {
 
   // Row Sheet
   const [sheetOpen, setSheetOpen] = useState(false);
-    
+
+  // Inline edit state for status
+  const [hoveredRowId, setHoveredRowId] = useState<string | null>(null);
+  const [editingRowId, setEditingRowId] = useState<string | null>(null);
+
+  // Status options
+  const statusOptions = [
+    "Not Started",
+    "In Progress",
+    "On Hold",
+    "Completed",
+    "Unknown"
+  ];
+
+  // Update function for status
+  const updateStatus = (rowId: string, newStatus: string) => {
+    setRows(prevRows => prevRows.map(row =>
+      row.id === rowId
+        ? { ...row, status: { ...row.status, name: newStatus } }
+        : row
+    ));
+  };
+
 
 
   /*******************
@@ -131,11 +153,48 @@ export default function TodaysTasksWidget() {
     },
     { accessorKey: "status", header: "Status",
         enableSorting: true,
-        cell: ({ row }) => (
-          <Badge variant="secondary" className={`${getStatusColor(row.original.status.name as StatusEnum)} text-white`}>
-            {capitalizeWords((row.original.status.name ?? '').replace('_', ' '))}
-          </Badge>
-        ),
+        cell: ({ row }) => {
+          const isHovered = hoveredRowId === row.original.id;
+          const isEditing = editingRowId === row.original.id;
+          const currentStatus = row.original.status.name;
+          return (
+            <div
+              onMouseEnter={() => setHoveredRowId(row.original.id)}
+              onMouseLeave={() => {
+                setHoveredRowId(null);
+                setEditingRowId(null);
+              }}
+              onClick={() => setEditingRowId(row.original.id)}
+              style={{ cursor: "pointer" }}
+            >
+              {isEditing ? (
+                <select
+                  value={currentStatus}
+                  onChange={e => {
+                    updateStatus(row.original.id, e.target.value);
+                    setEditingRowId(null);
+                  }}
+                  onBlur={() => setEditingRowId(null)}
+                  autoFocus
+                  className="border rounded px-2 py-1 text-xs"
+                >
+                  {statusOptions.map(option => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <Badge
+                  variant="secondary"
+                  className={`${getStatusColor(currentStatus as StatusEnum)} text-white`}
+                >
+                  {capitalizeWords((currentStatus ?? '').replace('_', ' '))}
+                </Badge>
+              )}
+            </div>
+          );
+        },
     },
     { accessorKey: "priority", header: "Priority",
         enableSorting: true,

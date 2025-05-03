@@ -12,9 +12,9 @@ import { Separator } from '@/components/ui/separator'
 import { PriorityEnum, StatusEnum } from '@/types/enums'
 
 interface TaskSheetProps {
-  task: Task | null
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  task: Task | null | undefined
+  open: boolean | undefined
+  onOpenChange?: (open: boolean) => void
 }
 
 export function TaskSheet({ task, open, onOpenChange }: TaskSheetProps) {
@@ -22,8 +22,8 @@ export function TaskSheet({ task, open, onOpenChange }: TaskSheetProps) {
 
   //const status = statuses.find((s) => s.value === task.status)
   //const priority = priorities.find((p) => p.value === task.priority)
-  const statusLabel = StatusEnum[task.status as keyof typeof StatusEnum];
-  const priorityLabel = PriorityEnum[task.priority as keyof typeof PriorityEnum];
+  const statusLabel = StatusEnum[task.status as keyof typeof StatusEnum] ?? 'Unknown';
+  const priorityLabel = PriorityEnum[task.priority as keyof typeof PriorityEnum] ?? 'Unknown';
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -46,11 +46,11 @@ export function TaskSheet({ task, open, onOpenChange }: TaskSheetProps) {
               <div className="grid gap-4">
                 <div className="grid grid-cols-4 items-center">
                   <span className="text-sm text-muted-foreground">Lesson</span>
-                  <span className="text-sm col-span-3">{task.lesson}</span>
+                  <span className="text-sm col-span-3">{task.lesson?.title}</span>
                 </div>
                 <div className="grid grid-cols-4 items-center">
                   <span className="text-sm text-muted-foreground">Type</span>
-                  <span className="text-sm col-span-3">{task.type}</span>
+                  <span className="text-sm col-span-3">{task.type?.name}</span>
                 </div>
               </div>
             </div>

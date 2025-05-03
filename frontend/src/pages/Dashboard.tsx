@@ -26,6 +26,7 @@ import { TaskSheet } from '@/components/ui/task-sheet'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { QuickAddTaskWidget } from '@/components/widgets/QuickAddTaskWidget'
 import BarChartHorizontal from '@/components/charts/bar-chart-horizontal'
+import TodaysTasksWidget from '@/components/widgets/TodaysTasksWidget'
 
 
 
@@ -870,6 +871,11 @@ export default function Dashboard() {
         <BarChartHorizontal />
       </div>
 
+
+      {/* Today's Tasks and Quick Add Task side by side */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr,400px] gap-6 mb-8">
+        <TodaysTasksWidget />
+      </div>
 
 
 

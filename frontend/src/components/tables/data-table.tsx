@@ -333,8 +333,7 @@ export function DataTableComponent<T extends Record<string, any>>({
   return (
     <div className="border rounded-lg p-6 col-span-full">
       <div className="space-y-4">
-      <h2 className="text-2xl font-bold">{title}</h2>
-
+      <h2 className="font-semibold">{title}</h2>
 
         {/* Filter Controls */}
       <div className="flex items-center justify-between mb-6">

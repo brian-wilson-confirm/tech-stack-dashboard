@@ -214,18 +214,6 @@ export default function TodaysTasksWidget() {
       setHasFetchedRows(true);
     }
   }, []);
-
-
-
-  /*******************
-    ADDITIONAL FUNCTIONS
-  ********************/
-
-
-
-  /***********************
-    ROW EDITING
-  ***********************/
   
 
 

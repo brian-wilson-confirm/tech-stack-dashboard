@@ -81,6 +81,7 @@ type Props<T extends Record<string, any>> = {
   onColumnFiltersChange?: OnChangeFn<ColumnFiltersState>;
   pagination?: { pageIndex: number; pageSize: number };
   onPaginationChange?: OnChangeFn<PaginationState>;
+  maxVisibleRows?: number
   filterConfigs?: FilterConfig[]
   searchQuery?: string
   setSearchQuery?: (value: string) => void
@@ -198,6 +199,7 @@ export function DataTableComponent<T extends Record<string, any>>({
   onColumnFiltersChange,
   pagination,
   onPaginationChange,
+  maxVisibleRows,
   filterConfigs,
   searchQuery,
   setSearchQuery,
@@ -222,8 +224,11 @@ export function DataTableComponent<T extends Record<string, any>>({
   onAddItem,
 }: Props<T>) {
 
+  // Manually limits the amount of rows returned to the amount specified in maxVisibleRows
+  const limitedData = maxVisibleRows ? data?.slice(0, maxVisibleRows) : data;
+
   const table = useReactTable({
-    data: data ?? [],
+    data: limitedData ?? [],
     columns: columns ?? [],
     state: {
       rowSelection: rowSelection,

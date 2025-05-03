@@ -13,7 +13,7 @@ interface CoverageWidgetProps {
 
 export function CoverageWidget({ items, overallProgress }: CoverageWidgetProps) {
   return (
-    <div className="border rounded-lg p-6 col-span-full">
+    <div className="border rounded-lg p-6">
       <div className="flex items-center justify-between mb-8">
         <h2 className="text-xl font-semibold">Tech Stack Coverage</h2>
         <Button variant="ghost" size="icon">

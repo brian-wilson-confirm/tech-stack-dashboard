@@ -26,11 +26,6 @@ export default function Dashboard() {
   const [securityAlerts, setSecurityAlerts] = useState<any[]>([])
   const [metrics, setMetrics] = useState<any[]>([])
   const [coverage, setCoverage] = useState<{ items: any[], overallProgress: number }>({ items: [], overallProgress: 0 })
-  const [tasks, setTasks] = useState<any[]>([])
-
-
-  // Row Editing
-  const [editingRow, setEditingRow] = useState<string | null>(null);
 
 
 
@@ -41,12 +36,6 @@ export default function Dashboard() {
   const fetchCategoryData = async () => {
     try {
       setIsLoading(true)
-      
-      // Fetch tasks separately to ensure proper data structure
-      const tasksResponse = await fetch('/api/tasks')
-      const tasksData = await tasksResponse.json()
-      console.log('Tasks API Response:', tasksData) // Debug log
-      setTasks(tasksData || []) // Remove .tasks property access
 
       // These would be actual API calls to your backend
       const [languages, backend, storage, devops, coverage] = await Promise.all([
@@ -111,12 +100,6 @@ export default function Dashboard() {
   }, [])
 
 
-  // Add debug effect
-  useEffect(() => {
-    console.log('Current tasks state:', tasks)
-  }, [tasks])
-
-
   return (
     <div className="p-8">   
       <div className="flex items-center justify-between mb-8">
@@ -131,13 +114,6 @@ export default function Dashboard() {
       </div>
 
 
-
-      {/* Task Distribution Bar Chart (by category) */}
-      <div className="grid grid-cols-3 gap-6 mb-8">
-        <BarChartHorizontal />
-      </div>
-
-
       {/* Today's Tasks and Quick Add Task side by side */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr,400px] gap-6 mb-8">
         <TodaysTasksWidget />
@@ -145,16 +121,17 @@ export default function Dashboard() {
       </div>
 
 
-      {/* Coverage Widget */}
-      <div className="grid grid-cols-1 gap-6 mb-8">
+      {/* Bar Charts */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <CoverageWidget 
           items={coverage.items}
           overallProgress={coverage.overallProgress}
         />
+        <BarChartHorizontal />
       </div>
 
       {/* Security and System Widget */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <SecurityWidget 
           alerts={securityAlerts} 
         />

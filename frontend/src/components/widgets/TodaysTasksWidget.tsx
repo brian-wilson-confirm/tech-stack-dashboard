@@ -156,6 +156,19 @@ export default function TodaysTasksWidget() {
     setPrevRowSelection(rowSelection);
   }, [rowSelection, statusOptions]);
 
+  useEffect(() => {
+    // Sync checkboxes with completed status on page load or data change
+    const completedStatus = statusOptions.find(opt => opt.name.toLowerCase() === "completed");
+    if (!completedStatus) return;
+    const newRowSelection: Record<string, boolean> = {};
+    rows.forEach((row, idx) => {
+      if (row.status.name.toLowerCase() === completedStatus.name.toLowerCase()) {
+        newRowSelection[idx] = true;
+      }
+    });
+    setRowSelection(newRowSelection);
+  }, [rows, statusOptions]);
+
 
 
   /*******************
@@ -221,8 +234,8 @@ export default function TodaysTasksWidget() {
     },
     { accessorKey: "priority", header: "Priority",
       enableSorting: true,
-      size: 80,
-      maxSize: 80,
+      size: 90,
+      maxSize: 90,
       cell: ({ row }) => (
         <div className="w-24">
           <Badge variant="secondary" className={`${getPriorityColor(row.original.priority.name as PriorityEnum)} text-white`}>

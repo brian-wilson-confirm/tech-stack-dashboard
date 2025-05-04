@@ -271,6 +271,8 @@ async def update_task_status(id: int, status_update: TaskUpdateStatus, session: 
             task.start_date = datetime.now(timezone.utc)
             task.done = False
         case TaskStatusEnum.COMPLETED.value:
+            if task.start_date is None:
+                task.start_date = datetime.now(timezone.utc)
             task.end_date = datetime.now(timezone.utc)
             task.actual_duration = task.end_date - task.start_date
             task.done = True

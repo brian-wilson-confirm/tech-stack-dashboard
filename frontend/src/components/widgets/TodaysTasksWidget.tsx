@@ -125,6 +125,20 @@ export default function TodaysTasksWidget() {
     }
   };
 
+  // Set status to completed when a row is selected
+  useEffect(() => {
+    const completedStatus = statusOptions.find(opt => opt.name.toLowerCase().replace(/_/g, '') === "completed");
+    if (!completedStatus) return;
+    Object.keys(rowSelection).forEach(rowIndex => {
+      if (rowSelection[rowIndex]) {
+        const row = rows[Number(rowIndex)];
+        if (row && row.status.name.toLowerCase().replace(/_/g, '') !== "completed") {
+          updateStatus(row.id, completedStatus.id, completedStatus.name);
+        }
+      }
+    });
+  }, [rowSelection, statusOptions]);
+
 
 
   /*******************

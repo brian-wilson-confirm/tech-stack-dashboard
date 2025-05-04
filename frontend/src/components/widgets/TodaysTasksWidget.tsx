@@ -126,9 +126,14 @@ export default function TodaysTasksWidget() {
   };
 
   // Set status to completed when a row is selected
+  const [prevRowSelection, setPrevRowSelection] = useState(rowSelection);
+
   useEffect(() => {
-    const completedStatus = statusOptions.find(opt => opt.name.toLowerCase().replace(/_/g, '') === "completed");
-    if (!completedStatus) return;
+    const completedStatus = statusOptions.find(opt => opt.name.toLowerCase() === "completed");
+    const notStartedStatus = statusOptions.find(opt => opt.name.toLowerCase() === "not_started");
+    if (!completedStatus || !notStartedStatus) return;
+
+    // Handle checked (set to completed)
     Object.keys(rowSelection).forEach(rowIndex => {
       if (rowSelection[rowIndex]) {
         const row = rows[Number(rowIndex)];
@@ -137,6 +142,18 @@ export default function TodaysTasksWidget() {
         }
       }
     });
+
+    // Handle unchecked (set to not_started)
+    Object.keys(prevRowSelection).forEach(rowIndex => {
+      if (prevRowSelection[rowIndex] && !rowSelection[rowIndex]) {
+        const row = rows[Number(rowIndex)];
+        if (row && row.status.name.toLowerCase().replace(/_/g, '') !== "notstarted") {
+          updateStatus(row.id, notStartedStatus.id, notStartedStatus.name);
+        }
+      }
+    });
+
+    setPrevRowSelection(rowSelection);
   }, [rowSelection, statusOptions]);
 
 

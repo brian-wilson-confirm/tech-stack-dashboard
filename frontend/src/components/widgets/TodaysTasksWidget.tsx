@@ -212,8 +212,8 @@ export default function TodaysTasksWidget() {
       accessorKey: "status",
       header: "Status",
       enableSorting: true,
-      size: 110,
-      maxSize: 110,
+      size: 120,
+      maxSize: 120,
       cell: ({ row }) => {
         const isHovered = hoveredRowId === row.original.id;
         const isEditing = editingRowId === row.original.id;

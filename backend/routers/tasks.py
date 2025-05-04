@@ -3,7 +3,7 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, WebSocket
 
 from sqlmodel import Session, select
-from sqlalchemy import desc,func
+from sqlalchemy import desc,func, asc
 from sqlalchemy.orm import selectinload
 from backend.database.connection import get_session
 
@@ -54,7 +54,7 @@ async def get_tasks(session: Session = Depends(get_session)):
 async def get_tasks_detailed(session: Session = Depends(get_session)):
     # Step 1: Fetch ALL lessons with their relationships preloaded
     tasks = session.exec(
-        select(Task).order_by(desc(Task.due_date))
+        select(Task).order_by(asc(Task.due_date))
         .options(
             selectinload(Task.lesson).selectinload(Lesson.lesson_technologies).selectinload(LessonTechnology.technology),
             selectinload(Task.lesson).selectinload(Lesson.lesson_subcategories).selectinload(LessonSubcategory.subcategory),

@@ -365,7 +365,7 @@ export default function TodaysTasksWidget() {
             onColumnFiltersChange={undefined}
             pagination={undefined}
             onPaginationChange={undefined}
-            maxVisibleRows={10}
+            maxVisibleRows={100}
             filterConfigs={undefined}
             searchQuery={undefined}
             setSearchQuery={undefined}

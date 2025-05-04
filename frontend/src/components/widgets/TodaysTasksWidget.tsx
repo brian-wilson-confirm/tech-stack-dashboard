@@ -147,18 +147,14 @@ export default function TodaysTasksWidget() {
             </div>
         )
     },
-    {
-      accessorKey: "task",
-      header: "Task",
+    { accessorKey: "task", header: "Task",
       enableSorting: true,
       size: undefined,
       cell: ({ row }) => (
         <div className="truncate min-w-0">{row.original.task}</div>
       ),
     },
-    {
-      accessorKey: "estimated_duration",
-      header: "Est. Duration",
+    { accessorKey: "estimated_duration", header: "Est. Duration",
       enableSorting: true,
       size: 96,
       maxSize: 96,
@@ -180,9 +176,7 @@ export default function TodaysTasksWidget() {
         );
       },
     },
-    {
-      accessorKey: "level",
-      header: "Level",
+    { accessorKey: "level", header: "Level",
       enableSorting: true,
       size: 120,
       maxSize: 120,
@@ -194,9 +188,7 @@ export default function TodaysTasksWidget() {
         </div>
       ),
     },
-    {
-      accessorKey: "priority",
-      header: "Priority",
+    { accessorKey: "priority", header: "Priority",
       enableSorting: true,
       size: 80,
       maxSize: 80,
@@ -208,9 +200,7 @@ export default function TodaysTasksWidget() {
         </div>
       ),
     },
-    {
-      accessorKey: "status",
-      header: "Status",
+    { accessorKey: "status", header: "Status",
       enableSorting: true,
       size: 120,
       maxSize: 120,

@@ -1,5 +1,5 @@
 from typing import List, Optional
-from datetime import date
+from datetime import datetime, date
 from pydantic import BaseModel
 from datetime import timedelta
 
@@ -17,10 +17,10 @@ class TaskBase(BaseModel):
     progress: int
     order: Optional[int]
     due_date: Optional[date]
-    start_date: Optional[date]
-    end_date: Optional[date]
+    start_date: Optional[datetime]
+    end_date: Optional[datetime]
     estimated_duration: Optional[timedelta]
-    actual_duration: Optional[int]
+    actual_duration: Optional[timedelta]
     done: bool = False
 
 
@@ -78,10 +78,10 @@ class TaskDetailsRead(BaseModel):
     progress: int
     order: Optional[int]
     due_date: Optional[date]
-    start_date: Optional[date]
-    end_date: Optional[date]
+    start_date: Optional[datetime]
+    end_date: Optional[datetime]
     estimated_duration: Optional[timedelta]
-    actual_duration: Optional[int]
+    actual_duration: Optional[timedelta]
     done: bool = False
 
 

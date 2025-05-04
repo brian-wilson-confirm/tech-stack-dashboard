@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import datetime, date
 from sqlmodel import Field, Relationship, SQLModel
 from typing import List, Optional, TYPE_CHECKING
 
@@ -32,8 +32,8 @@ class Task(SQLModel, table=True):
     progress: int = 0
     order: Optional[int]
     due_date: Optional[date]
-    start_date: Optional[date]
-    end_date: Optional[date]
+    start_date: Optional[datetime]
+    end_date: Optional[datetime]
     estimated_duration: Optional[int]
     actual_duration: Optional[int]
     done: bool = False

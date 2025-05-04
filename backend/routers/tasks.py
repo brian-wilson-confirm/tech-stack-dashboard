@@ -35,6 +35,8 @@ from backend.routers.topics import get_topic_ids
 from backend.routers.sources import create_source_authors, get_source_id, get_sourcetype_id
 from backend.utils.web_scraper_util import extract_article_metadata
 import asyncio
+from datetime import datetime, timezone
+from backend.enums.task_status_enum import TaskStatusEnum
 
 
 router = APIRouter(prefix="/tasks")
@@ -257,6 +259,22 @@ async def update_task_status(id: int, status_update: TaskUpdateStatus, session: 
         raise HTTPException(status_code=404, detail="Task not found")
     
     task.status_id = status_update.status_id
+    status = session.get(TaskStatus, task.status_id)
+
+    match status.name:
+        case TaskStatusEnum.NOT_STARTED.value:
+            task.start_date = None
+            task.end_date = None
+            task.actual_duration = None
+            task.done = False
+        case TaskStatusEnum.IN_PROGRESS.value:
+            task.start_date = datetime.now(timezone.utc)
+            task.done = False
+        case TaskStatusEnum.COMPLETED.value:
+            task.end_date = datetime.now(timezone.utc)
+            task.actual_duration = task.end_date - task.start_date
+            task.done = True
+
     session.add(task)
     session.commit()
     session.refresh(task)

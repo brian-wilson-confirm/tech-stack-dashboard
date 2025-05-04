@@ -10,6 +10,7 @@ import { usePageTitle } from '@/hooks/usePageTitle'
 import { QuickAddTaskWidget } from '@/components/widgets/QuickAddTaskWidget'
 import BarChartHorizontal from '@/components/charts/bar-chart-horizontal'
 import TodaysTasksWidget from '@/components/widgets/TodaysTasksWidget'
+import TasksCompletedWidget from '@/components/widgets/polished/TasksCompletedWidget'
 
 
 
@@ -111,6 +112,10 @@ export default function Dashboard() {
         >
           {isLoading ? "Refreshing..." : "Refresh Data"}
         </Button>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 mb-8">
+        <TasksCompletedWidget />
       </div>
 
 

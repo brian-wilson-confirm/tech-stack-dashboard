@@ -8,8 +8,12 @@ export interface ChartConfig {
   height?: number
   width?: number
   desktop?: {
-    height?: number
-    width?: number
+    label: string
+    color: string
+  }
+  mobile?: {
+    label: string
+    color: string
   }
 }
 

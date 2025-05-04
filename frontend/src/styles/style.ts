@@ -18,9 +18,9 @@ export const getPriorityColor = (priority?: PriorityEnum) => {
   if (!priority) return "bg-gray-500"; // default/fallback
   const normalized = capitalizeWords(priority.replace('_', ' ')) as PriorityEnum;
   const colors: Record<PriorityEnum, string> = {
-    [PriorityEnum.low]: "bg-gray-500",
-    [PriorityEnum.medium]: "bg-blue-500",
-    [PriorityEnum.high]: "bg-yellow-500",
+    [PriorityEnum.low]: "bg-yellow-500",
+    [PriorityEnum.medium]: "bg-amber-500",
+    [PriorityEnum.high]: "bg-orange-500",
     [PriorityEnum.critical]: "bg-red-500"
   }
   return colors[normalized] || "bg-gray-500"
@@ -30,9 +30,9 @@ export const getLevelColor = (level?: LevelEnum) => {
   if (!level) return "bg-gray-500"; // default/fallback
   const normalized = capitalizeWords(level.replace('_', ' ')) as LevelEnum;
   const colors: Record<LevelEnum, string> = {
-    [LevelEnum.beginner]: "bg-gray-500",
-    [LevelEnum.intermediate]: "bg-blue-500",
-    [LevelEnum.advanced]: "bg-yellow-500",
+    [LevelEnum.beginner]: "bg-blue-500",
+    [LevelEnum.intermediate]: "bg-indigo-500",
+    [LevelEnum.advanced]: "bg-orange-500",
     [LevelEnum.expert]: "bg-red-500"
   }
   return colors[normalized] || "bg-gray-500"

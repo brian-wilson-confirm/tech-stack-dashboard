@@ -408,8 +408,8 @@ export function DataTableComponent<T extends Record<string, any>>({
 
 
         {/* Table */}
-        <div className="rounded-md border overflow-x-auto">
-          <Table className={cn("w-full", tableClassName)}>
+        <div className="rounded-md border">
+          <Table className={cn("w-full table-fixed", tableClassName)}>
 
 
           {/* Table Header */}
@@ -418,7 +418,7 @@ export function DataTableComponent<T extends Record<string, any>>({
               <TableRow key={headerGroup.id}>
                   {/* Select All checkbox */}
                   {showCheckboxes && (
-                    <TableHead className="w-12">
+                    <TableHead className="w-8">
                       <Checkbox
                         checked={table.getIsAllPageRowsSelected()}
                         onCheckedChange={(checked) => table.toggleAllPageRowsSelected(!!checked)}
@@ -429,7 +429,9 @@ export function DataTableComponent<T extends Record<string, any>>({
 
                   {headerGroup.headers.map((header) => {
                     return (
-                      <TableHead key={header.id}>
+                      <TableHead key={header.id}
+                        style={header.column.columnDef.size ? { width: header.column.columnDef.size } : {}}
+                      >
                         {header.isPlaceholder ? null : (
                           <div
                             className={cn(
@@ -480,7 +482,7 @@ export function DataTableComponent<T extends Record<string, any>>({
                     className={tableClassName}
                   >
 
-                    {/* Row checkbox */}
+                    {/* Column checkbox */}
                     {showCheckboxes && (
                       <TableCell className="w-12">
                         <Checkbox
@@ -495,6 +497,7 @@ export function DataTableComponent<T extends Record<string, any>>({
                       <TableCell 
                         key={cell.id}
                         className="relative"
+                        style={cell.column.columnDef.size ? { width: cell.column.columnDef.size } : {}}
                       >
                         <div className="overflow-hidden text-ellipsis">
                           {editingRow === row.original.id ? (

@@ -133,146 +133,135 @@ export default function TodaysTasksWidget() {
   const columns: ColumnDef<Task>[] = [
     { accessorKey: "task_id", header: "Task ID", 
         enableSorting: true,
+        size: 95,
+        maxSize: 95,
         cell: ({ row }) => (
-        <Button
-            variant="link"
-            className="p-0 h-auto font-normal"
-            onClick={() => handleRowClick(row.original)}
-        >
-            {row.original.task_id}
-        </Button>
-    )},
-    { accessorKey: "task", header: "Task", 
-        enableSorting: true,
-        cell: ({ row }) => (
-        <div className="max-w-[250px] truncate">
-            {row.original.task}
-        </div>
+            <div className="w-24">
+                <Button
+                    variant="link"
+                    className="p-1 h-auto font-normal"
+                    onClick={() => handleRowClick(row.original)}
+                >
+                    {row.original.task_id}
+                </Button>
+            </div>
         )
     },
-    { accessorKey: "type", header: "Type", 
-        enableSorting: true,
-        cell: ({ row }) => (
-        <span>{capitalizeWords(row.original.type.name)}</span>
-    )},
-    { accessorKey: "estimated_duration", header: "Est. Duration",
-        enableSorting: true,
-        cell: ({ row }) => {
-          const duration = row.original.estimated_duration; // example: "PT2H30M"
-          if (!duration) return null;
-      
-          const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?/);
-      
-          if (!match) return null;
-      
-          const hours = match[1] ? parseInt(match[1], 10) : 0;
-          const minutes = match[2] ? parseInt(match[2], 10) : 0;
-      
-          let display = "";
-          if (hours > 0) display += `${hours} h `;
-          if (minutes > 0) display += `${minutes} m`;
-      
-          return (
-            <div className="flex items-center gap-1">
-              <Clock className="h-4 w-4" />
-              <span>{display.trim() || "0 m"}</span>
-            </div>
-          );
-        }
+    {
+      accessorKey: "task",
+      header: "Task",
+      enableSorting: true,
+      size: undefined,
+      cell: ({ row }) => (
+        <div className="truncate min-w-0">{row.original.task}</div>
+      ),
     },
-    { accessorKey: "level", header: "Level",
-        enableSorting: true,
-        cell: ({ row }) => (
-            <Badge variant="secondary" className={`${getLevelColor(row.original.lesson.level as LevelEnum)} text-white`}>
-              {capitalizeWords(row.original.lesson.level)}
-            </Badge>
-          ),
+    {
+      accessorKey: "estimated_duration",
+      header: "Est. Duration",
+      enableSorting: true,
+      size: 96,
+      maxSize: 96,
+      cell: ({ row }) => {
+        const duration = row.original.estimated_duration;
+        if (!duration) return null;
+        const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?/);
+        if (!match) return null;
+        const hours = match[1] ? parseInt(match[1], 10) : 0;
+        const minutes = match[2] ? parseInt(match[2], 10) : 0;
+        let display = "";
+        if (hours > 0) display += `${hours} h `;
+        if (minutes > 0) display += `${minutes} m`;
+        return (
+          <div className="w-24 truncate">
+            <Clock className="h-4 w-4 inline-block mr-1" />
+            <span>{display.trim() || "0 m"}</span>
+          </div>
+        );
+      },
     },
-    { accessorKey: "priority", header: "Priority",
-        enableSorting: true,
-        cell: ({ row }) => (
+    {
+      accessorKey: "level",
+      header: "Level",
+      enableSorting: true,
+      size: 120,
+      maxSize: 120,
+      cell: ({ row }) => (
+        <div className="w-24">
+          <Badge variant="secondary" className={`${getLevelColor(row.original.lesson.level as LevelEnum)} text-white`}>
+            {capitalizeWords(row.original.lesson.level)}
+          </Badge>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "priority",
+      header: "Priority",
+      enableSorting: true,
+      size: 80,
+      maxSize: 80,
+      cell: ({ row }) => (
+        <div className="w-24">
           <Badge variant="secondary" className={`${getPriorityColor(row.original.priority.name as PriorityEnum)} text-white`}>
             {capitalizeWords(row.original.priority.name)}
           </Badge>
-        ),
+        </div>
+      ),
     },
-    { accessorKey: "status", header: "Status",
-        enableSorting: true,
-        cell: ({ row }) => {
-          const isHovered = hoveredRowId === row.original.id;
-          const isEditing = editingRowId === row.original.id;
-          const currentStatusId = row.original.status.id;
-          const currentStatusName = row.original.status.name;
-          return (
-            <div
-              className="w-24"
-              onMouseEnter={() => setHoveredRowId(row.original.id)}
-              onMouseLeave={() => {
-                setHoveredRowId(null);
-                setEditingRowId(null);
-              }}
-              onClick={() => setEditingRowId(row.original.id)}
-              style={{ cursor: "pointer" }}
-            >
-              {isEditing ? (
-                <select
-                  value={currentStatusId}
-                  onChange={async e => {
-                    console.log('Dropdown changed!', e.target.value, statusOptions);
-                    // Ensure id types match
-                    const selected = statusOptions.find(opt => String(opt.id) === String(e.target.value));
-                    console.log('Selected option:', selected);
-                    if (selected) {
-                      await updateStatus(row.original.id, selected.id, selected.name);
-                    } else {
-                      console.warn('No matching status option found for value:', e.target.value);
-                    }
-                    setEditingRowId(null);
-                  }}
-                  onBlur={() => setEditingRowId(null)}
-                  autoFocus
-                  className="border rounded px-2 py-1 text-xs"
-                >
-                  {statusOptions.map(option => (
-                    <option key={option.id} value={option.id}>
-                      {capitalizeWords(option.name.replace('_', ' '))}
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <Badge
-                  variant="secondary"
-                  className={`${getStatusColor(currentStatusName as StatusEnum)} text-white`}
-                >
-                  {capitalizeWords((currentStatusName ?? '').replace('_', ' '))}
-                </Badge>
-              )}
-            </div>
-          );
-        },
-    },
-    { accessorKey: "due_date", header: "Due Date", 
-        enableSorting: true,
-        cell: ({ row }) => {
-        const toLocalInputDate = (date: Date | string | null) => {
-        if (!date) return '';
-        const dateObj = date instanceof Date ? date : new Date(date);
-        if (isNaN(dateObj.getTime())) return '';
-        return dateObj.toISOString().split('T')[0]; // Return the date part directly
-        }
-        return <span>{toLocalInputDate(row.original.due_date)}</span>
-    }}, 
-    { accessorKey: "start_date", header: "Start Date", 
-        enableSorting: true,
-        cell: ({ row }) => {
-        const toLocalInputDate = (date: Date | string | null) => {
-        if (!date) return '';
-        const dateObj = date instanceof Date ? date : new Date(date);
-        if (isNaN(dateObj.getTime())) return '';
-        return dateObj.toISOString().split('T')[0]; // Return the date part directly
-        }
-        return <span>{toLocalInputDate(row.original.start_date)}</span>
-    }}
+    {
+      accessorKey: "status",
+      header: "Status",
+      enableSorting: true,
+      size: 110,
+      maxSize: 110,
+      cell: ({ row }) => {
+        const isHovered = hoveredRowId === row.original.id;
+        const isEditing = editingRowId === row.original.id;
+        const currentStatusId = row.original.status.id;
+        const currentStatusName = row.original.status.name;
+        return (
+          <div
+            className="w-24"
+            onMouseEnter={() => setHoveredRowId(row.original.id)}
+            onMouseLeave={() => {
+              setHoveredRowId(null);
+              setEditingRowId(null);
+            }}
+            onClick={() => setEditingRowId(row.original.id)}
+            style={{ cursor: "pointer" }}
+          >
+            {isEditing ? (
+              <select
+                value={currentStatusId}
+                onChange={async e => {
+                  const selected = statusOptions.find(opt => String(opt.id) === String(e.target.value));
+                  if (selected) {
+                    await updateStatus(row.original.id, selected.id, selected.name);
+                  }
+                  setEditingRowId(null);
+                }}
+                onBlur={() => setEditingRowId(null)}
+                autoFocus
+                className="border rounded px-2 py-1 text-xs"
+              >
+                {statusOptions.map(option => (
+                  <option key={option.id} value={option.id}>
+                    {capitalizeWords(option.name.replace('_', ' '))}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <Badge
+                variant="secondary"
+                className={`${getStatusColor(currentStatusName as StatusEnum)} text-white`}
+              >
+                {capitalizeWords((currentStatusName ?? '').replace('_', ' '))}
+              </Badge>
+            )}
+          </div>
+        );
+      },
+    }
   ]
 
 

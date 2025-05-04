@@ -545,44 +545,6 @@ export function DataTableComponent<T extends Record<string, any>>({
 
 
 
-        {/* Selected Rows */}
-        {showCheckboxes && table.getFilteredSelectedRowModel().rows.length > 0 && (
-        <div className="flex items-center justify-between px-4 py-3 border rounded-md bg-muted">
-          <div className="text-sm text-muted-foreground">
-            {table.getFilteredSelectedRowModel().rows.length} {table.getFilteredSelectedRowModel().rows.length === 1 ? "row" : "rows"} selected
-          </div>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="destructive"
-              onClick={() => {
-                const selectedIds = table
-                  .getFilteredSelectedRowModel()
-                  .rows.map((row) => row.original.id)
-                console.log("Delete rows with IDs:", selectedIds)
-                // You could call a passed-in prop like onDeleteSelected(selectedIds)
-              }}
-            >
-              Delete Selected
-            </Button>
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={() => {
-                const selectedData = table
-                  .getFilteredSelectedRowModel()
-                  .rows.map((row) => row.original)
-                console.log("Export rows:", selectedData)
-                // You could trigger CSV export or share to API
-              }}
-            >
-              Export Selected
-            </Button>
-          </div>
-        </div>
-      )}
-
-
 
       {/* Pagination */}
         {showPagination && (

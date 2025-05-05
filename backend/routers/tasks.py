@@ -17,7 +17,7 @@ from backend.database.models.task_models import TaskTopicLink, Task, TaskPriorit
 from backend.database.models.topic_models import Topic
 
 from backend.database.views.lesson_schemas import LessonDetailsRead
-from backend.database.views.task_schemas import QuickAddTaskRequest, TaskCountByCategory, TaskCreate, TaskDetailsRead, TaskRead, TaskResponse, TaskUpdate, TaskUpdateStatus
+from backend.database.views.task_schemas import QuickAddTaskRequest, TaskCountByCategory, TaskCountByDay, TaskCreate, TaskDetailsRead, TaskRead, TaskResponse, TaskUpdate, TaskUpdateStatus
 from backend.database.views.taskpriority_schemas import TaskPriorityRead
 from backend.database.views.taskstatus_schemas import TaskStatusRead
 from backend.database.views.tasktype_schemas import TaskTypeRead
@@ -80,7 +80,6 @@ async def get_num_tasks(session: Session = Depends(get_session)):
     return session.exec(select(func.count()).select_from(Task)).one()
 
 
-
 @router.get("/count-by-category", response_model=List[TaskCountByCategory])
 async def get_num_tasks_by_category(session: Session = Depends(get_session)):
     """Get the total number of tasks in the database by category (via task -> lesson -> lesson_category -> category)."""
@@ -97,6 +96,23 @@ async def get_num_tasks_by_category(session: Session = Depends(get_session)):
     results = session.exec(stmt).all()
     return [TaskCountByCategory(category=cat, tasks=count) for cat, count in results]
 
+
+
+@router.get("/completed-by-day", response_model=List[TaskCountByDay])
+async def get_num_completed_tasks_by_day(session: Session = Depends(get_session)):
+    """Get the total number of completed tasks by day."""
+    status = session.exec(select(TaskStatus).where(TaskStatus.name == TaskStatusEnum.COMPLETED.value)).first()
+    stmt = (
+        select(func.date(Task.end_date), func.count(Task.id))
+        .where(
+            Task.end_date.isnot(None),
+            Task.done == True,
+            Task.status_id == status.id
+        )
+        .group_by(func.date(Task.end_date))
+    )
+    results = session.exec(stmt).all()
+    return [TaskCountByDay(date=date, tasks=count) for date, count in results]
 
 
 
@@ -245,6 +261,7 @@ async def websocket_endpoint(websocket: WebSocket, session: Session = Depends(ge
     await websocket.send_json({"progress": 100, "stage": "Task Created!"})
     await asyncio.sleep(0)
     await websocket.close()
+
 
 
 """

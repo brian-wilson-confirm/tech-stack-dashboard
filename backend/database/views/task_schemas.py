@@ -91,3 +91,11 @@ class TaskDetailsRead(BaseModel):
 class TaskCountByCategory(BaseModel):
     category: str
     tasks: int
+
+
+"""
+    TASK COUNT BY DAY
+"""
+class TaskCountByDay(BaseModel):
+    date: date
+    tasks: int

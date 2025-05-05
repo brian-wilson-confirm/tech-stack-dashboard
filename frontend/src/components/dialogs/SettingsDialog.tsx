@@ -12,46 +12,54 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
 const sidebarSections = [
-  "Profile",
-  "Account",
-  "Appearance",
-  "Notifications",
-  "Display",
+  { index: 0, title: "Learning Goals" },
+  { index: 1, title: "Focus & Difficulty" },
+  { index: 2, title: "AI Assistant" },
+  { index: 3, title: "Notifications & Reminders" },
+  { index: 4, title: "Display & Behavior" },
+  { index: 5, title: "Data & Privacy" },
+  { index: 6, title: "Advanced Settings" },
 ];
 
 export function SettingsDialog({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {
-  const [selectedSection, setSelectedSection] = React.useState("Profile");
+  const [selectedSection, setSelectedSection] = React.useState(0);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl w-full p-0 overflow-hidden">
+        {/* Heading */}
+        <div className="px-8 pt-6 w-full">
+            <DialogHeader>
+              <DialogTitle className="text-2xl mb-1">Settings</DialogTitle>
+              <DialogDescription className="mb-0">
+                Manage your account settings and set e-mail preferences.
+              </DialogDescription>
+            </DialogHeader>
+        </div>
+        <div className="border-b w-full" />
+
+
         <div className="flex h-[600px]">
           {/* Sidebar */}
           <div className="w-48 border-r bg-muted/50 flex flex-col py-6 px-2">
             {sidebarSections.map((section) => (
               <button
-                key={section}
-                className={`text-left px-4 py-2 rounded mb-1 font-medium transition-colors ${
-                  selectedSection === section
+                key={section.index}
+                className={`text-left px-4 py-2 rounded mb-1 font-medium transition-colors text-sm ${
+                  selectedSection === section.index
                     ? "bg-white text-black shadow"
                     : "text-muted-foreground hover:bg-muted"
                 }`}
-                onClick={() => setSelectedSection(section)}
+                onClick={() => setSelectedSection(section.index)}
               >
-                {section}
+                {section.title}
               </button>
             ))}
           </div>
 
           {/* Main Content */}
           <div className="flex-1 p-8 overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="text-2xl mb-1">Settings</DialogTitle>
-              <DialogDescription className="mb-6">
-                Manage your account settings and set e-mail preferences.
-              </DialogDescription>
-            </DialogHeader>
-            {selectedSection === "Profile" && (
+            {selectedSection === 0 && (
               <form className="space-y-6 max-w-xl">
                 <div>
                   <label className="block text-sm font-medium mb-1">Username</label>

@@ -35,7 +35,7 @@ from backend.routers.topics import get_topic_ids
 from backend.routers.sources import create_source_authors, get_source_id, get_sourcetype_id
 from backend.utils.web_scraper_util import extract_article_metadata
 import asyncio
-from datetime import datetime, timezone
+from datetime import datetime, timezone, date, timedelta
 from backend.enums.task_status_enum import TaskStatusEnum
 
 
@@ -97,10 +97,9 @@ async def get_num_tasks_by_category(session: Session = Depends(get_session)):
     return [TaskCountByCategory(category=cat, tasks=count) for cat, count in results]
 
 
-
 @router.get("/completed-by-day", response_model=List[TaskCountByDay])
 async def get_num_completed_tasks_by_day(session: Session = Depends(get_session)):
-    """Get the total number of completed tasks by day."""
+    """Get the total number of completed tasks by day for the last 90 days (including days with 0)."""
     status = session.exec(select(TaskStatus).where(TaskStatus.name == TaskStatusEnum.COMPLETED.value)).first()
     stmt = (
         select(func.date(Task.end_date), func.count(Task.id))
@@ -112,7 +111,16 @@ async def get_num_completed_tasks_by_day(session: Session = Depends(get_session)
         .group_by(func.date(Task.end_date))
     )
     results = session.exec(stmt).all()
-    return [TaskCountByDay(date=date, tasks=count) for date, count in results]
+    completed_by_day = {str(day): count for day, count in results}
+
+    today = date.today()
+    days = [today - timedelta(days=i) for i in range(89, -1, -1)]  # 90 days, oldest to newest
+
+    response = [
+        TaskCountByDay(date=day.isoformat(), tasks=completed_by_day.get(day.isoformat(), 0))
+        for day in days
+    ]
+    return response
 
 
 

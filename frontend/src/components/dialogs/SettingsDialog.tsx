@@ -29,7 +29,7 @@ export function SettingsDialog({ open, onOpenChange }: { open: boolean, onOpenCh
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl w-full p-0 overflow-hidden">
+      <DialogContent className="sm:max-w-5xl w-full p-0 overflow-hidden gap-0">
         {/* Heading */}
         <div className="px-8 pt-6 w-full">
             <DialogHeader>
@@ -61,7 +61,7 @@ export function SettingsDialog({ open, onOpenChange }: { open: boolean, onOpenCh
           </div>
 
           {/* Main Content */}
-          <div className="flex-1 p-8 overflow-y-auto">
+          <div className="flex-1 p-6 overflow-y-auto">
             {selectedSection === 0 && (
               <LearningGoalsForm 
                 onCancel={() => onOpenChange(false)}

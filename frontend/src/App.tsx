@@ -54,7 +54,6 @@ import AlertingPage from './pages/monitoring/AlertingPage'
 import TasksPage from './pages/TasksPage'
 import AssessmentsPage from './pages/AssessmentsPage'
 import { Toaster } from './components/ui/toaster'
-import SettingsPage from './pages/SettingsPage'
 import LessonsPage from './pages/LessonsPage'
 import TasksOldPage from './pages/TasksOldPage'
 import CoursesPage from './pages/CoursesPage'
@@ -132,7 +131,6 @@ function App() {
             
             {/* Administration routes */}
             <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/settings" element={<SettingsPage />} />
             
           </Routes>
           <Toaster />

@@ -26,6 +26,7 @@ import {
   Calendar,
   User,
 } from "lucide-react"
+import SettingsDialog from "@/components/dialogs/SettingsDialog"
 
 interface NavItem {
   label: string
@@ -45,7 +46,7 @@ export function Sidebar({ className }: React.HTMLAttributes<HTMLDivElement>) {
   const [expandedGroups, setExpandedGroups] = useState<string[]>(['Platform'])
   const [expandedItems, setExpandedItems] = useState<string[]>([])
   const { counts, isLoading } = useItemCounts()
-
+  const [settingsDialogOpen, setSettingsDialogOpen] = useState(false)
 
   const toggleItem = (item: string) => {
     setExpandedItems(current =>
@@ -262,40 +263,59 @@ export function Sidebar({ className }: React.HTMLAttributes<HTMLDivElement>) {
                   {(!isCollapsed || expandedGroups.includes(group.label)) &&
                     group.items.map((item) => (
                       <div key={item.href}>
-                        <Link to={item.href}>
+                        {item.label === "Settings" ? (
                           <Button
                             variant={location.pathname === item.href ? "secondary" : "ghost"}
                             className={cn(
                               "w-full justify-start text-gray-300 font-light hover:bg-gray-700/50 hover:text-gray-100",
                               isCollapsed && "justify-center px-2",
-                              item.subItems && expandedItems.includes(item.label) && "bg-gray-700/30",
                               location.pathname === item.href && "bg-gray-700/50 text-gray-100"
                             )}
-                            onClick={(e) => {
-                              if (item.subItems) {
-                                e.preventDefault()
-                                toggleItem(item.label)
-                              }
-                            }}
+                            onClick={() => setSettingsDialogOpen(true)}
                           >
                             {item.icon && <item.icon className={cn("h-4 w-4 text-gray-400", !isCollapsed && "mr-2")} />}
                             {!isCollapsed && (
                               <>
                                 {item.label}
-                                {renderBadge(item.label)}
-                                {item.subItems && (
-                                  <ChevronRight
-                                    size={16}
-                                    className={cn(
-                                      "ml-auto transition-transform text-gray-400",
-                                      expandedItems.includes(item.label) && "rotate-90"
-                                    )}
-                                  />
-                                )}
                               </>
                             )}
                           </Button>
-                        </Link>
+                        ) : (
+                          <Link to={item.href}>
+                            <Button
+                              variant={location.pathname === item.href ? "secondary" : "ghost"}
+                              className={cn(
+                                "w-full justify-start text-gray-300 font-light hover:bg-gray-700/50 hover:text-gray-100",
+                                isCollapsed && "justify-center px-2",
+                                item.subItems && expandedItems.includes(item.label) && "bg-gray-700/30",
+                                location.pathname === item.href && "bg-gray-700/50 text-gray-100"
+                              )}
+                              onClick={(e) => {
+                                if (item.subItems) {
+                                  e.preventDefault()
+                                  toggleItem(item.label)
+                                }
+                              }}
+                            >
+                              {item.icon && <item.icon className={cn("h-4 w-4 text-gray-400", !isCollapsed && "mr-2")} />}
+                              {!isCollapsed && (
+                                <>
+                                  {item.label}
+                                  {renderBadge(item.label)}
+                                  {item.subItems && (
+                                    <ChevronRight
+                                      size={16}
+                                      className={cn(
+                                        "ml-auto transition-transform text-gray-400",
+                                        expandedItems.includes(item.label) && "rotate-90"
+                                      )}
+                                    />
+                                  )}
+                                </>
+                              )}
+                            </Button>
+                          </Link>
+                        )}
                         {!isCollapsed && item.subItems && expandedItems.includes(item.label) && (
                           <div className="pl-6 mt-1 space-y-1">
                             {item.subItems.map((subItem) => (
@@ -336,6 +356,7 @@ export function Sidebar({ className }: React.HTMLAttributes<HTMLDivElement>) {
           )}
         </div>
       </div>
+      <SettingsDialog open={settingsDialogOpen} onOpenChange={setSettingsDialogOpen} />
     </div>
   )
 } 

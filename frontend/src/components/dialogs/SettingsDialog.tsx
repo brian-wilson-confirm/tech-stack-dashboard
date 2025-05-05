@@ -5,11 +5,14 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogClose,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import LearningGoalsForm from "../forms/LearningGoalsForm";
+import FocusDifficultyForm from "../forms/FocusDifficultyForm";
+import AIAssistantForm from "../forms/AIAssistantForm";
+import NotificationsRemindersForm from "../forms/NotificationsRemindersForm";
+import DisplayBehaviorForm from "../forms/DisplayBehaviorForm";
+import DataPrivacyForm from "../forms/DataPrivacyForm";
+import AdvancedSettingsForm from "../forms/AdvancedSettingsForm";
 
 const sidebarSections = [
   { index: 0, title: "Learning Goals" },
@@ -60,45 +63,47 @@ export function SettingsDialog({ open, onOpenChange }: { open: boolean, onOpenCh
           {/* Main Content */}
           <div className="flex-1 p-8 overflow-y-auto">
             {selectedSection === 0 && (
-              <form className="space-y-6 max-w-xl">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Username</label>
-                  <Input defaultValue="shadcn" />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    This is your public display name. It can be your real name or a pseudonym. You can only change this once every 30 days.
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Email</label>
-                  <Input placeholder="Select a verified email to display" />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    You can manage verified email addresses in your email settings.
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Bio</label>
-                  <Textarea defaultValue="I own a computer." />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    You can @mention other users and organizations to link to them.
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">URLs</label>
-                  <Input className="mb-2" defaultValue="https://shadcn.com" />
-                  <Input defaultValue="http://twitter.com/shadcn" />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Add links to your website, blog, or social media profiles.
-                  </p>
-                </div>
-                <div className="flex gap-2 justify-end pt-4">
-                  <DialogClose asChild>
-                    <Button type="button" variant="secondary">Cancel</Button>
-                  </DialogClose>
-                  <Button type="submit">Save</Button>
-                </div>
-              </form>
+              <LearningGoalsForm 
+                onCancel={() => onOpenChange(false)}
+                onSave={() => onOpenChange(false)}
+              />
             )}
-            {/* Add forms for other sections as needed */}
+            {selectedSection === 1 && (
+              <FocusDifficultyForm 
+                onCancel={() => onOpenChange(false)}
+                onSave={() => onOpenChange(false)}
+              />
+            )}
+            {selectedSection === 2 && (
+              <AIAssistantForm 
+                onCancel={() => onOpenChange(false)}
+                onSave={() => onOpenChange(false)}
+              />
+            )}
+            {selectedSection === 3 && (
+              <NotificationsRemindersForm 
+                onCancel={() => onOpenChange(false)}
+                onSave={() => onOpenChange(false)}
+              />
+            )}
+            {selectedSection === 4 && (
+              <DisplayBehaviorForm 
+                onCancel={() => onOpenChange(false)}
+                onSave={() => onOpenChange(false)}
+              />
+            )}
+            {selectedSection === 5 && (
+              <DataPrivacyForm 
+                onCancel={() => onOpenChange(false)}
+                onSave={() => onOpenChange(false)}
+              />
+            )}
+            {selectedSection === 6 && (
+              <AdvancedSettingsForm 
+                onCancel={() => onOpenChange(false)}
+                onSave={() => onOpenChange(false)}
+              />
+            )}
           </div>
         </div>
       </DialogContent>

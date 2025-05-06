@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../ui/tabs";
 import { Label } from "../ui/label";
 import { Checkbox } from "../ui/checkbox";
-import { MultiSelect } from "../ui/multi-select";
 
 
 interface LearningGoalsFormProps {
@@ -18,6 +17,9 @@ const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave 
   const [taskTypeValues, setTaskTypeValues] = useState<{[key: string]: number}>(
     Object.fromEntries(TASK_TYPES.map(type => [type, 5]))
   );
+  const [difficultyRange, setDifficultyRange] = useState<string[]>([]);
+  const [difficultyBias, setDifficultyBias] = useState("Balanced");
+  const [minTasksPerLevel, setMinTasksPerLevel] = useState<{[key: string]: number}>({});
 
   return (
     <Tabs defaultValue="study-time" className="w-full">
@@ -157,9 +159,71 @@ const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave 
         </form>
       </TabsContent>
       <TabsContent value="difficulty-targets">
-        <div className="space-y-4">
-          <span className="text-sm font-medium">Difficulty Range</span>
-        </div>
+        <form className="space-y-6 max-w-xl p-6" onSubmit={e => { e.preventDefault(); onSave(); }}>
+          <div>
+            <Label className="block text-sm font-medium mb-1">Difficulty Range</Label>
+            <div className="flex gap-4">
+              {["Beginner", "Intermediate", "Advanced"].map(level => (
+                <label key={level} className="flex items-center gap-1 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={difficultyRange.includes(level)}
+                    onChange={e => {
+                      if (e.target.checked) {
+                        setDifficultyRange(prev => [...prev, level]);
+                      } else {
+                        setDifficultyRange(prev => prev.filter(l => l !== level));
+                      }
+                    }}
+                  />
+                  {level}
+                </label>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Range of tasks to focus on (e.g., Intermediate → Advanced)</p>
+          </div>
+          <div>
+            <Label className="block text-sm font-medium mb-1">Difficulty Bias</Label>
+            <div className="flex gap-4">
+              {["Balanced", "Push Higher", "Reinforce Basics"].map(bias => (
+                <label key={bias} className="flex items-center gap-1 text-sm">
+                  <input
+                    type="radio"
+                    name="difficulty-bias"
+                    checked={difficultyBias === bias}
+                    onChange={() => setDifficultyBias(bias)}
+                  />
+                  {bias}
+                </label>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Informs AI task weighting</p>
+          </div>
+          <div>
+            <Label className="block text-sm font-medium mb-1">Minimum Tasks per Level</Label>
+            <div className="flex flex-col gap-2">
+              {["Beginner", "Intermediate", "Advanced"].map(level => (
+                <div key={level} className="flex items-center gap-2">
+                  <span className="w-28 text-xs font-normal text-muted-foreground">{level}</span>
+                  <Input
+                    type="number"
+                    min={0}
+                    placeholder="1"
+                    value={minTasksPerLevel[level] || ''}
+                    onChange={e => setMinTasksPerLevel(v => ({ ...v, [level]: Number(e.target.value) }))}
+                    className="w-24"
+                  />
+                  <span className="text-xs text-muted-foreground">/week</span>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Optional level balance targets (e.g., Beginner: 1/week, Advanced: 2/week)</p>
+          </div>
+          <div className="flex gap-2 justify-end pt-4">
+            <Button type="button" variant="secondary" onClick={onCancel}>Cancel</Button>
+            <Button type="submit">Save</Button>
+          </div>
+        </form>
       </TabsContent>
       <TabsContent value="category-balance">
         <div className="p-6 text-muted-foreground">Category Balance form goes here.</div>

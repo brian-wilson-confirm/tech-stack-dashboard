@@ -24,6 +24,78 @@ const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave 
   const [enforceBalance, setEnforceBalance] = useState(false);
   const [minSubcategoriesPerCategory, setMinSubcategoriesPerCategory] = useState<{[key: string]: number}>({});
   const [autoAlertOnImbalance, setAutoAlertOnImbalance] = useState(false);
+  const [daysToStudy, setDaysToStudy] = useState<string[]>([]);
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    // Gather all config values from state and controlled inputs
+    // (You may want to add refs or state for uncontrolled inputs if needed)
+    const config: any = {
+      // Example for state values:
+      taskTypeValues,
+      difficultyRange,
+      difficultyBias,
+      minTasksPerLevel,
+      targetCategoryDistribution,
+      enforceBalance,
+      minSubcategoriesPerCategory,
+      autoAlertOnImbalance,
+      // Add more fields as needed from controlled inputs
+    };
+
+    // Gather values from uncontrolled inputs (study-time, task-quotas, quiz-goals)
+    const form = e.target as HTMLFormElement;
+    // Study Time
+    config.weeklyGoal = (form.querySelector('#weekly-goal') as HTMLInputElement)?.value;
+    config.dailyGoal = (form.querySelector('#daily-goal') as HTMLInputElement)?.value;
+    config.preferredHours = (form.querySelector('#preferred-hours') as HTMLInputElement)?.value;
+    config.daysToStudy = Array.from(form.querySelectorAll('input[id^="day-"]:checked')).map((el: any) => el.nextSibling.textContent);
+    // Task Quotas
+    config.tasksPerDay = (form.querySelector('#tasks-per-day') as HTMLInputElement)?.value;
+    config.tasksPerWeek = (form.querySelector('#tasks-per-week') as HTMLInputElement)?.value;
+    config.minCompletion = (form.querySelector('#min-completion') as HTMLInputElement)?.value;
+    // Quiz Goals
+    config.quizzesPerWeek = (form.querySelector('input[placeholder="3"]') as HTMLInputElement)?.value;
+    config.minPassingScore = (form.querySelector('input[placeholder="80"]') as HTMLInputElement)?.value;
+    config.dailyQuizStreakGoal = (form.querySelector('input[placeholder="1"]') as HTMLInputElement)?.value;
+    config.reviewMissedQuizTopicsWeekly = !!form.querySelector('input[type="checkbox"]:checked');
+
+    try {
+      const res = await fetch('/api/settings/study-time', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(config),
+      });
+      if (!res.ok) throw new Error('Failed to save settings');
+      onSave();
+    } catch (err) {
+      // Optionally show error to user
+      //alert('Failed to save settings.');
+    }
+  };
+
+  const handleSaveStudyTime = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const form = e.target as HTMLFormElement;
+    const config = {
+      daily_goal: (form.querySelector('#daily-goal') as HTMLInputElement)?.value,
+      weekly_goal: (form.querySelector('#weekly-goal') as HTMLInputElement)?.value,
+      preferred_hours: (form.querySelector('#preferred-hours') as HTMLInputElement)?.value,
+      days_to_study: daysToStudy,
+    };
+  
+    try {
+      const res = await fetch('/api/settings/study-time', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(config),
+      });
+      if (!res.ok) throw new Error('Failed to save');
+      onSave();
+    } catch (err) {
+      //alert('Failed to save study time settings.');
+    }
+  };
 
   return (
     <Tabs defaultValue="study-time" className="w-full">
@@ -35,28 +107,36 @@ const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave 
         <TabsTrigger value="category-balance">Category Balance</TabsTrigger>
       </TabsList>
       <TabsContent value="study-time">
-        <form className="space-y-6 max-w-xl" onSubmit={e => { e.preventDefault(); onSave(); }}>
+        <form className="space-y-6 max-w-xl" onSubmit={handleSaveStudyTime}>
+          <div>
+            <Label htmlFor="daily-goal" className="block text-sm font-medium mb-1">Daily Study Time Goal (hours)</Label>
+            <Input id="daily-goal" type="number" min={0} step={1} placeholder="5" />
+            <p className="text-xs text-muted-foreground mt-1">Example: <span className="bg-muted px-1 rounded">5 hours/day</span> — Micro-targets to help with consistency</p>
+          </div>
           <div>
             <Label htmlFor="weekly-goal" className="block text-sm font-medium mb-1">Weekly Study Time Goal (hours)</Label>
             <Input id="weekly-goal" type="number" min={0} step={0.5} placeholder="10" />
             <p className="text-xs text-muted-foreground mt-1">Example: <span className="bg-muted px-1 rounded">10 hours/week</span> — Sets expected total learning time</p>
           </div>
           <div>
-            <Label htmlFor="daily-goal" className="block text-sm font-medium mb-1">Daily Time Goal (minutes)</Label>
-            <Input id="daily-goal" type="number" min={0} step={1} placeholder="90" />
-            <p className="text-xs text-muted-foreground mt-1">Example: <span className="bg-muted px-1 rounded">90 mins/day</span> — Micro-targets to help with consistency</p>
-          </div>
-          <div>
             <Label className="block text-sm font-medium mb-1">Days a Week to Study</Label>
             <div className="flex gap-2 mt-1">
-              {['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(day => (
+              {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(day => (
                 <label key={day} className="flex items-center gap-1 text-sm">
-                  <Checkbox id={`day-${day}`} />
+                  <Checkbox
+                    id={`day-${day}`}
+                    checked={daysToStudy.includes(day)}
+                    onCheckedChange={checked => {
+                      setDaysToStudy(prev =>
+                        checked ? [...prev, day] : prev.filter(d => d !== day)
+                      );
+                    }}
+                  />
                   {day}
                 </label>
               ))}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Example: <span className="bg-muted px-1 rounded">Mon, Wed, Fri, Sat</span> — Used for streaks and pacing logic</p>
+            <p className="text-xs text-muted-foreground mt-1">Example: Mon, Wed, Fri, Sat — Used for streaks and pacing logic</p>
           </div>
           <div>
             <Label htmlFor="preferred-hours" className="block text-sm font-medium mb-1">Time Blocks / Preferred Hours</Label>
@@ -70,7 +150,7 @@ const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave 
         </form>
       </TabsContent>
       <TabsContent value="task-quotas">
-        <form className="space-y-6 max-w-xl" onSubmit={e => { e.preventDefault(); onSave(); }}>
+        <form className="space-y-6 max-w-xl" onSubmit={handleSave}>
           <div>
             <Label htmlFor="tasks-per-day" className="block text-sm font-medium mb-1">Tasks per Day</Label>
             <Input id="tasks-per-day" type="number" min={0} step={1} placeholder="3" />
@@ -114,7 +194,7 @@ const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave 
         </form>
       </TabsContent>
       <TabsContent value="quiz-goals">
-        <form className="space-y-6 max-w-xl p-6" onSubmit={e => { e.preventDefault(); onSave(); }}>
+        <form className="space-y-6 max-w-xl p-6" onSubmit={handleSave}>
           <table className="w-full text-sm">
             <thead>
               <tr>
@@ -163,7 +243,7 @@ const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave 
         </form>
       </TabsContent>
       <TabsContent value="difficulty-targets">
-        <form className="space-y-6 max-w-xl p-6" onSubmit={e => { e.preventDefault(); onSave(); }}>
+        <form className="space-y-6 max-w-xl p-6" onSubmit={handleSave}>
           <div>
             <Label className="block text-sm font-medium mb-1">Difficulty Range</Label>
             <div className="flex gap-4">
@@ -230,7 +310,7 @@ const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave 
         </form>
       </TabsContent>
       <TabsContent value="category-balance">
-        <form className="space-y-6 max-w-xl p-6" onSubmit={e => { e.preventDefault(); onSave(); }}>
+        <form className="space-y-6 max-w-xl p-6" onSubmit={handleSave}>
           {/* Target Category Distribution */}
           <div>
             <Label className="block text-sm font-medium mb-1">Target Category Distribution</Label>

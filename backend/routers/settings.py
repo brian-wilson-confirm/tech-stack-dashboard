@@ -14,9 +14,17 @@ router = APIRouter(prefix="/settings")
     GET ENDPOINTS
 """
 
-@router.get("/")
-async def get_settings():
-    return {"message": "Hello, World!"}
+@router.get("/learning-goals/study-time", response_model=StudyTime)
+async def get_settings(session: Session = Depends(get_session)):
+    goals = session.get(LearningGoals, 1)
+    hours = session.exec(select(StudyHour).where(StudyHour.id == 1)).first()
+
+    return StudyTime(
+        daily_goal=goals.daily_study_hours if goals else None,
+        weekly_goal=goals.weekly_study_hours if goals else None,
+        days_to_study=[day.day_of_week for day in session.exec(select(StudyDay).where(StudyDay.is_set == True)).all()],
+        preferred_hours=hours.label + ", " + hours.time_range if hours else None,
+    )
 
 
 """
@@ -35,6 +43,8 @@ async def update_study_time(study_time: StudyTime, session: Session = Depends(ge
     update_learning_goals(study_time, session)
     update_study_days(study_time, session)
     update_study_hours(study_time, session)
+
+
 
 """
     HELPER FUNCTIONS

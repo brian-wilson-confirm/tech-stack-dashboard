@@ -1,6 +1,6 @@
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../ui/tabs";
 import { Label } from "../ui/label";
 import { Checkbox } from "../ui/checkbox";
@@ -27,6 +27,25 @@ const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave 
   const [minSubcategoriesPerCategory, setMinSubcategoriesPerCategory] = useState<{[key: string]: number}>({});
   const [autoAlertOnImbalance, setAutoAlertOnImbalance] = useState(false);
   const [daysToStudy, setDaysToStudy] = useState<string[]>([]);
+  const [dailyGoal, setDailyGoal] = useState<number | ''>('');
+  const [weeklyGoal, setWeeklyGoal] = useState<number | ''>('');
+  const [preferredHours, setPreferredHours] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    setLoading(true);
+    fetch("/api/settings/learning-goals/study-time")
+      .then(res => res.json())
+      .then(data => {
+        setDailyGoal(data.daily_goal ?? '');
+        setWeeklyGoal(data.weekly_goal ?? '');
+        setPreferredHours(data.preferred_hours ?? '');
+        setDaysToStudy((data.days_to_study ?? []).map(
+          (d: string) => d.charAt(0).toUpperCase() + d.slice(1).toLowerCase()
+        ));
+      })
+      .finally(() => setLoading(false));
+  }, []);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,11 +103,10 @@ const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave 
 
   const handleSaveStudyTime = async (e: React.FormEvent) => {
     e.preventDefault();
-    const form = e.target as HTMLFormElement;
     const config = {
-      daily_goal: (form.querySelector('#daily-goal') as HTMLInputElement)?.value,
-      weekly_goal: (form.querySelector('#weekly-goal') as HTMLInputElement)?.value,
-      preferred_hours: (form.querySelector('#preferred-hours') as HTMLInputElement)?.value,
+      daily_goal: dailyGoal,
+      weekly_goal: weeklyGoal,
+      preferred_hours: preferredHours,
       days_to_study: daysToStudy,
     };
   
@@ -122,47 +140,72 @@ const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave 
         <TabsTrigger value="category-balance">Category Balance</TabsTrigger>
       </TabsList>
       <TabsContent value="study-time">
-        <form className="space-y-6 max-w-xl" onSubmit={handleSaveStudyTime}>
-          <div>
-            <Label htmlFor="daily-goal" className="block text-sm font-medium mb-1">Daily Study Time Goal (hours)</Label>
-            <Input id="daily-goal" type="number" min={0} step={1} placeholder="5" />
-            <p className="text-xs text-muted-foreground mt-1">Example: <span className="bg-muted px-1 rounded">5 hours/day</span> — Micro-targets to help with consistency</p>
-          </div>
-          <div>
-            <Label htmlFor="weekly-goal" className="block text-sm font-medium mb-1">Weekly Study Time Goal (hours)</Label>
-            <Input id="weekly-goal" type="number" min={0} step={0.5} placeholder="10" />
-            <p className="text-xs text-muted-foreground mt-1">Example: <span className="bg-muted px-1 rounded">10 hours/week</span> — Sets expected total learning time</p>
-          </div>
-          <div>
-            <Label className="block text-sm font-medium mb-1">Days a Week to Study</Label>
-            <div className="flex gap-2 mt-1">
-              {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(day => (
-                <label key={day} className="flex items-center gap-1 text-sm">
-                  <Checkbox
-                    id={`day-${day}`}
-                    checked={daysToStudy.includes(day)}
-                    onCheckedChange={checked => {
-                      setDaysToStudy(prev =>
-                        checked ? [...prev, day] : prev.filter(d => d !== day)
-                      );
-                    }}
-                  />
-                  {day}
-                </label>
-              ))}
+        {loading ? (
+          <div className="p-6 text-center text-muted-foreground">Loading...</div>
+        ) : (
+          <form className="space-y-6 max-w-xl" onSubmit={handleSaveStudyTime}>
+            <div>
+              <Label htmlFor="daily-goal" className="block text-sm font-medium mb-1">Daily Study Time Goal (hours)</Label>
+              <Input
+                id="daily-goal"
+                type="number"
+                min={0}
+                step={1}
+                placeholder="5"
+                value={dailyGoal}
+                onChange={e => setDailyGoal(e.target.value === '' ? '' : Number(e.target.value))}
+              />
+              <p className="text-xs text-muted-foreground mt-1">Example: <span className="bg-muted px-1 rounded">5 hours/day</span> — Micro-targets to help with consistency</p>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Example: Mon, Wed, Fri, Sat — Used for streaks and pacing logic</p>
-          </div>
-          <div>
-            <Label htmlFor="preferred-hours" className="block text-sm font-medium mb-1">Time Blocks / Preferred Hours</Label>
-            <Input id="preferred-hours" placeholder="Mornings, 8–10pm" />
-            <p className="text-xs text-muted-foreground mt-1">Example: <span className="bg-muted px-1 rounded">Mornings</span>, <span className="bg-muted px-1 rounded">8–10pm</span> — Optional, but useful for scheduling & reminders</p>
-          </div>
-          <div className="flex gap-2 justify-end pt-4">
-            <Button type="button" variant="secondary" onClick={onCancel}>Cancel</Button>
-            <Button type="submit">Save</Button>
-          </div>
-        </form>
+            <div>
+              <Label htmlFor="weekly-goal" className="block text-sm font-medium mb-1">Weekly Study Time Goal (hours)</Label>
+              <Input
+                id="weekly-goal"
+                type="number"
+                min={0}
+                step={0.5}
+                placeholder="10"
+                value={weeklyGoal}
+                onChange={e => setWeeklyGoal(e.target.value === '' ? '' : Number(e.target.value))}
+              />
+              <p className="text-xs text-muted-foreground mt-1">Example: <span className="bg-muted px-1 rounded">10 hours/week</span> — Sets expected total learning time</p>
+            </div>
+            <div>
+              <Label className="block text-sm font-medium mb-1">Days a Week to Study</Label>
+              <div className="flex gap-2 mt-1">
+                {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(day => (
+                  <label key={day} className="flex items-center gap-1 text-sm">
+                    <Checkbox
+                      id={`day-${day}`}
+                      checked={daysToStudy.includes(day)}
+                      onCheckedChange={checked => {
+                        setDaysToStudy(prev =>
+                          checked ? [...prev, day] : prev.filter(d => d !== day)
+                        );
+                      }}
+                    />
+                    {day}
+                  </label>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">Example: Mon, Wed, Fri, Sat — Used for streaks and pacing logic</p>
+            </div>
+            <div>
+              <Label htmlFor="preferred-hours" className="block text-sm font-medium mb-1">Time Blocks / Preferred Hours</Label>
+              <Input
+                id="preferred-hours"
+                placeholder="Mornings, 8–10pm"
+                value={preferredHours}
+                onChange={e => setPreferredHours(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground mt-1">Example: <span className="bg-muted px-1 rounded">Mornings</span>, <span className="bg-muted px-1 rounded">8–10pm</span> — Optional, but useful for scheduling & reminders</p>
+            </div>
+            <div className="flex gap-2 justify-end pt-4">
+              <Button type="button" variant="secondary" onClick={onCancel}>Cancel</Button>
+              <Button type="submit">Save</Button>
+            </div>
+          </form>
+        )}
       </TabsContent>
       <TabsContent value="task-quotas">
         <form className="space-y-6 max-w-xl" onSubmit={handleSave}>

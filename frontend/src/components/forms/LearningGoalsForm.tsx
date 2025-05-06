@@ -12,7 +12,7 @@ interface LearningGoalsFormProps {
   onSave: () => void;
 }
 
-const TASK_TYPES = ['Read','Watch','Listen','Research','Review','Install', 'Build', 'Code', 'Debug'];
+const TASK_TYPES = ['Reading','Watching','Listening','Researching','Reviewing','Installing', 'Building', 'Coding', 'Debugging'];
 
 const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave }) => {
   const { toast } = useToast();
@@ -26,80 +26,60 @@ const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave 
   const [enforceBalance, setEnforceBalance] = useState(false);
   const [minSubcategoriesPerCategory, setMinSubcategoriesPerCategory] = useState<{[key: string]: number}>({});
   const [autoAlertOnImbalance, setAutoAlertOnImbalance] = useState(false);
-  const [daysToStudy, setDaysToStudy] = useState<string[]>([]);
   const [dailyGoal, setDailyGoal] = useState<number | ''>('');
   const [weeklyGoal, setWeeklyGoal] = useState<number | ''>('');
   const [preferredHours, setPreferredHours] = useState<string>('');
-  const [loading, setLoading] = useState<boolean>(true);
+  const [daysToStudy, setDaysToStudy] = useState<string[]>([]);
+  const [tasksPerDay, setTasksPerDay] = useState<number | ''>('');
+  const [tasksPerWeek, setTasksPerWeek] = useState<number | ''>('');
+  const [minCompletion, setMinCompletion] = useState<number | ''>('');
+  const [quizzesPerWeek, setQuizzesPerWeek] = useState<number | ''>('');
+  const [minPassingScore, setMinPassingScore] = useState<number | ''>('');
+  const [dailyQuizStreakGoal, setDailyQuizStreakGoal] = useState<number | ''>('');
+  const [reviewMissedQuizTopicsWeekly, setReviewMissedQuizTopicsWeekly] = useState<boolean>(false);
+  const [loadingStudyTime, setLoadingStudyTime] = useState<boolean>(true);
+  const [loadingTaskQuotas, setLoadingTaskQuotas] = useState(true);
 
   useEffect(() => {
-    setLoading(true);
+    setLoadingStudyTime(true);
     fetch("/api/settings/learning-goals/study-time")
       .then(res => res.json())
       .then(data => {
         setDailyGoal(data.daily_goal ?? '');
         setWeeklyGoal(data.weekly_goal ?? '');
-        setPreferredHours(data.preferred_hours ?? '');
         setDaysToStudy((data.days_to_study ?? []).map(
           (d: string) => d.charAt(0).toUpperCase() + d.slice(1).toLowerCase()
         ));
+        setPreferredHours(data.preferred_hours ?? '');
       })
-      .finally(() => setLoading(false));
+      .finally(() => setLoadingStudyTime(false));
   }, []);
 
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    // Gather all config values from state and controlled inputs
-    // (You may want to add refs or state for uncontrolled inputs if needed)
-    const config: any = {
-      // Example for state values:
-      taskTypeValues,
-      difficultyRange,
-      difficultyBias,
-      minTasksPerLevel,
-      targetCategoryDistribution,
-      enforceBalance,
-      minSubcategoriesPerCategory,
-      autoAlertOnImbalance,
-      // Add more fields as needed from controlled inputs
-    };
+  useEffect(() => {
+    setLoadingTaskQuotas(true);
+    fetch("/api/settings/learning-goals/task-quotas")
+      .then(res => res.json())
+      .then(data => {
+        setTasksPerDay(data.tasks_per_day ?? '');
+        setTasksPerWeek(data.tasks_per_week ?? '');
+        setTaskTypeValues(data.task_type_values ?? {});
+        setMinCompletion(data.min_completion ?? '');
+      })
+      .finally(() => setLoadingTaskQuotas(false));
+  }, []);
 
-    // Gather values from uncontrolled inputs (study-time, task-quotas, quiz-goals)
-    const form = e.target as HTMLFormElement;
-    // Study Time
-    config.weeklyGoal = (form.querySelector('#weekly-goal') as HTMLInputElement)?.value;
-    config.dailyGoal = (form.querySelector('#daily-goal') as HTMLInputElement)?.value;
-    config.preferredHours = (form.querySelector('#preferred-hours') as HTMLInputElement)?.value;
-    config.daysToStudy = Array.from(form.querySelectorAll('input[id^="day-"]:checked')).map((el: any) => el.nextSibling.textContent);
-    // Task Quotas
-    config.tasksPerDay = (form.querySelector('#tasks-per-day') as HTMLInputElement)?.value;
-    config.tasksPerWeek = (form.querySelector('#tasks-per-week') as HTMLInputElement)?.value;
-    config.minCompletion = (form.querySelector('#min-completion') as HTMLInputElement)?.value;
-    // Quiz Goals
-    config.quizzesPerWeek = (form.querySelector('input[placeholder="3"]') as HTMLInputElement)?.value;
-    config.minPassingScore = (form.querySelector('input[placeholder="80"]') as HTMLInputElement)?.value;
-    config.dailyQuizStreakGoal = (form.querySelector('input[placeholder="1"]') as HTMLInputElement)?.value;
-    config.reviewMissedQuizTopicsWeekly = !!form.querySelector('input[type="checkbox"]:checked');
-
-    try {
-      const res = await fetch('/api/settings/study-time', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(config),
-      });
-      if (!res.ok) throw new Error('Failed to save settings');
-      toast({
-        title: "Settings saved",
-        description: "Your configuration was saved successfully.",
-      });
-    } catch (err) {
-      toast({
-        title: "Save failed",
-        description: "There was an error saving your settings.",
-        variant: "destructive",
-      });
-    }
-  };
+  /*
+  const transformTaskTypeKeys = (obj: {[key: string]: number}) => {
+    const result: {[key: string]: number} = {};
+    Object.entries(obj).forEach(([key, value]) => {
+      let newKey = key.toLowerCase();
+      if (newKey === 'code') newKey = 'coding';
+      else if (newKey === 'debug') newKey = 'debugging';
+      else newKey = newKey + 'ing';
+      result[newKey] = value;
+    });
+    return result;
+  };*/
 
   const handleSaveStudyTime = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -111,7 +91,7 @@ const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave 
     };
   
     try {
-      const res = await fetch('/api/settings/study-time', {
+      const res = await fetch('/api/settings/learning-goals/study-time', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(config),
@@ -130,6 +110,126 @@ const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave 
     }
   };
 
+  const handleSaveTaskQuotas = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const config = {
+      tasks_per_day: tasksPerDay,
+      tasks_per_week: tasksPerWeek,
+      task_type_values: taskTypeValues, //transformTaskTypeKeys(taskTypeValues),
+      min_completion: minCompletion,
+    };
+
+    try {
+      const res = await fetch('/api/settings/learning-goals/task-quotas', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(config),
+      });
+      if (!res.ok) throw new Error('Failed to save');
+      toast({
+        title: "Settings saved",
+        description: "Your task quotas were saved successfully.",
+      });
+    } catch (err) {
+      toast({
+        title: "Save failed",
+        description: "There was an error saving your task quotas.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSaveQuizGoals = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const config = {
+      quizzes_per_week: quizzesPerWeek,
+      min_passing_score: minPassingScore,
+      daily_quiz_streak_goal: dailyQuizStreakGoal,
+      review_missed_quiz_topics_weekly: reviewMissedQuizTopicsWeekly,
+    };
+
+    try {
+      const res = await fetch('/api/settings/learning-goals/quiz-goals', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(config),
+      });
+      if (!res.ok) throw new Error('Failed to save');
+      toast({
+        title: "Settings saved",
+        description: "Your quiz goals were saved successfully.",
+      });
+    } catch (err) {
+      toast({
+        title: "Save failed",
+        description: "There was an error saving your quiz goals.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSaveDifficultyTargets = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const config = {
+      difficulty_range: difficultyRange,
+      difficulty_bias: difficultyBias,
+      min_tasks_per_level: minTasksPerLevel,
+      target_category_distribution: targetCategoryDistribution,
+      enforce_balance: enforceBalance,
+      min_subcategories_per_category: minSubcategoriesPerCategory,
+      auto_alert_on_imbalance: autoAlertOnImbalance,
+    };
+
+    try {
+      const res = await fetch('/api/settings/learning-goals/difficulty-targets', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(config),
+      });
+      if (!res.ok) throw new Error('Failed to save');
+      toast({
+        title: "Settings saved",
+        description: "Your difficulty targets were saved successfully.",
+      });
+    } catch (err) {
+      toast({
+        title: "Save failed",
+        description: "There was an error saving your difficulty targets.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSaveCategoryBalance = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const config = {
+      target_category_distribution: targetCategoryDistribution,
+      enforce_balance: enforceBalance,  
+      min_subcategories_per_category: minSubcategoriesPerCategory,
+      auto_alert_on_imbalance: autoAlertOnImbalance,
+    };
+
+    try {
+      const res = await fetch('/api/settings/learning-goals/category-balance', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(config),
+      });
+      if (!res.ok) throw new Error('Failed to save');
+      toast({
+        title: "Settings saved",
+        description: "Your category balance settings were saved successfully.",
+      });
+    } catch (err) {
+      toast({
+        title: "Save failed",
+        description: "There was an error saving your category balance settings.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  
   return (
     <Tabs defaultValue="study-time" className="w-full">
       <TabsList className="mb-6">
@@ -140,7 +240,7 @@ const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave 
         <TabsTrigger value="category-balance">Category Balance</TabsTrigger>
       </TabsList>
       <TabsContent value="study-time">
-        {loading ? (
+        {loadingStudyTime ? (
           <div className="p-6 text-center text-muted-foreground">Loading...</div>
         ) : (
           <form className="space-y-6 max-w-xl" onSubmit={handleSaveStudyTime}>
@@ -208,51 +308,80 @@ const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave 
         )}
       </TabsContent>
       <TabsContent value="task-quotas">
-        <form className="space-y-6 max-w-xl" onSubmit={handleSave}>
-          <div>
-            <Label htmlFor="tasks-per-day" className="block text-sm font-medium mb-1">Tasks per Day</Label>
-            <Input id="tasks-per-day" type="number" min={0} step={1} placeholder="3" />
-            <p className="text-xs text-muted-foreground mt-1">Example: <span className="bg-muted px-1 rounded">3 tasks/day</span></p>
-          </div>
-          <div>
-            <Label htmlFor="tasks-per-week" className="block text-sm font-medium mb-1">Tasks per Week</Label>
-            <Input id="tasks-per-week" type="number" min={0} step={1} placeholder="15" />
-            <p className="text-xs text-muted-foreground mt-1">Example: <span className="bg-muted px-1 rounded">15 tasks/week</span></p>
-          </div>
-          <div>
-            <Label className="block text-sm font-medium mb-1">Task Types to Emphasize</Label>
-            <div className="flex flex-col gap-4 mt-1">
-              {TASK_TYPES.map(type => (
-                <div key={type} className="flex items-center gap-4">
-                  <span className="w-20 text-xs font-normal text-muted-foreground capitalize pl-3">{type}</span>
-                  <input
-                    type="range"
-                    min={1}
-                    max={10}
-                    value={taskTypeValues[type]}
-                    onChange={e => setTaskTypeValues(v => ({ ...v, [type]: Number(e.target.value) }))}
-                    className="flex-1 accent-primary"
-                    id={`task-type-slider-${type}`}
-                  />
-                  <span className="w-8 text-xs text-muted-foreground text-right">{taskTypeValues[type]}</span>
-                </div>
-              ))}
+        {loadingTaskQuotas ? (
+          <div className="p-6 text-center text-muted-foreground">Loading...</div>
+        ) : (
+          <form className="space-y-6 max-w-xl" onSubmit={handleSaveTaskQuotas}>
+            <div>
+              <Label htmlFor="tasks-per-day" className="block text-sm font-medium mb-1">Tasks per Day</Label>
+              <Input
+                id="tasks-per-day"
+                type="number"
+                min={0}
+                step={1}
+                placeholder="3"
+                value={tasksPerDay}
+                onChange={e => setTasksPerDay(e.target.value === '' ? '' : Number(e.target.value))}
+              />
+              <p className="text-xs text-muted-foreground mt-1">Example: <span className="bg-muted px-1 rounded">3 tasks/day</span></p>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Set emphasis for each type: 1 (low) to 10 (high). Example: <span className="bg-muted px-1 rounded">code: 8</span>, <span className="bg-muted px-1 rounded">quiz: 6</span>, <span className="bg-muted px-1 rounded">build: 9</span></p>
-          </div>
-          <div>
-            <Label htmlFor="min-completion" className="block text-sm font-medium mb-1">Minimum Completion % per Category</Label>
-            <Input id="min-completion" type="number" min={0} max={100} step={1} placeholder="10" />
-            <p className="text-xs text-muted-foreground mt-1">e.g., 10% from each major category per week</p>
-          </div>
-          <div className="flex gap-2 justify-end pt-4">
-            <Button type="button" variant="secondary" onClick={onCancel}>Cancel</Button>
-            <Button type="submit">Save</Button>
-          </div>
-        </form>
+            <div>
+              <Label htmlFor="tasks-per-week" className="block text-sm font-medium mb-1">Tasks per Week</Label>
+              <Input
+                id="tasks-per-week"
+                type="number"
+                min={0}
+                step={1}
+                placeholder="15"
+                value={tasksPerWeek}
+                onChange={e => setTasksPerWeek(e.target.value === '' ? '' : Number(e.target.value))}
+              />
+              <p className="text-xs text-muted-foreground mt-1">Example: <span className="bg-muted px-1 rounded">15 tasks/week</span></p>
+            </div>
+            <div>
+              <Label className="block text-sm font-medium mb-1">Task Types to Emphasize</Label>
+              <div className="flex flex-col gap-4 mt-1">
+                {TASK_TYPES.map(type => (
+                  <div key={type} className="flex items-center gap-4">
+                    <span className="w-20 text-xs font-normal text-muted-foreground capitalize pl-3">{type}</span>
+                    <input
+                      type="range"
+                      min={1}
+                      max={10}
+                      value={taskTypeValues[type.toLowerCase()]}
+                      onChange={e => setTaskTypeValues(v => ({ ...v, [type.toLowerCase()]: Number(e.target.value) }))}
+                      className="flex-1 accent-primary"
+                      id={`task-type-slider-${type}`}
+                    />
+                    <span className="w-8 text-xs text-muted-foreground text-right">{taskTypeValues[type.toLowerCase()]}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">Set emphasis for each type: 1 (low) to 10 (high). Example: <span className="bg-muted px-1 rounded">code: 8</span>, <span className="bg-muted px-1 rounded">quiz: 6</span>, <span className="bg-muted px-1 rounded">build: 9</span></p>
+            </div>
+            <div>
+              <Label htmlFor="min-completion" className="block text-sm font-medium mb-1">Minimum Completion % per Category</Label>
+              <Input
+                id="min-completion"
+                type="number"
+                min={0}
+                max={100}
+                step={1}
+                placeholder="10"
+                value={minCompletion}
+                onChange={e => setMinCompletion(e.target.value === '' ? '' : Number(e.target.value))}
+              />
+              <p className="text-xs text-muted-foreground mt-1">e.g., 10% from each major category per week</p>
+            </div>
+            <div className="flex gap-2 justify-end pt-4">
+              <Button type="button" variant="secondary" onClick={onCancel}>Cancel</Button>
+              <Button type="submit">Save</Button>
+            </div>
+          </form>
+        )}
       </TabsContent>
       <TabsContent value="quiz-goals">
-        <form className="space-y-6 max-w-xl p-6" onSubmit={handleSave}>
+        <form className="space-y-6 max-w-xl p-6" onSubmit={handleSaveQuizGoals}>
           <table className="w-full text-sm">
             <thead>
               <tr>
@@ -301,7 +430,7 @@ const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave 
         </form>
       </TabsContent>
       <TabsContent value="difficulty-targets">
-        <form className="space-y-6 max-w-xl p-6" onSubmit={handleSave}>
+        <form className="space-y-6 max-w-xl p-6" onSubmit={handleSaveDifficultyTargets}>
           <div>
             <Label className="block text-sm font-medium mb-1">Difficulty Range</Label>
             <div className="flex gap-4">
@@ -368,7 +497,7 @@ const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave 
         </form>
       </TabsContent>
       <TabsContent value="category-balance">
-        <form className="space-y-6 max-w-xl p-6" onSubmit={handleSave}>
+        <form className="space-y-6 max-w-xl p-6" onSubmit={handleSaveCategoryBalance}>
           {/* Target Category Distribution */}
           <div>
             <Label className="block text-sm font-medium mb-1">Target Category Distribution</Label>
@@ -441,6 +570,8 @@ const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave 
       </TabsContent>
     </Tabs>
   );
-};
+  };
+
+
 
 export default LearningGoalsForm; 

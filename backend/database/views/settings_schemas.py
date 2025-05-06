@@ -7,3 +7,10 @@ class StudyTime(BaseModel):
     weekly_goal: int
     days_to_study: list[str]
     preferred_hours: Optional[str] = None
+
+
+class TaskQuotas(BaseModel):
+    tasks_per_day: int
+    tasks_per_week: int
+    task_type_values: dict[str, int]
+    min_completion: int

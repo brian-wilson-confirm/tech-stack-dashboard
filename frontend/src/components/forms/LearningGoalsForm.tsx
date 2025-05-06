@@ -20,6 +20,10 @@ const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave 
   const [difficultyRange, setDifficultyRange] = useState<string[]>([]);
   const [difficultyBias, setDifficultyBias] = useState("Balanced");
   const [minTasksPerLevel, setMinTasksPerLevel] = useState<{[key: string]: number}>({});
+  const [targetCategoryDistribution, setTargetCategoryDistribution] = useState<{[key: string]: number}>({});
+  const [enforceBalance, setEnforceBalance] = useState(false);
+  const [minSubcategoriesPerCategory, setMinSubcategoriesPerCategory] = useState<{[key: string]: number}>({});
+  const [autoAlertOnImbalance, setAutoAlertOnImbalance] = useState(false);
 
   return (
     <Tabs defaultValue="study-time" className="w-full">
@@ -226,7 +230,76 @@ const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave 
         </form>
       </TabsContent>
       <TabsContent value="category-balance">
-        <div className="p-6 text-muted-foreground">Category Balance form goes here.</div>
+        <form className="space-y-6 max-w-xl p-6" onSubmit={e => { e.preventDefault(); onSave(); }}>
+          {/* Target Category Distribution */}
+          <div>
+            <Label className="block text-sm font-medium mb-1">Target Category Distribution</Label>
+            <div className="flex flex-col gap-4">
+              {['Frontend', 'DevOps', 'Backend', 'Security'].map(category => (
+                <div key={category} className="flex items-center gap-2">
+                  <span className="w-24 text-xs font-normal text-muted-foreground">{category}</span>
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    value={targetCategoryDistribution[category] || 0}
+                    onChange={e => setTargetCategoryDistribution(v => ({ ...v, [category]: Number(e.target.value) }))}
+                    className="flex-1 accent-primary"
+                  />
+                  <span className="w-12 text-xs text-muted-foreground text-right">{targetCategoryDistribution[category] || 0}%</span>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Used for LLM to prioritize new tasks (e.g., Frontend 20%, DevOps 15%)</p>
+          </div>
+          {/* Enforce Balance Toggle */}
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="enforce-balance"
+              checked={enforceBalance}
+              onChange={e => setEnforceBalance(e.target.checked)}
+            />
+            <Label htmlFor="enforce-balance" className="text-sm font-medium">Enforce Balance</Label>
+            <span className="text-xs text-muted-foreground">If true, deprioritize oversaturated categories</span>
+          </div>
+          {/* Min Subcategories per Category */}
+          <div>
+            <Label className="block text-sm font-medium mb-1">Minimum Subcategories per Category</Label>
+            <div className="flex flex-col gap-2">
+              {['Frontend', 'DevOps', 'Backend', 'Security'].map(category => (
+                <div key={category} className="flex items-center gap-2">
+                  <span className="w-24 text-xs font-normal text-muted-foreground">{category}</span>
+                  <Input
+                    type="number"
+                    min={0}
+                    placeholder="2"
+                    value={minSubcategoriesPerCategory[category] || ''}
+                    onChange={e => setMinSubcategoriesPerCategory(v => ({ ...v, [category]: Number(e.target.value) }))}
+                    className="w-24"
+                  />
+                  <span className="text-xs text-muted-foreground">per category</span>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Promotes coverage of full category depth (e.g., ≥2 per category)</p>
+          </div>
+          {/* Auto Alert on Imbalance Toggle */}
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="auto-alert-on-imbalance"
+              checked={autoAlertOnImbalance}
+              onChange={e => setAutoAlertOnImbalance(e.target.checked)}
+            />
+            <Label htmlFor="auto-alert-on-imbalance" className="text-sm font-medium">Auto Alert on Imbalance</Label>
+            <span className="text-xs text-muted-foreground">Triggers nudges like "Security falling behind"</span>
+          </div>
+          <div className="flex gap-2 justify-end pt-4">
+            <Button type="button" variant="secondary" onClick={onCancel}>Cancel</Button>
+            <Button type="submit">Save</Button>
+          </div>
+        </form>
       </TabsContent>
     </Tabs>
   );

@@ -34,7 +34,7 @@ export function SettingsDialog({ open, onOpenChange }: { open: boolean, onOpenCh
         <div className="px-8 pt-6 w-full">
             <DialogHeader>
               <DialogTitle className="text-2xl mb-1">Settings</DialogTitle>
-              <DialogDescription className="mb-0">
+              <DialogDescription className="mb-8">
                 Manage your account settings and set e-mail preferences.
               </DialogDescription>
             </DialogHeader>

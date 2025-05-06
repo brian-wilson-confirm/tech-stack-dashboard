@@ -39,7 +39,9 @@ const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave 
   const [reviewMissedQuizTopicsWeekly, setReviewMissedQuizTopicsWeekly] = useState<boolean>(false);
   const [loadingStudyTime, setLoadingStudyTime] = useState<boolean>(true);
   const [loadingTaskQuotas, setLoadingTaskQuotas] = useState(true);
-
+  const [loadingQuizGoals, setLoadingQuizGoals] = useState(true);
+  
+  
   useEffect(() => {
     setLoadingStudyTime(true);
     fetch("/api/settings/learning-goals/study-time")
@@ -67,6 +69,20 @@ const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave 
       .finally(() => setLoadingTaskQuotas(false));
   }, []);
 
+  useEffect(() => {
+    setLoadingQuizGoals(true);
+    fetch("/api/settings/learning-goals/quiz-goals")
+      .then(res => res.json())
+      .then(data => {
+        setQuizzesPerWeek(data.quizzes_per_week ?? '');
+        setDailyQuizStreakGoal(data.daily_quiz_goal ?? '');
+        setMinPassingScore(data.minimum_passing_score ?? '');
+        setReviewMissedQuizTopicsWeekly(data.review_missed_topics_weekly ?? false);
+      })
+      .finally(() => setLoadingQuizGoals(false));
+  }, []);
+  
+
   /*
   const transformTaskTypeKeys = (obj: {[key: string]: number}) => {
     const result: {[key: string]: number} = {};
@@ -79,6 +95,7 @@ const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave 
     });
     return result;
   };*/
+
 
   const handleSaveStudyTime = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -140,10 +157,10 @@ const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave 
   const handleSaveQuizGoals = async (e: React.FormEvent) => {
     e.preventDefault();
     const config = {
+      daily_quiz_goal: dailyQuizStreakGoal,
       quizzes_per_week: quizzesPerWeek,
-      min_passing_score: minPassingScore,
-      daily_quiz_streak_goal: dailyQuizStreakGoal,
-      review_missed_quiz_topics_weekly: reviewMissedQuizTopicsWeekly,
+      minimum_passing_score: minPassingScore,
+      review_missed_topics_weekly: reviewMissedQuizTopicsWeekly,
     };
 
     try {
@@ -366,8 +383,11 @@ const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave 
         )}
       </TabsContent>
       <TabsContent value="quiz-goals">
-        <form className="space-y-6 max-w-xl p-6" onSubmit={handleSaveQuizGoals}>
-          <table className="w-full text-sm">
+        {loadingQuizGoals ? (
+          <div className="p-6 text-center text-muted-foreground">Loading...</div>
+        ) : (
+          <form className="space-y-6 max-w-xl" onSubmit={handleSaveQuizGoals}>
+            <table className="w-full text-sm">
             <thead>
               <tr>
                 <th className="text-left pb-2">Setting</th>
@@ -377,31 +397,31 @@ const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave 
             </thead>
             <tbody>
               <tr>
-                <td className="py-2 font-medium">Quizzes per Week</td>
-                <td><code className="bg-muted px-2 py-1 rounded">number</code></td>
-                <td><Input type="number" min={0} className="w-32" placeholder="3" /></td>
-              </tr>
-              <tr>
-                <td className="py-2 font-medium">Minimum Passing Score</td>
-                <td><code className="bg-muted px-2 py-1 rounded">number (%)</code></td>
-                <td><Input type="number" min={0} max={100} className="w-32" placeholder="80" /></td>
-              </tr>
-              <tr>
                 <td className="py-2 font-medium">Daily Quiz Streak Goal</td>
                 <td><code className="bg-muted px-2 py-1 rounded">boolean</code> <span className="text-xs text-muted-foreground">or</span> <code className="bg-muted px-2 py-1 rounded">number</code></td>
                 <td>
                   <div className="flex items-center gap-2">
-                    <Input type="number" min={0} className="w-20" placeholder="1" />
+                    <Input type="number" min={0} className="w-20" placeholder="1" value={dailyQuizStreakGoal} onChange={e => setDailyQuizStreakGoal(e.target.value === '' ? '' : Number(e.target.value))} />
                     <span className="text-xs text-muted-foreground">quiz/day</span>
                   </div>
                 </td>
+              </tr>
+              <tr>
+                <td className="py-2 font-medium">Quizzes per Week</td>
+                <td><code className="bg-muted px-2 py-1 rounded">number</code></td>
+                <td><Input type="number" min={0} className="w-32" placeholder="3" value={quizzesPerWeek} onChange={e => setQuizzesPerWeek(e.target.value === '' ? '' : Number(e.target.value))} /></td>
+              </tr>
+              <tr>
+                <td className="py-2 font-medium">Minimum Passing Score</td>
+                <td><code className="bg-muted px-2 py-1 rounded">number (%)</code></td>
+                <td><Input type="number" min={0} max={100} className="w-32" placeholder="80" value={minPassingScore} onChange={e => setMinPassingScore(e.target.value === '' ? '' : Number(e.target.value))} /></td>
               </tr>
               <tr>
                 <td className="py-2 font-medium">Review Missed Quiz Topics Weekly</td>
                 <td><code className="bg-muted px-2 py-1 rounded">toggle</code></td>
                 <td>
                   <div className="flex items-center gap-2">
-                    <Checkbox />
+                    <Checkbox checked={reviewMissedQuizTopicsWeekly} onCheckedChange={checked => setReviewMissedQuizTopicsWeekly(!!checked)} />
                     <span className="text-xs text-muted-foreground">enabled</span>
                   </div>
                 </td>
@@ -411,8 +431,9 @@ const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave 
           <div className="flex gap-2 justify-end pt-4">
             <Button type="button" variant="secondary" onClick={onCancel}>Cancel</Button>
             <Button type="submit">Save</Button>
-          </div>
-        </form>
+            </div>
+          </form>
+        )}
       </TabsContent>
       <TabsContent value="difficulty-targets">
         <form className="space-y-6 max-w-xl p-6" onSubmit={handleSaveDifficultyTargets}>

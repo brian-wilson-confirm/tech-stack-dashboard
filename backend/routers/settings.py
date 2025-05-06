@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from backend.database.models.goals.study_days import StudyDay
 from backend.database.models.goals.study_hours import StudyHour
 from backend.database.models.goals.task_type_weights import TaskTypeWeight
-from backend.database.views.settings_schemas import StudyTime, TaskQuotas
+from backend.database.views.settings_schemas import QuizGoals, StudyTime, TaskQuotas
 from backend.database.connection import get_session
 from sqlmodel import Session, select
 from backend.database.models.goals.learning_goals import LearningGoals
@@ -48,6 +48,15 @@ async def get_task_quotas(session: Session = Depends(get_session)):
     )
 
 
+@router.get("/learning-goals/quiz-goals", response_model=QuizGoals)
+async def get_quiz_goals(session: Session = Depends(get_session)):
+    goals = session.get(LearningGoals, 1)
+    return QuizGoals(
+        daily_quiz_goal=goals.daily_quiz_goal if goals else None,
+        quizzes_per_week=goals.quizzes_per_week if goals else None,
+        minimum_passing_score=goals.minimum_passing_score if goals else None,
+        review_missed_topics_weekly=goals.review_missed_topics_weekly if goals else None
+    )
 
 
 
@@ -75,6 +84,16 @@ async def update_task_quotas(task_quotas: TaskQuotas, session: Session = Depends
     update_task_type_weights(task_quotas, session)
 
 
+@router.put("/learning-goals/quiz-goals")
+async def update_quiz_goals(quiz_goals: QuizGoals, session: Session = Depends(get_session)):
+    update_learning_goals(quiz_goals, session)  
+
+
+
+
+
+
+
 
 
 
@@ -82,7 +101,7 @@ async def update_task_quotas(task_quotas: TaskQuotas, session: Session = Depends
 """
     HELPER FUNCTIONS
 """
-def update_learning_goals(tab: StudyTime | TaskQuotas, session: Session):
+def update_learning_goals(tab: StudyTime | TaskQuotas | QuizGoals, session: Session):
     """
     Update the learning goals based on the study time.
     """
@@ -98,6 +117,11 @@ def update_learning_goals(tab: StudyTime | TaskQuotas, session: Session):
     elif isinstance(tab, TaskQuotas):
         goals.tasks_per_day = tab.tasks_per_day
         goals.tasks_per_week = tab.tasks_per_week
+    elif isinstance(tab, QuizGoals):
+        goals.daily_quiz_goal = tab.daily_quiz_goal
+        goals.quizzes_per_week = tab.quizzes_per_week
+        goals.minimum_passing_score = tab.minimum_passing_score
+        goals.review_missed_topics_weekly = tab.review_missed_topics_weekly
     session.commit()
 
 

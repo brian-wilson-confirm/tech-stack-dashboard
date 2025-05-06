@@ -13,3 +13,12 @@ class TaskQuotas(BaseModel):
     tasks_per_day: int
     tasks_per_week: int
     task_type_values: dict[str, int]
+
+
+class QuizGoals(BaseModel):
+    quizzes_per_week: int
+    daily_quiz_goal: int
+    minimum_passing_score: int
+    review_missed_topics_weekly: bool
+    
+    

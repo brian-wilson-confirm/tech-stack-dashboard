@@ -13,4 +13,3 @@ class TaskQuotas(BaseModel):
     tasks_per_day: int
     tasks_per_week: int
     task_type_values: dict[str, int]
-    min_completion: int

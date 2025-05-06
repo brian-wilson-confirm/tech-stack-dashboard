@@ -44,8 +44,7 @@ async def get_task_quotas(session: Session = Depends(get_session)):
     return TaskQuotas(
         tasks_per_day=goals.tasks_per_day if goals else None,
         tasks_per_week=goals.tasks_per_week if goals else None,
-        task_type_values=task_type_values,
-        min_completion=getattr(goals, "min_completion", 0),
+        task_type_values=task_type_values
     )
 
 
@@ -99,8 +98,6 @@ def update_learning_goals(tab: StudyTime | TaskQuotas, session: Session):
     elif isinstance(tab, TaskQuotas):
         goals.tasks_per_day = tab.tasks_per_day
         goals.tasks_per_week = tab.tasks_per_week
-        if hasattr(goals, "min_completion"):
-            goals.min_completion = tab.min_completion
     session.commit()
 
 

@@ -63,7 +63,6 @@ const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave 
         setTasksPerDay(data.tasks_per_day ?? '');
         setTasksPerWeek(data.tasks_per_week ?? '');
         setTaskTypeValues(data.task_type_values ?? {});
-        setMinCompletion(data.min_completion ?? '');
       })
       .finally(() => setLoadingTaskQuotas(false));
   }, []);
@@ -116,7 +115,6 @@ const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave 
       tasks_per_day: tasksPerDay,
       tasks_per_week: tasksPerWeek,
       task_type_values: taskTypeValues, //transformTaskTypeKeys(taskTypeValues),
-      min_completion: minCompletion,
     };
 
     try {
@@ -207,6 +205,7 @@ const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave 
       enforce_balance: enforceBalance,  
       min_subcategories_per_category: minSubcategoriesPerCategory,
       auto_alert_on_imbalance: autoAlertOnImbalance,
+      min_completion: minCompletion,
     };
 
     try {
@@ -358,20 +357,6 @@ const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave 
                 ))}
               </div>
               <p className="text-xs text-muted-foreground mt-1">Set emphasis for each type: 1 (low) to 10 (high). Example: <span className="bg-muted px-1 rounded">code: 8</span>, <span className="bg-muted px-1 rounded">quiz: 6</span>, <span className="bg-muted px-1 rounded">build: 9</span></p>
-            </div>
-            <div>
-              <Label htmlFor="min-completion" className="block text-sm font-medium mb-1">Minimum Completion % per Category</Label>
-              <Input
-                id="min-completion"
-                type="number"
-                min={0}
-                max={100}
-                step={1}
-                placeholder="10"
-                value={minCompletion}
-                onChange={e => setMinCompletion(e.target.value === '' ? '' : Number(e.target.value))}
-              />
-              <p className="text-xs text-muted-foreground mt-1">e.g., 10% from each major category per week</p>
             </div>
             <div className="flex gap-2 justify-end pt-4">
               <Button type="button" variant="secondary" onClick={onCancel}>Cancel</Button>
@@ -561,6 +546,20 @@ const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave 
             />
             <Label htmlFor="auto-alert-on-imbalance" className="text-sm font-medium">Auto Alert on Imbalance</Label>
             <span className="text-xs text-muted-foreground">Triggers nudges like "Security falling behind"</span>
+          </div>
+          <div>
+              <Label htmlFor="min-completion" className="block text-sm font-medium mb-1">Minimum Completion % per Category</Label>
+              <Input
+                id="min-completion"
+                type="number"
+                min={0}
+                max={100}
+                step={1}
+                placeholder="10"
+                value={minCompletion}
+                onChange={e => setMinCompletion(e.target.value === '' ? '' : Number(e.target.value))}
+              />
+              <p className="text-xs text-muted-foreground mt-1">e.g., 10% from each major category per week</p>
           </div>
           <div className="flex gap-2 justify-end pt-4">
             <Button type="button" variant="secondary" onClick={onCancel}>Cancel</Button>

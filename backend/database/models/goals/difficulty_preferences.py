@@ -2,6 +2,8 @@ from sqlmodel import SQLModel, Field
 from typing import Optional
 
 class DifficultyPreferences(SQLModel, table=True):
+    __tablename__ = "difficulty_preferences"
+    
     id: Optional[int] = Field(default=None, primary_key=True)
     allow_beginner: bool = False
     allow_intermediate: bool = False

@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../ui/tabs";
 import { Label } from "../ui/label";
 import { Checkbox } from "../ui/checkbox";
+import { useToast } from "../ui/use-toast";
 
 
 interface LearningGoalsFormProps {
@@ -14,6 +15,7 @@ interface LearningGoalsFormProps {
 const TASK_TYPES = ['Read','Watch','Listen','Research','Review','Install', 'Build', 'Code', 'Debug'];
 
 const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave }) => {
+  const { toast } = useToast();
   const [taskTypeValues, setTaskTypeValues] = useState<{[key: string]: number}>(
     Object.fromEntries(TASK_TYPES.map(type => [type, 5]))
   );
@@ -67,10 +69,16 @@ const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave 
         body: JSON.stringify(config),
       });
       if (!res.ok) throw new Error('Failed to save settings');
-      onSave();
+      toast({
+        title: "Settings saved",
+        description: "Your configuration was saved successfully.",
+      });
     } catch (err) {
-      // Optionally show error to user
-      //alert('Failed to save settings.');
+      toast({
+        title: "Save failed",
+        description: "There was an error saving your settings.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -91,9 +99,16 @@ const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave 
         body: JSON.stringify(config),
       });
       if (!res.ok) throw new Error('Failed to save');
-      onSave();
+      toast({
+        title: "Settings saved",
+        description: "Your study time configuration was saved successfully.",
+      });
     } catch (err) {
-      //alert('Failed to save study time settings.');
+      toast({
+        title: "Save failed",
+        description: "There was an error saving your study time settings.",
+        variant: "destructive",
+      });
     }
   };
 

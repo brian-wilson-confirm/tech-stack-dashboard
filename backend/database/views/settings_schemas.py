@@ -26,4 +26,10 @@ class DifficultyTarget(BaseModel):
     difficulty_range: list[str]
     difficulty_bias: str
     min_tasks_per_level: dict[str, int]
-    
+
+
+class CategoryBalance(BaseModel):
+    target_category_distribution: dict[str, int]
+    enforce_balance: bool
+    min_subcategories_per_category: dict[str, int]
+    auto_alert_on_imbalance: bool

@@ -1,9 +1,12 @@
 from fastapi import APIRouter, Depends
+from backend.database.models.category_models import Category
+from backend.database.models.goals.category_preferences import CategoryPreference
+from backend.database.models.goals.category_settings import CategorySettings
 from backend.database.models.goals.difficulty_preferences import DifficultyPreferences
 from backend.database.models.goals.study_days import StudyDay
 from backend.database.models.goals.study_hours import StudyHour
 from backend.database.models.goals.task_type_weights import TaskTypeWeight
-from backend.database.views.settings_schemas import DifficultyTarget, QuizGoals, StudyTime, TaskQuotas
+from backend.database.views.settings_schemas import CategoryBalance, DifficultyTarget, QuizGoals, StudyTime, TaskQuotas
 from backend.database.connection import get_session
 from sqlmodel import Session, select
 from backend.database.models.goals.learning_goals import LearningGoals
@@ -60,7 +63,6 @@ async def get_quiz_goals(session: Session = Depends(get_session)):
     )
 
 
-
 @router.get("/learning-goals/difficulty-targets", response_model=DifficultyTarget)
 async def get_difficulty_targets(session: Session = Depends(get_session)):
     preferences = session.get(DifficultyPreferences, 1)
@@ -73,6 +75,7 @@ async def get_difficulty_targets(session: Session = Depends(get_session)):
         difficulty_range.append("Advanced")
     if preferences.allow_expert:
         difficulty_range.append("Expert")
+
     return DifficultyTarget(
         difficulty_range=difficulty_range,
         difficulty_bias=preferences.bias if preferences else "balanced",
@@ -83,6 +86,36 @@ async def get_difficulty_targets(session: Session = Depends(get_session)):
             "Expert": preferences.min_expert_tasks if preferences else 0
         }   
     )
+
+
+@router.get("/learning-goals/category-balance", response_model=CategoryBalance)
+async def get_category_balance(session: Session = Depends(get_session)):
+    # Get all categories and build id->name and name->id maps
+    categories = session.exec(select(Category)).all()
+    id_to_name = {cat.id: cat.name for cat in categories}
+
+    # Get all category preferences
+    category_preferences = session.exec(select(CategoryPreference)).all()
+    target_category_distribution = {}
+    min_subcategories_per_category = {}
+    for cp in category_preferences:
+        name = id_to_name.get(cp.category_id)
+        if name:
+            target_category_distribution[name] = cp.target_percentage
+            min_subcategories_per_category[name] = cp.min_subcategories
+
+    # Get category settings
+    category_settings = session.get(CategorySettings, 1)
+    enforce_balance = category_settings.enforce_balance if category_settings else False
+    auto_alert_on_imbalance = category_settings.auto_alert_on_imbalance if category_settings else False
+
+    return CategoryBalance(
+        target_category_distribution=target_category_distribution,
+        enforce_balance=enforce_balance,
+        min_subcategories_per_category=min_subcategories_per_category,
+        auto_alert_on_imbalance=auto_alert_on_imbalance,
+    )
+
 
 
 
@@ -118,6 +151,12 @@ async def update_quiz_goals(quiz_goals: QuizGoals, session: Session = Depends(ge
 @router.put("/learning-goals/difficulty-targets")
 async def update_difficulty_targets(difficulty_targets: DifficultyTarget, session: Session = Depends(get_session)):
     update_difficulty_preferences(difficulty_targets, session)
+
+
+@router.put("/learning-goals/category-balance")
+async def update_category_balance(category_balance: CategoryBalance, session: Session = Depends(get_session)):
+    update_category_preferences(category_balance, session)
+    update_category_settings(category_balance, session)
 
 
 
@@ -229,4 +268,43 @@ def update_difficulty_preferences(difficulty_targets: DifficultyTarget, session:
     preferences.min_intermediate_tasks = difficulty_targets.min_tasks_per_level.get("Intermediate", 0)
     preferences.min_advanced_tasks = difficulty_targets.min_tasks_per_level.get("Advanced", 0)
     preferences.min_expert_tasks = difficulty_targets.min_tasks_per_level.get("Expert", 0)
+    session.commit()
+
+
+def update_category_preferences(category_balance: CategoryBalance, session: Session):
+    """
+    Update the category preferences based on the category balance.
+    """
+    # Build a mapping from category name to id
+    name_to_id = {cat.name: cat.id for cat in session.exec(select(Category)).all()}
+
+    # Update target_percentage for each category
+    for category_name, target_percentage in category_balance.target_category_distribution.items():
+        category_id = name_to_id.get(category_name)
+        if category_id is not None:
+            cp = session.exec(select(CategoryPreference).where(CategoryPreference.category_id == category_id)).first()
+            if cp:
+                cp.target_percentage = target_percentage
+
+    # Update min_subcategories for each category
+    for category_name, min_subcategories in category_balance.min_subcategories_per_category.items():
+        category_id = name_to_id.get(category_name)
+        if category_id is not None:
+            cp = session.exec(select(CategoryPreference).where(CategoryPreference.category_id == category_id)).first()
+            if cp:
+                cp.min_subcategories = min_subcategories
+    session.commit()
+
+
+def update_category_settings(category_balance: CategoryBalance, session: Session):
+    """
+    Update the category settings based on the category balance.
+    """
+    category_settings = session.get(CategorySettings, 1)
+    if not category_settings:
+        category_settings = CategorySettings(id=1)
+        session.add(category_settings)  
+
+    category_settings.enforce_balance = category_balance.enforce_balance
+    category_settings.auto_alert_on_imbalance = category_balance.auto_alert_on_imbalance
     session.commit()

@@ -41,7 +41,9 @@ const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave 
   const [loadingTaskQuotas, setLoadingTaskQuotas] = useState(true);
   const [loadingQuizGoals, setLoadingQuizGoals] = useState(true);
   const [loadingDifficultyTargets, setLoadingDifficultyTargets] = useState(true);
-  
+  const [loadingCategoryBalance, setLoadingCategoryBalance] = useState(true);
+
+
 
   useEffect(() => {
     setLoadingStudyTime(true);
@@ -99,18 +101,19 @@ const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave 
       .finally(() => setLoadingDifficultyTargets(false));
   }, []); 
 
-  /*
-  const transformTaskTypeKeys = (obj: {[key: string]: number}) => {
-    const result: {[key: string]: number} = {};
-    Object.entries(obj).forEach(([key, value]) => {
-      let newKey = key.toLowerCase();
-      if (newKey === 'code') newKey = 'coding';
-      else if (newKey === 'debug') newKey = 'debugging';
-      else newKey = newKey + 'ing';
-      result[newKey] = value;
-    });
-    return result;
-  };*/
+
+  useEffect(() => {
+    setLoadingCategoryBalance(true);
+    fetch("/api/settings/learning-goals/category-balance")
+      .then(res => res.json())
+      .then(data => {
+        setTargetCategoryDistribution(data.target_category_distribution ?? {}); 
+        setEnforceBalance(data.enforce_balance ?? false);
+        setMinSubcategoriesPerCategory(data.min_subcategories_per_category ?? {});
+        setAutoAlertOnImbalance(data.auto_alert_on_imbalance ?? false);
+      })
+      .finally(() => setLoadingCategoryBalance(false));
+  }, []);
 
 
   const handleSaveStudyTime = async (e: React.FormEvent) => {
@@ -238,7 +241,6 @@ const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave 
       enforce_balance: enforceBalance,
       min_subcategories_per_category: minSubcategoriesPerCategory,
       auto_alert_on_imbalance: autoAlertOnImbalance,
-      min_completion: minCompletion,
     };
 
     try {
@@ -526,14 +528,17 @@ const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave 
         )}
       </TabsContent>
       <TabsContent value="category-balance">
-        <form className="space-y-6 max-w-xl p-6" onSubmit={handleSaveCategoryBalance}>
+        {loadingCategoryBalance ? (
+          <div className="p-6 text-center text-muted-foreground">Loading...</div>
+        ) : (
+        <form className="space-y-6 max-w-xl" onSubmit={handleSaveCategoryBalance}>
           {/* Target Category Distribution */}
           <div>
             <Label className="block text-sm font-medium mb-1">Target Category Distribution</Label>
             <div className="flex flex-col gap-4">
-              {['Frontend', 'DevOps', 'Backend', 'Security'].map(category => (
+              {['Frontend', 'Middleware', 'Backend', 'Database', 'Messaging', 'DevOps', 'Security', 'Monitoring', 'Dev Tooling', 'AI/ML'].map(category => (
                 <div key={category} className="flex items-center gap-2">
-                  <span className="w-24 text-xs font-normal text-muted-foreground">{category}</span>
+                  <span className="w-24 text-xs font-normal text-muted-foreground pl-3">{category}</span>
                   <input
                     type="range"
                     min={0}
@@ -563,7 +568,7 @@ const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave 
           <div>
             <Label className="block text-sm font-medium mb-1">Minimum Subcategories per Category</Label>
             <div className="flex flex-col gap-2">
-              {['Frontend', 'DevOps', 'Backend', 'Security'].map(category => (
+              {['Frontend', 'Middleware', 'Backend', 'Database', 'Messaging', 'DevOps', 'Security', 'Monitoring', 'Dev Tooling', 'AI/ML'].map(category => (
                 <div key={category} className="flex items-center gap-2">
                   <span className="w-24 text-xs font-normal text-muted-foreground">{category}</span>
                   <Input
@@ -591,25 +596,12 @@ const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave 
             <Label htmlFor="auto-alert-on-imbalance" className="text-sm font-medium">Auto Alert on Imbalance</Label>
             <span className="text-xs text-muted-foreground">Triggers nudges like "Security falling behind"</span>
           </div>
-          <div>
-              <Label htmlFor="min-completion" className="block text-sm font-medium mb-1">Minimum Completion % per Category</Label>
-              <Input
-                id="min-completion"
-                type="number"
-                min={0}
-                max={100}
-                step={1}
-                placeholder="10"
-                value={minCompletion}
-                onChange={e => setMinCompletion(e.target.value === '' ? '' : Number(e.target.value))}
-              />
-              <p className="text-xs text-muted-foreground mt-1">e.g., 10% from each major category per week</p>
-          </div>
           <div className="flex gap-2 justify-end pt-4">
             <Button type="button" variant="secondary" onClick={onCancel}>Cancel</Button>
             <Button type="submit">Save</Button>
           </div>
         </form>
+        )}
       </TabsContent>
     </Tabs>
   );

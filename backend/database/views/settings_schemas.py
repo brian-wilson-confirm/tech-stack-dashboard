@@ -20,5 +20,10 @@ class QuizGoals(BaseModel):
     daily_quiz_goal: int
     minimum_passing_score: int
     review_missed_topics_weekly: bool
-    
+
+
+class DifficultyTarget(BaseModel):
+    difficulty_range: list[str]
+    difficulty_bias: str
+    min_tasks_per_level: dict[str, int]
     

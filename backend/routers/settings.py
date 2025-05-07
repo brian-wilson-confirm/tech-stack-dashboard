@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends
+from backend.database.models.goals.difficulty_preferences import DifficultyPreferences
 from backend.database.models.goals.study_days import StudyDay
 from backend.database.models.goals.study_hours import StudyHour
 from backend.database.models.goals.task_type_weights import TaskTypeWeight
-from backend.database.views.settings_schemas import QuizGoals, StudyTime, TaskQuotas
+from backend.database.views.settings_schemas import DifficultyTarget, QuizGoals, StudyTime, TaskQuotas
 from backend.database.connection import get_session
 from sqlmodel import Session, select
 from backend.database.models.goals.learning_goals import LearningGoals
@@ -60,6 +61,31 @@ async def get_quiz_goals(session: Session = Depends(get_session)):
 
 
 
+@router.get("/learning-goals/difficulty-targets", response_model=DifficultyTarget)
+async def get_difficulty_targets(session: Session = Depends(get_session)):
+    preferences = session.get(DifficultyPreferences, 1)
+    difficulty_range = []
+    if preferences.allow_beginner:
+        difficulty_range.append("Beginner")
+    if preferences.allow_intermediate:
+        difficulty_range.append("Intermediate")
+    if preferences.allow_advanced:
+        difficulty_range.append("Advanced")
+    if preferences.allow_expert:
+        difficulty_range.append("Expert")
+    return DifficultyTarget(
+        difficulty_range=difficulty_range,
+        difficulty_bias=preferences.bias if preferences else "balanced",
+        min_tasks_per_level={
+            "Beginner": preferences.min_beginner_tasks if preferences else 0,
+            "Intermediate": preferences.min_intermediate_tasks if preferences else 0,
+            "Advanced": preferences.min_advanced_tasks if preferences else 0,
+            "Expert": preferences.min_expert_tasks if preferences else 0
+        }   
+    )
+
+
+
 """
     POST ENDPOINTS
 """
@@ -87,6 +113,11 @@ async def update_task_quotas(task_quotas: TaskQuotas, session: Session = Depends
 @router.put("/learning-goals/quiz-goals")
 async def update_quiz_goals(quiz_goals: QuizGoals, session: Session = Depends(get_session)):
     update_learning_goals(quiz_goals, session)  
+
+
+@router.put("/learning-goals/difficulty-targets")
+async def update_difficulty_targets(difficulty_targets: DifficultyTarget, session: Session = Depends(get_session)):
+    update_difficulty_preferences(difficulty_targets, session)
 
 
 
@@ -179,3 +210,23 @@ def update_task_type_weights(task_quotas: TaskQuotas, session: Session):
     session.commit()
 
 
+def update_difficulty_preferences(difficulty_targets: DifficultyTarget, session: Session):
+    """
+    Update the difficulty preferences based on the difficulty targets.
+    """
+    # For now, assume a single row with id=1
+    preferences = session.get(DifficultyPreferences, 1)
+    if not preferences:
+        preferences = DifficultyPreferences(id=1)
+        session.add(preferences)
+
+    preferences.allow_beginner = "Beginner" in difficulty_targets.difficulty_range
+    preferences.allow_intermediate = "Intermediate" in difficulty_targets.difficulty_range
+    preferences.allow_advanced = "Advanced" in difficulty_targets.difficulty_range
+    preferences.allow_expert = "Expert" in difficulty_targets.difficulty_range
+    preferences.bias = difficulty_targets.difficulty_bias
+    preferences.min_beginner_tasks = difficulty_targets.min_tasks_per_level.get("Beginner", 0)
+    preferences.min_intermediate_tasks = difficulty_targets.min_tasks_per_level.get("Intermediate", 0)
+    preferences.min_advanced_tasks = difficulty_targets.min_tasks_per_level.get("Advanced", 0)
+    preferences.min_expert_tasks = difficulty_targets.min_tasks_per_level.get("Expert", 0)
+    session.commit()

@@ -40,8 +40,9 @@ const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave 
   const [loadingStudyTime, setLoadingStudyTime] = useState<boolean>(true);
   const [loadingTaskQuotas, setLoadingTaskQuotas] = useState(true);
   const [loadingQuizGoals, setLoadingQuizGoals] = useState(true);
+  const [loadingDifficultyTargets, setLoadingDifficultyTargets] = useState(true);
   
-  
+
   useEffect(() => {
     setLoadingStudyTime(true);
     fetch("/api/settings/learning-goals/study-time")
@@ -81,7 +82,22 @@ const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave 
       })
       .finally(() => setLoadingQuizGoals(false));
   }, []);
-  
+
+  useEffect(() => {
+    setLoadingDifficultyTargets(true);
+    fetch("/api/settings/learning-goals/difficulty-targets")
+      .then(res => res.json())
+      .then(data => {
+        setDifficultyRange(data.difficulty_range ?? []);
+        let bias = data.difficulty_bias ?? '';
+        if (bias === 'balanced') bias = 'Balanced';
+        else if (bias === 'push_higher') bias = 'Push Higher';
+        else if (bias === 'reinforce_basics') bias = 'Reinforce Basics';
+        setDifficultyBias(bias);
+        setMinTasksPerLevel(data.min_tasks_per_level ?? {});
+      })
+      .finally(() => setLoadingDifficultyTargets(false));
+  }, []); 
 
   /*
   const transformTaskTypeKeys = (obj: {[key: string]: number}) => {
@@ -187,12 +203,12 @@ const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave 
     e.preventDefault();
     const config = {
       difficulty_range: difficultyRange,
-      difficulty_bias: difficultyBias,
+      difficulty_bias: (() => {
+        if (difficultyBias === 'Push Higher') return 'push_higher';
+        if (difficultyBias === 'Reinforce Basics') return 'reinforce_basics';
+        return 'balanced';
+      })(),
       min_tasks_per_level: minTasksPerLevel,
-      target_category_distribution: targetCategoryDistribution,
-      enforce_balance: enforceBalance,
-      min_subcategories_per_category: minSubcategoriesPerCategory,
-      auto_alert_on_imbalance: autoAlertOnImbalance,
     };
 
     try {
@@ -219,7 +235,7 @@ const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave 
     e.preventDefault();
     const config = {
       target_category_distribution: targetCategoryDistribution,
-      enforce_balance: enforceBalance,  
+      enforce_balance: enforceBalance,
       min_subcategories_per_category: minSubcategoriesPerCategory,
       auto_alert_on_imbalance: autoAlertOnImbalance,
       min_completion: minCompletion,
@@ -436,11 +452,14 @@ const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave 
         )}
       </TabsContent>
       <TabsContent value="difficulty-targets">
-        <form className="space-y-6 max-w-xl p-6" onSubmit={handleSaveDifficultyTargets}>
-          <div>
-            <Label className="block text-sm font-medium mb-1">Difficulty Range</Label>
+        {loadingDifficultyTargets ? (
+          <div className="p-6 text-center text-muted-foreground">Loading...</div>
+        ) : (
+          <form className="space-y-6 max-w-xl" onSubmit={handleSaveDifficultyTargets}>
+            <div>
+              <Label className="block text-sm font-medium mb-1">Difficulty Range</Label>
             <div className="flex gap-4">
-              {["Beginner", "Intermediate", "Advanced"].map(level => (
+              {["Beginner", "Intermediate", "Advanced", "Expert"].map(level => (
                 <label key={level} className="flex items-center gap-1 text-sm">
                   <input
                     type="checkbox"
@@ -457,7 +476,7 @@ const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave 
                 </label>
               ))}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Range of tasks to focus on (e.g., Intermediate → Advanced)</p>
+            <p className="text-xs text-muted-foreground mt-1">Range of tasks to focus on (e.g., Intermediate → Expert)</p>
           </div>
           <div>
             <Label className="block text-sm font-medium mb-1">Difficulty Bias</Label>
@@ -479,15 +498,18 @@ const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave 
           <div>
             <Label className="block text-sm font-medium mb-1">Minimum Tasks per Level</Label>
             <div className="flex flex-col gap-2">
-              {["Beginner", "Intermediate", "Advanced"].map(level => (
+              {["Beginner", "Intermediate", "Advanced", "Expert"].map(level => (
                 <div key={level} className="flex items-center gap-2">
                   <span className="w-28 text-xs font-normal text-muted-foreground">{level}</span>
                   <Input
                     type="number"
                     min={0}
                     placeholder="1"
-                    value={minTasksPerLevel[level] || ''}
-                    onChange={e => setMinTasksPerLevel(v => ({ ...v, [level]: Number(e.target.value) }))}
+                    value={minTasksPerLevel[level] ?? ''}
+                    onChange={e => {
+                      const value = e.target.value === '' ? 0 : Number(e.target.value);
+                      setMinTasksPerLevel(v => ({ ...v, [level]: value }));
+                    }}
                     className="w-24"
                   />
                   <span className="text-xs text-muted-foreground">/week</span>
@@ -499,8 +521,9 @@ const LearningGoalsForm: React.FC<LearningGoalsFormProps> = ({ onCancel, onSave 
           <div className="flex gap-2 justify-end pt-4">
             <Button type="button" variant="secondary" onClick={onCancel}>Cancel</Button>
             <Button type="submit">Save</Button>
-          </div>
-        </form>
+            </div>
+          </form>
+        )}
       </TabsContent>
       <TabsContent value="category-balance">
         <form className="space-y-6 max-w-xl p-6" onSubmit={handleSaveCategoryBalance}>

@@ -8,7 +8,9 @@ class DifficultyPreferences(SQLModel, table=True):
     allow_beginner: bool = False
     allow_intermediate: bool = False
     allow_advanced: bool = False
+    allow_expert: bool = False
     bias: str = Field(default="balanced", regex="^(balanced|push_higher|reinforce_basics)$")
     min_beginner_tasks: int = 0
     min_intermediate_tasks: int = 0
     min_advanced_tasks: int = 0
+    min_expert_tasks: int = 0

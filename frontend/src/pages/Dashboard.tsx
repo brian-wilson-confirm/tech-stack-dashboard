@@ -11,6 +11,7 @@ import { QuickAddTaskWidget } from '@/components/widgets/QuickAddTaskWidget'
 import BarChartHorizontal from '@/components/charts/bar-chart-horizontal'
 import TodaysTasksWidget from '@/components/widgets/TodaysTasksWidget'
 import TasksCompletedWidget from '@/components/widgets/polished/TasksCompletedWidget'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from '@/components/ui/dialog'
 
 
 
@@ -27,6 +28,9 @@ export default function Dashboard() {
   const [securityAlerts, setSecurityAlerts] = useState<any[]>([])
   const [metrics, setMetrics] = useState<any[]>([])
   const [coverage, setCoverage] = useState<{ items: any[], overallProgress: number }>({ items: [], overallProgress: 0 })
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false)
+  const [summaryDialogOpen, setSummaryDialogOpen] = useState(false)
+  const [summaryText, setSummaryText] = useState('')
 
 
 
@@ -95,6 +99,20 @@ export default function Dashboard() {
     }
   }
 
+  const handleGenerateSummary = async () => {
+    setIsGeneratingSummary(true)
+    try {
+      const res = await fetch('/api/summary')
+      if (!res.ok) throw new Error('Failed to generate summary')
+      const data = await res.text()
+      setSummaryText(data)
+      setSummaryDialogOpen(true)
+    } catch (err) {
+      // Optionally handle error
+    } finally {
+      setIsGeneratingSummary(false)
+    }
+  }
 
   useEffect(() => {
     fetchCategoryData()
@@ -105,13 +123,22 @@ export default function Dashboard() {
     <div className="p-8">   
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold">Personal AI Learning Management System</h1>
-        <Button 
-          onClick={fetchCategoryData}
-          variant="outline"
-          disabled={isLoading}
-        >
-          {isLoading ? "Refreshing..." : "Refresh Data"}
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            onClick={fetchCategoryData}
+            variant="outline"
+            disabled={isLoading}
+          >
+            {isLoading ? "Refreshing..." : "Refresh Data"}
+          </Button>
+          <Button 
+            onClick={handleGenerateSummary}
+            variant="outline"
+            disabled={isGeneratingSummary}
+          >
+            {isGeneratingSummary ? "Generating..." : "Generate Daily Summary Report"}
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6 mb-8">
@@ -159,6 +186,18 @@ export default function Dashboard() {
         ))}
       </div>
       
+      <Dialog open={summaryDialogOpen} onOpenChange={setSummaryDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Daily Summary Report</DialogTitle>
+            <DialogDescription>Here is your generated daily summary report.</DialogDescription>
+          </DialogHeader>
+          <div className="whitespace-pre-wrap text-sm max-h-96 overflow-auto">{summaryText}</div>
+          <DialogClose asChild>
+            <Button variant="secondary">Close</Button>
+          </DialogClose>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 } 

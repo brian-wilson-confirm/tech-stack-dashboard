@@ -21,100 +21,28 @@ router = APIRouter(prefix="/settings")
 """
 
 @router.get("/learning-goals/study-time", response_model=StudyTime)
-async def get_settings(session: Session = Depends(get_session)):
-    goals = session.get(LearningGoals, 1)
-    hours = session.exec(select(StudyHour).where(StudyHour.id == 1)).first()
-
-    return StudyTime(
-        daily_goal=goals.daily_study_hours if goals else None,
-        weekly_goal=goals.weekly_study_hours if goals else None,
-        days_to_study=[day.day_of_week for day in session.exec(select(StudyDay).where(StudyDay.is_set == True)).all()],
-        preferred_hours=hours.label + ", " + hours.time_range if hours else None,
-    )
+async def get_study_time(session: Session = Depends(get_session)):
+    return get_study_time(session)
 
 
 @router.get("/learning-goals/task-quotas", response_model=TaskQuotas)
 async def get_task_quotas(session: Session = Depends(get_session)):
-    goals = session.get(LearningGoals, 1)
-    task_type_weights = session.exec(select(TaskTypeWeight)).all()
-    
-    task_type_names = {tt.id: tt.name for tt in session.exec(select(TaskType)).all()}
-    task_type_values = {
-        task_type_names[type_weight.task_type_id]: type_weight.weight
-        for type_weight in task_type_weights
-        if type_weight.task_type_id in task_type_names
-    }
-
-    return TaskQuotas(
-        tasks_per_day=goals.tasks_per_day if goals else None,
-        tasks_per_week=goals.tasks_per_week if goals else None,
-        task_type_values=task_type_values
-    )
+    return get_task_quotas(session)
 
 
 @router.get("/learning-goals/quiz-goals", response_model=QuizGoals)
 async def get_quiz_goals(session: Session = Depends(get_session)):
-    goals = session.get(LearningGoals, 1)
-    return QuizGoals(
-        daily_quiz_goal=goals.daily_quiz_goal if goals else None,
-        quizzes_per_week=goals.quizzes_per_week if goals else None,
-        minimum_passing_score=goals.minimum_passing_score if goals else None,
-        review_missed_topics_weekly=goals.review_missed_topics_weekly if goals else None
-    )
+    return get_quiz_goals(session)
 
 
 @router.get("/learning-goals/difficulty-targets", response_model=DifficultyTarget)
 async def get_difficulty_targets(session: Session = Depends(get_session)):
-    preferences = session.get(DifficultyPreferences, 1)
-    difficulty_range = []
-    if preferences.allow_beginner:
-        difficulty_range.append("Beginner")
-    if preferences.allow_intermediate:
-        difficulty_range.append("Intermediate")
-    if preferences.allow_advanced:
-        difficulty_range.append("Advanced")
-    if preferences.allow_expert:
-        difficulty_range.append("Expert")
-
-    return DifficultyTarget(
-        difficulty_range=difficulty_range,
-        difficulty_bias=preferences.bias if preferences else "balanced",
-        min_tasks_per_level={
-            "Beginner": preferences.min_beginner_tasks if preferences else 0,
-            "Intermediate": preferences.min_intermediate_tasks if preferences else 0,
-            "Advanced": preferences.min_advanced_tasks if preferences else 0,
-            "Expert": preferences.min_expert_tasks if preferences else 0
-        }   
-    )
+    return get_difficulty_targets(session)
 
 
 @router.get("/learning-goals/category-balance", response_model=CategoryBalance)
 async def get_category_balance(session: Session = Depends(get_session)):
-    # Get all categories and build id->name and name->id maps
-    categories = session.exec(select(Category)).all()
-    id_to_name = {cat.id: cat.name for cat in categories}
-
-    # Get all category preferences
-    category_preferences = session.exec(select(CategoryPreference)).all()
-    target_category_distribution = {}
-    min_subcategories_per_category = {}
-    for cp in category_preferences:
-        name = id_to_name.get(cp.category_id)
-        if name:
-            target_category_distribution[name] = cp.target_percentage
-            min_subcategories_per_category[name] = cp.min_subcategories
-
-    # Get category settings
-    category_settings = session.get(CategorySettings, 1)
-    enforce_balance = category_settings.enforce_balance if category_settings else False
-    auto_alert_on_imbalance = category_settings.auto_alert_on_imbalance if category_settings else False
-
-    return CategoryBalance(
-        target_category_distribution=target_category_distribution,
-        enforce_balance=enforce_balance,
-        min_subcategories_per_category=min_subcategories_per_category,
-        auto_alert_on_imbalance=auto_alert_on_imbalance,
-    )
+    return get_category_balance(session)
 
 
 
@@ -171,6 +99,98 @@ async def update_category_balance(category_balance: CategoryBalance, session: Se
 """
     HELPER FUNCTIONS
 """
+def get_study_time(session: Session):
+    goals = session.get(LearningGoals, 1)
+    hours = session.exec(select(StudyHour).where(StudyHour.id == 1)).first()
+
+    return StudyTime(
+        daily_goal=goals.daily_study_hours if goals else None,
+        weekly_goal=goals.weekly_study_hours if goals else None,
+        days_to_study=[day.day_of_week for day in session.exec(select(StudyDay).where(StudyDay.is_set == True)).all()],
+        preferred_hours=hours.label + ", " + hours.time_range if hours else None,
+    )
+
+
+def get_task_quotas(session: Session):
+    goals = session.get(LearningGoals, 1)
+    task_type_weights = session.exec(select(TaskTypeWeight)).all()
+    
+    task_type_names = {tt.id: tt.name for tt in session.exec(select(TaskType)).all()}
+    task_type_values = {
+        task_type_names[type_weight.task_type_id]: type_weight.weight
+        for type_weight in task_type_weights
+        if type_weight.task_type_id in task_type_names
+    }
+
+    return TaskQuotas(
+        tasks_per_day=goals.tasks_per_day if goals else None,
+        tasks_per_week=goals.tasks_per_week if goals else None,
+        task_type_values=task_type_values
+    )
+
+
+def get_quiz_goals(session: Session):
+    goals = session.get(LearningGoals, 1)
+    return QuizGoals(
+        daily_quiz_goal=goals.daily_quiz_goal if goals else None,
+        quizzes_per_week=goals.quizzes_per_week if goals else None,
+        minimum_passing_score=goals.minimum_passing_score if goals else None,
+        review_missed_topics_weekly=goals.review_missed_topics_weekly if goals else None
+    )
+
+
+def get_difficulty_targets(session: Session):
+    preferences = session.get(DifficultyPreferences, 1)
+    difficulty_range = []
+    if preferences.allow_beginner:
+        difficulty_range.append("Beginner")
+    if preferences.allow_intermediate:
+        difficulty_range.append("Intermediate")
+    if preferences.allow_advanced:
+        difficulty_range.append("Advanced")
+    if preferences.allow_expert:
+        difficulty_range.append("Expert")
+
+    return DifficultyTarget(
+        difficulty_range=difficulty_range,
+        difficulty_bias=preferences.bias if preferences else "balanced",
+        min_tasks_per_level={
+            "Beginner": preferences.min_beginner_tasks if preferences else 0,
+            "Intermediate": preferences.min_intermediate_tasks if preferences else 0,
+            "Advanced": preferences.min_advanced_tasks if preferences else 0,
+            "Expert": preferences.min_expert_tasks if preferences else 0
+        }   
+    )
+
+
+def get_category_balance(session: Session):
+    # Get all categories and build id->name and name->id maps
+    categories = session.exec(select(Category)).all()
+    id_to_name = {cat.id: cat.name for cat in categories}
+
+    # Get all category preferences
+    category_preferences = session.exec(select(CategoryPreference)).all()
+    target_category_distribution = {}
+    min_subcategories_per_category = {}
+    for cp in category_preferences:
+        name = id_to_name.get(cp.category_id)
+        if name:
+            target_category_distribution[name] = cp.target_percentage
+            min_subcategories_per_category[name] = cp.min_subcategories
+
+    # Get category settings
+    category_settings = session.get(CategorySettings, 1)
+    enforce_balance = category_settings.enforce_balance if category_settings else False
+    auto_alert_on_imbalance = category_settings.auto_alert_on_imbalance if category_settings else False
+
+    return CategoryBalance(
+        target_category_distribution=target_category_distribution,
+        enforce_balance=enforce_balance,
+        min_subcategories_per_category=min_subcategories_per_category,
+        auto_alert_on_imbalance=auto_alert_on_imbalance,
+    )
+
+
 def update_learning_goals(tab: StudyTime | TaskQuotas | QuizGoals, session: Session):
     """
     Update the learning goals based on the study time.

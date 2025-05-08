@@ -192,7 +192,15 @@ export default function Dashboard() {
             <DialogTitle>Daily Summary Report</DialogTitle>
             <DialogDescription>Here is your generated daily summary report.</DialogDescription>
           </DialogHeader>
-          <div className="whitespace-pre-wrap text-sm max-h-96 overflow-auto">{summaryText}</div>
+          <div className="whitespace-pre-wrap text-sm max-h-96 overflow-auto">
+            {(() => {
+              try {
+                return JSON.stringify(JSON.parse(summaryText), null, 2)
+              } catch {
+                return summaryText
+              }
+            })()}
+          </div>
           <DialogClose asChild>
             <Button variant="secondary">Close</Button>
           </DialogClose>

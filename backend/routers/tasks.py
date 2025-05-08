@@ -27,9 +27,12 @@ from backend.database.views.subcategory_schemas import SubcategoryRead
 from backend.database.views.category_schemas import CategoryRead
 from sqlalchemy import text
 
-from backend.routers.lessons import enrich_lesson, get_lesson_id
+from backend.llm.schemas.metadata import TaskMetadata
+from backend.routers.categories import get_category_id
+from backend.routers.lessons import create_lesson_topics, enrich_lesson, get_lesson_id, create_lesson_categories, create_lesson_subcategories, create_lesson_technologies, create_technology_subcategories
 from backend.routers.levels import get_level_id
 from backend.routers.people import get_person_ids
+
 from backend.routers.resources import get_resource_id, get_resourcetype_id
 from backend.routers.topics import get_topic_ids
 from backend.routers.sources import create_source_authors, get_source_id, get_sourcetype_id
@@ -37,6 +40,16 @@ from backend.utils.web_scraper_util import extract_article_metadata
 import asyncio
 from datetime import datetime, timezone, date, timedelta
 from backend.enums.task_status_enum import TaskStatusEnum
+
+from backend.routers.resources import get_resource_id, get_resourcetype_id, create_resource_authors
+from backend.routers.subcategories import get_subcategory_id
+from backend.routers.technologies import get_technology_id
+from backend.routers.topics import get_topic_id, get_topic_ids
+from backend.routers.sources import get_publication_id, get_source_id, get_sourcetype_id, create_source_authors
+from backend.utils.web_scraper_util import extract_article_metadata
+from backend.llm.agents.url_ingestion_agent import run_url_ingestion_pipeline
+from backend.utils.websocket_util import update_progress
+import asyncio
 
 
 router = APIRouter(prefix="/tasks")
@@ -193,8 +206,8 @@ async def create_task_from_url(request: QuickAddTaskRequest, session: Session = 
     return task
 
 
-@router.websocket("/ws/quick-add")
-async def websocket_endpoint(websocket: WebSocket, session: Session = Depends(get_session)):
+@router.websocket("/ws/quick-add1")
+async def websocket_endpoint1(websocket: WebSocket, session: Session = Depends(get_session)):
     await websocket.accept()
 
     # 1. Receive initial message with URL
@@ -268,6 +281,105 @@ async def websocket_endpoint(websocket: WebSocket, session: Session = Depends(ge
 
     await websocket.send_json({"progress": 100, "stage": "Task Created!"})
     await asyncio.sleep(0)
+    await websocket.close()
+
+
+@router.websocket("/ws/quick-add2")
+async def websocket_endpoint2(websocket: WebSocket, session: Session = Depends(get_session)):
+    await websocket.accept()
+
+    # 1. Receive initial message with URL
+    data = await websocket.receive_json()
+    await update_progress(websocket, 3, "Scanning URL...")
+    url = data.get("resourceUrl")
+
+    # 2. Scrape the HTML at the URL
+    await update_progress(websocket, 8, "Scraping URL...")
+    metadata = await run_url_ingestion_pipeline(url, websocket, session)
+    print(f"\n\nmetadata: {metadata}\n\n")
+
+    if isinstance(metadata, dict) and "error" in metadata:
+        await websocket.send_json({"progress": -1, "stage": "Error Processing URL", "error": metadata["error"]})
+        await websocket.close()
+        return
+
+    # 3. Get/Create the Person id(s)
+    await update_progress(websocket, 85, "Fetching IDs...")
+    person_ids = get_person_ids(metadata.resource.authors, session)
+    sourcetype_id = get_sourcetype_id(metadata.source.type, session)
+
+    # 4. Get/Create the Source
+    await update_progress(websocket, 86, "Creating the Source...")
+    source_id = get_source_id(metadata.source.name, sourcetype_id, session)
+
+    # 5. Get/Create the Publication
+    await update_progress(websocket, 87, "Creating the Publication...")
+    publication_id = get_publication_id(metadata.source.publication_name, source_id, session)
+
+    # 6. Get/Create the ResourceType
+    await update_progress(websocket, 88, "Creating the Resource Type...")
+    resourcetype_id = get_resourcetype_id(metadata.resource.type, session)
+
+    # 7. Get/Create the Resource
+    await update_progress(websocket, 89, "Creating the Resource...")
+    resource_id = get_resource_id(resourcetype_id, source_id, publication_id, metadata.resource, session)
+
+    # 8. Create the resource_author relationship(s) if it doesn't already exist
+    await update_progress(websocket, 90, "Mapping the Author(s) to the Resource...")
+    create_resource_authors(resource_id, person_ids, session)
+
+    # 9. Get the Level
+    await update_progress(websocket, 91, "Creating the Level...")
+    level_id = get_level_id(metadata.lesson.level, session)
+
+    # 10. Get/Create the Lesson
+    await update_progress(websocket, 92, "Creating the Lesson...")
+    lesson_id = get_lesson_id(metadata.lesson, level_id, resource_id, session)
+
+    # 11. Update the lesson_category relationships
+    await update_progress(websocket, 93, "Mapping the Category(ies) to the Lesson...")
+    category_ids = [get_category_id(category_data["category"], session) for category_data in metadata.lesson.categories]
+    create_lesson_categories(lesson_id, category_ids, session)
+
+    # 12. Update the lesson_subcategory relationships
+    await update_progress(websocket, 94, "Mapping the Subcategory(ies) to the Lesson...")
+    for category_data in metadata.lesson.categories:
+        subcategories = category_data["subcategories"]
+        subcategory_ids = [get_subcategory_id(subcategory, session) for subcategory in subcategories]
+        create_lesson_subcategories(lesson_id, subcategory_ids, session)
+
+    # 13. Get/Create the Technology(ies)
+    await update_progress(websocket, 95, "Categorizing the Technology(ies)...")
+    technology_ids = [get_technology_id(technology_data["technology"], session) for technology_data in metadata.lesson.technologies]
+
+    # 14. Update the lesson_technology relationships
+    await update_progress(websocket, 96, "Mapping the Technology(ies) to the Lesson...")
+    create_lesson_technologies(lesson_id, technology_ids, session)
+
+    # 15. Update the technology_subcategory relationships
+    await update_progress(websocket, 97, "Mapping the Technology(ies) to the Subcategory(ies)...")
+    for technology_data in metadata.lesson.technologies:
+        technology_id = get_technology_id(technology_data["technology"], session)
+        subcategory_ids = [get_subcategory_id(subcategory, session) for subcategory in technology_data["subcategories"]]
+        create_technology_subcategories(technology_id, subcategory_ids, session)
+    
+    # 16. Update the lesson_topic relationships
+    await update_progress(websocket, 98, "Mapping the Topic(s) to the Lesson...")
+    topic_ids = [get_topic_id(topic, session) for topic in metadata.lesson.topics]
+    create_lesson_topics(lesson_id, topic_ids, session)
+
+    # 17. Create the Task
+    await update_progress(websocket, 99, "Creating the Task...")
+    task = create_task(lesson_id, metadata.task, metadata.lesson.estimated_duration, session)
+    #print(f"\n\ntask: {task}\n\n")
+    print(f"\n\nmetadata: {metadata}\n\n")
+    print(f"\n\nresource: {metadata.resource}\n\n")
+    print(f"\n\nsource: {metadata.source}\n\n")
+    print(f"\n\ntopics: {metadata.lesson.topics}\n\n")
+    print(f"\n\ntechnologies: {metadata.lesson.technologies}\n\n")
+    print(f"\n\ncategories: {metadata.lesson.categories}\n\n")
+
+    await update_progress(websocket, 100, "Task has been created!")
     await websocket.close()
 
 
@@ -697,15 +809,15 @@ def create_task(task_in: TaskCreate, session: Session = Depends(get_session)):
     return task
 
 
-def create_task(lesson_id: int, lesson_title: str, resourcetype: str, estimated_duration: str, session: Session):
+def create_task(lesson_id: int, task_metadata: TaskMetadata, estimated_duration: str, session: Session):
     task = Task(
         task_id=generate_unique_task_id(session),
-        task=generate_task_name(lesson_title, resourcetype),
-        description="No description provided",
+        task=task_metadata.name,
+        description=task_metadata.description,
         lesson_id=lesson_id,
-        type_id=1,  # Default type_id for tasks
-        status_id=1,  # Default status_id for tasks
-        priority_id=1,  # Default priority_id for tasks
+        type_id=get_tasktype_id(task_metadata.type, session),
+        status_id=get_status_id(task_metadata.status, session),
+        priority_id=get_priority_id(task_metadata.priority, session),
         progress=0,
         order=0,
         due_date=None,
@@ -719,6 +831,18 @@ def create_task(lesson_id: int, lesson_title: str, resourcetype: str, estimated_
     session.commit()
     session.refresh(task)
     return task
+
+
+def get_tasktype_id(task_type: str, session: Session):
+    return session.exec(select(TaskType).where(TaskType.name == task_type)).first().id
+
+
+def get_status_id(status: str, session: Session):
+    return session.exec(select(TaskStatus).where(TaskStatus.name == status)).first().id
+
+
+def get_priority_id(priority: str, session: Session):
+    return session.exec(select(TaskPriority).where(TaskPriority.name == priority)).first().id
 
 
 def generate_unique_task_id(session, prefix="TASK-", digits=4, max_attempts=10):

@@ -25,11 +25,11 @@ export function QuickAddTaskWidget({ onClose }: QuickAddTaskWidgetProps) {
     const notes = (form.elements.namedItem('notes') as HTMLTextAreaElement).value
 
     try {
-      const socket = new WebSocket("ws://localhost:8000/api/tasks/ws/quick-add");
+      const socket = new WebSocket("ws://localhost:8000/api/tasks/ws/quick-add2");
     
       socket.onopen = () => {
         setIsLoading(true);
-        setProgress(8);
+        //setProgress(8);
         setStage("Starting...");
         socket.send(JSON.stringify({ resourceUrl }));
       };

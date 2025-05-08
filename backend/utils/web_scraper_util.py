@@ -12,6 +12,7 @@ from playwright.async_api import async_playwright
 
 
 # REMOVE? THIS CODE IS FOR ARCHIVE LINKS BUT THE METADATA LOOKS BAD
+"""
 async def scrape_article(url: str) -> Article:
     #async with sync_playwright() as p:
     p = await async_playwright().start()  # ✅ FIX HERE
@@ -52,6 +53,7 @@ async def scrape_article(url: str) -> Article:
         estimated_read_time_minutes=estimated_minutes,
         source_url=url
     )
+"""
 
 
 def extract_article_metadata(url: str):

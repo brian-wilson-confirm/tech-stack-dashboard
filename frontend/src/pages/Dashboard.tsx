@@ -28,10 +28,10 @@ export default function Dashboard() {
   const [securityAlerts, setSecurityAlerts] = useState<any[]>([])
   const [metrics, setMetrics] = useState<any[]>([])
   const [coverage, setCoverage] = useState<{ items: any[], overallProgress: number }>({ items: [], overallProgress: 0 })
+
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false)
   const [summaryDialogOpen, setSummaryDialogOpen] = useState(false)
   const [summaryText, setSummaryText] = useState('')
-
 
 
   /***********************

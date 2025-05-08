@@ -1,11 +1,12 @@
-from typing import List
+from typing import List, Optional
 from fastapi import APIRouter, Depends
 from sqlalchemy import func
 from sqlmodel import Session, select
 from backend.database.connection import get_session
-from backend.database.models.resource_models import Resource
+from backend.database.models.resource_models import Resource, ResourceAuthor
 from backend.database.models.resourcetype_models import ResourceType
 from backend.database.views.resource_schemas import ResourceCreate, ResourceRead
+from backend.llm.schemas.metadata import ResourceMetadata
 
 router = APIRouter(prefix="/resources")
 
@@ -59,8 +60,8 @@ def serialize_resource(resource: Resource, session: Session) -> ResourceRead:
             )
 
 
-def create_resource(title: str, description: str, url: str, resourcetype_id: int, source_id: int, session: Session):
-    new_resource = Resource(title=title, description=description, url=url, resourcetype_id=resourcetype_id, source_id=source_id)
+def create_resource(title: str, description: str, url: str, resourcetype_id: int, source_id: int, publication_id: int, session: Session):
+    new_resource = Resource(title=title, description=description, url=url, resourcetype_id=resourcetype_id, source_id=source_id, publication_id=publication_id)
     session.add(new_resource)
     session.commit()
     session.refresh(new_resource)
@@ -75,13 +76,13 @@ def create_resourcetype(resourcetype_name: str, session: Session):
     return new_resourcetype
 
 
-def get_resource_id(resourcetype_id: int, source_id: int, resourcetitle: str, resourcedescription: str, resourceurl: str, session: Session):
+def get_resource_id(resourcetype_id: int, source_id: int, publication_id: Optional[int], resource_metadata: ResourceMetadata, session: Session):
     resource = session.exec(select(Resource)
-                            .where(Resource.title == resourcetitle)
+                            .where(Resource.title == resource_metadata.title)
                             .where(Resource.resourcetype_id == resourcetype_id)
                             .where(Resource.source_id == source_id)).first()
     if not resource:
-        resource = create_resource(resourcetitle, resourcedescription, resourceurl, resourcetype_id, source_id, session)
+        resource = create_resource(resource_metadata.title, resource_metadata.description, resource_metadata.url, resourcetype_id, source_id, publication_id, session)
     return resource.id
 
 
@@ -91,3 +92,25 @@ def get_resourcetype_id(resourcetype_name: str, session: Session):
         resourcetype = create_resourcetype(resourcetype_name, session)
     return resourcetype.id
 
+
+def create_resource_authors(resource_id: int, person_ids: List[int], session: Session):
+    for person_id in person_ids:
+        # Check if the course_category relationship already exists
+        existing_relation = session.exec(
+            select(ResourceAuthor).where(
+                ResourceAuthor.resource_id == resource_id,
+                ResourceAuthor.person_id == person_id
+            )
+        ).first()
+        
+        # If the relationship doesn't exist, create it
+        if not existing_relation:
+            create_resource_author(resource_id, person_id, session)
+
+
+def create_resource_author(resource_id: int, person_id: int, session: Session):
+    resource_author = ResourceAuthor(resource_id=resource_id, person_id=person_id)
+    session.add(resource_author)
+    session.commit()
+    session.refresh(resource_author)
+    return resource_author

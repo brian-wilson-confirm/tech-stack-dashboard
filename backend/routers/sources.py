@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import func
 from sqlmodel import Session, select
 from backend.database.connection import get_session
+from backend.database.models.publication_models import Publication
 from backend.database.models.source_models import Source, SourceAuthor
 from backend.database.models.sourcetype_models import SourceType
 from backend.database.views.source_schemas import SourceCreate, SourceRead
@@ -59,8 +60,8 @@ def serialize_source(source: Source, session: Session) -> SourceRead:
             )
 
 
-def create_source(source_name: str, session: Session):
-    new_source = Source(name=source_name)
+def create_source(source_name: str, sourcetype_id: int, session: Session):
+    new_source = Source(name=source_name, sourcetype_id=sourcetype_id)
     session.add(new_source)
     session.commit()
     session.refresh(new_source)
@@ -75,6 +76,7 @@ def create_sourcetype(sourcetype_name: str, session: Session):
     return new_sourcetype
 
 
+# NO LONGER NEEDED! 4/30/25
 def create_source_authors(source_id: int, person_ids: List[int], session: Session):
     for person_id in person_ids:
         # Check if the course_category relationship already exists
@@ -90,6 +92,7 @@ def create_source_authors(source_id: int, person_ids: List[int], session: Sessio
             create_source_author(source_id, person_id, session)
 
 
+# NO LONGER NEEDED! 4/30/25
 def create_source_author(source_id: int, person_id: int, session: Session):
     source_author = SourceAuthor(source_id=source_id, person_id=person_id)
     session.add(source_author)
@@ -98,10 +101,10 @@ def create_source_author(source_id: int, person_id: int, session: Session):
     return source_author
 
 
-def get_source_id(source_name: str, session: Session):
+def get_source_id(source_name: str, sourcetype_id: int, session: Session):
     source = session.exec(select(Source).where(Source.name == source_name)).first()
     if not source:
-        source = create_source(source_name, session)
+        source = create_source(source_name, sourcetype_id,session)
     return source.id
 
 
@@ -111,3 +114,19 @@ def get_sourcetype_id(sourcetype_name: str, session: Session):
         sourcetype = create_sourcetype(sourcetype_name, session)
     return sourcetype.id
 
+
+def get_publication_id(publication_name: str, source_id: int, session: Session):
+    if publication_name == "" or publication_name == None:
+        return None
+    publication = session.exec(select(Publication).where(Publication.name == publication_name, Publication.source_id == source_id)).first()
+    if not publication:
+        publication = create_publication(publication_name, source_id, session)
+    return publication.id
+
+
+def create_publication(publication_name: str, source_id: int, session: Session):
+    new_publication = Publication(name=publication_name, source_id=source_id)
+    session.add(new_publication)
+    session.commit()
+    session.refresh(new_publication)
+    return new_publication  

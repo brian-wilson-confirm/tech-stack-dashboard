@@ -10,15 +10,14 @@ def get_system_prompt() -> str:
                 4. Recommend any goal tweaks or focus areas.
             """
 
-def get_user_prompt(summary_1: str, summary_2: str) -> str:
+def get_user_prompt(summary_report: str) -> str:
     return f"""
-                Here are the past 2 days of daily summaries:
+                Here is the current daily summary report which includes configuration settings:
 
-                Day 1:
-                {summary_1}
-
-                Day 2:
-                {summary_2}
+                Daily Summary Report:
+                {summary_report}
 
                 What do you observe? Summarize your interpretation of the data and offer guidance and insights.
+                Then, provide a list of additional fields, if any, that you would expect to see in this daily summary report that was not included.
+                Lastly, do you have any questions about the data provided? Was any of the information unexpected or not useful?
             """

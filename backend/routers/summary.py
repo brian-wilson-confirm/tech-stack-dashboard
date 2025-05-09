@@ -1,10 +1,12 @@
 from fastapi import APIRouter
-from datetime import datetime
+from datetime import datetime, date
 from backend.llm.clients.langchain import submit_prompt
 from backend.routers.settings import get_study_time, get_task_quotas, get_quiz_goals, get_difficulty_targets, get_category_balance
 from backend.database.connection import get_session
 from backend.llm.templates.daily_summary_template import get_system_prompt, get_user_prompt
 from backend.enums import ResponseType
+from sqlmodel import select
+from backend.database.models.task_models import Task
 
 router = APIRouter(prefix="/summary")
 
@@ -19,8 +21,8 @@ async def get_summary():
     SYSTEM_PROMPT = get_system_prompt()
     USER_PROMPT = get_user_prompt(internal_summary)
     
-    #return internal_summary
-    return submit_prompt(SYSTEM_PROMPT, USER_PROMPT, ResponseType.TEXT)
+    return internal_summary
+    #return submit_prompt(SYSTEM_PROMPT, USER_PROMPT, ResponseType.TEXT)
 
 
 
@@ -84,9 +86,26 @@ def get_settings():
 
 
 def get_daily_metric_totals():
+    session = next(get_session())
+    today = date.today()
+    # Count tasks completed today
+    total_tasks_completed = len(session.exec(
+        select(Task).where(
+            Task.done == True,
+            Task.end_date != None,
+            Task.end_date >= datetime.combine(today, datetime.min.time()),
+            Task.end_date <= datetime.combine(today, datetime.max.time())
+        )
+    ).all())
+    # Sum actual_duration for tasks completed today (if tracked in minutes)
+    total_study_time_minutes = session.exec(
+        select(Task.actual_duration).where(Task.done == True).where(Task.end_date != None).where(Task.end_date >= datetime.combine(today, datetime.min.time())).where(Task.end_date <= datetime.combine(today, datetime.max.time()))
+    ).all()
+    total_study_time_minutes = sum([(d.total_seconds() / 60) if d else 0 for d in total_study_time_minutes])
+
     return {
-        "total_study_time_minutes": 0,
-        "total_tasks_completed": 0,
+        "total_study_time_minutes": total_study_time_minutes,
+        "total_tasks_completed": total_tasks_completed,
         #"total_lessons_completed": 0,
         #"total_modules_completed": 0,
         #"total_courses_completed": 0,

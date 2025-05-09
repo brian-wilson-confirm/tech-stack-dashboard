@@ -87,13 +87,13 @@ def get_daily_metric_totals():
     return {
         "total_study_time_minutes": 0,
         "total_tasks_completed": 0,
-        "total_lessons_completed": 0,
-        "total_modules_completed": 0,
-        "total_courses_completed": 0,
-        "total_resources_accessed": 0,
-        "total_quizzes_completed": 0,
-        "total_debugs_completed": 0,
-        "total_challenges_completed": 0,
+        #"total_lessons_completed": 0,
+        #"total_modules_completed": 0,
+        #"total_courses_completed": 0,
+        #"total_resources_accessed": 0,
+        #"total_quizzes_completed": 0,
+        #"total_debugs_completed": 0,
+        #"total_challenges_completed": 0,
     }
 
 

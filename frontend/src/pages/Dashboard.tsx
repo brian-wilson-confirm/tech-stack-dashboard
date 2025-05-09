@@ -193,13 +193,12 @@ export default function Dashboard() {
             <DialogDescription>Here is your generated daily summary report.</DialogDescription>
           </DialogHeader>
           <div className="whitespace-pre-wrap text-sm max-h-96 overflow-auto">
-            {(() => {
-              try {
-                return JSON.stringify(JSON.parse(summaryText), null, 2)
-              } catch {
-                return summaryText
-              }
-            })()}
+            {summaryText.split(/\\n/).map((line, idx) => (
+              <span key={idx}>
+                {line}
+                <br />
+              </span>
+            ))}
           </div>
           <DialogClose asChild>
             <Button variant="secondary">Close</Button>

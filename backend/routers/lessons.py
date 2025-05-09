@@ -24,7 +24,6 @@ from backend.llm.schemas.metadata import LessonMetadata
 from backend.llm.templates.prompt_templates import build_lesson_prompt
 from backend.routers.categories import get_category_id
 from backend.routers.levels import get_level_id
-from backend.routers.openai import isValidResponse, submit_prompt
 from backend.routers.subcategories import get_subcategory_id
 from backend.routers.technologies import create_technology_subcategories, get_technology_id
 from backend.routers.topics import get_topic_id
@@ -202,7 +201,7 @@ def generate_unique_lesson_id(session, prefix="LESSON-", digits=4, max_attempts=
             return lesson_id
     raise ValueError("Failed to generate unique lesson_id after multiple attempts")
 
-
+"""
 def enrich_lesson(lesson_id: int, session: Session):
     category_subcategory_map = get_category_subcategory_map(session)
     lesson_details = get_lesson_details(lesson_id, session)
@@ -263,7 +262,8 @@ def enrich_lesson(lesson_id: int, session: Session):
     create_lesson_topics(lesson_id, topic_ids, session)
 
     return response_json
-
+"""
+    
 
 def get_category_subcategory_map(session: Session):
     # Get list of categories

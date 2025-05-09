@@ -6,3 +6,10 @@ class TaskStatusEnum(Enum):
     COMPLETED = "completed" 
     ON_HOLD = "on_hold"
     CANCELLED = "cancelled"
+
+
+class ResponseType(Enum):
+    JSON = "json"
+    XML = "xml"
+    HTML = "html"
+    TEXT = "text"

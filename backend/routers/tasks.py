@@ -29,7 +29,7 @@ from sqlalchemy import text
 
 from backend.llm.schemas.metadata import TaskMetadata
 from backend.routers.categories import get_category_id
-from backend.routers.lessons import create_lesson_topics, enrich_lesson, get_lesson_id, create_lesson_categories, create_lesson_subcategories, create_lesson_technologies, create_technology_subcategories
+from backend.routers.lessons import create_lesson_topics, get_lesson_id, create_lesson_categories, create_lesson_subcategories, create_lesson_technologies, create_technology_subcategories
 from backend.routers.levels import get_level_id
 from backend.routers.people import get_person_ids
 
@@ -39,7 +39,7 @@ from backend.routers.sources import create_source_authors, get_source_id, get_so
 from backend.utils.web_scraper_util import extract_article_metadata
 import asyncio
 from datetime import datetime, timezone, date, timedelta
-from backend.enums.task_status_enum import TaskStatusEnum
+from backend.enums import TaskStatusEnum
 
 from backend.routers.resources import get_resource_id, get_resourcetype_id, create_resource_authors
 from backend.routers.subcategories import get_subcategory_id
